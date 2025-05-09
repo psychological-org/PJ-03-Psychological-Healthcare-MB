@@ -50,6 +50,7 @@ import com.example.beaceful.domain.model.DumpDataProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.PostVisibility
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -109,7 +110,7 @@ fun PostDetailsScreen(
                             )
                             Row {
                                 Text(
-                                    post.createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")),
+                                    formatDateWithHour(post.createdAt),
                                     color = MaterialTheme.colorScheme.secondary,
                                     style = MaterialTheme.typography.titleSmall
                                 )
@@ -251,7 +252,7 @@ fun CommentCard(comment: Comment) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    comment.createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")), color = MaterialTheme.colorScheme.secondary,
+                    formatDateWithHour(comment.createdAt), color = MaterialTheme.colorScheme.secondary,
                     style = MaterialTheme.typography.titleSmall
                 )
                 Spacer(Modifier.height(6.dp))

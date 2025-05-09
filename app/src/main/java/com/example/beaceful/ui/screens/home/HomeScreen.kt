@@ -55,6 +55,8 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(R.string.ho1_greeting),
             style = MaterialTheme.typography.titleLarge,
+
+
             color = MaterialTheme.colorScheme.primary,
         )
         EmotionRow(R.string.angry)
