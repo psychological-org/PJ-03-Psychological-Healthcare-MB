@@ -1,0 +1,161 @@
+<resources>
+    <string name="app_name">Beaceful</string>
+    <string name="title_activity_home">HomeActivity</string>
+<!--    Basic command-->
+    <string name="skip">Bỏ qua</string>
+    <string name="sign_in">Đăng nhập</string>
+    <string name="sign_up">Đăng ký</string>
+    <string name="forgot_password">Quên mật khẩu?</string>
+    <string name="send">Gửi</string>
+    <string name="or">Hoặc</string>
+    <string name="view_more">Xem thêm</string>
+    <string name="save">Lưu</string>
+    <string name="search">Tìm kiếm</string>
+    <string name="follow">Theo dõi</string>
+    <string name="verify">Xác nhận</string>
+    <string name="publish">Đăng</string>
+    <string name="booking">Đặt lịch</string>
+    <string name="write_your_comment">Nhập bình luận của bạn</string>
+<!--    Carousel car-->
+    <string name="ca1_title_1">Hãy dành một chút thời gian cho bản thân</string>
+    <string name="ca2_title_2">Tìm kiếm một bác sĩ tâm lý phù hợp</string>
+    <string name="ca3_title_3">Cùng chia sẻ với những người trong cộng đồng</string>
+    <string name="ca4_body_1">Nghe những bài hát yêu thích của bạn, tìm đọc những cuốn sách mới, hay ghi lại những gì đã xảy ra hôm nay.</string>
+    <string name="ca5_body_2">Tìm được một bác sĩ tâm lý phù hợp với bạn là một hành trình khó khăn, và An Yên ở đây để giúp bạn với hành trình đó!</string>
+    <string name="ca6_body_3">Kết nối với những người đã có cùng trải nghiệm với bạn và cùng giúp đỡ nhau vượt qua khó khắn.</string>
+<!--SignIn SignUp-->
+    <string name="si1_with_email">Với email</string>
+    <string name="si2_phone_or_mail">Số di động hoặc email</string>
+    <string name="si3_password">Mật khẩu</string>
+    <string name="si4_no_account">Chưa có tài khoản?</string>
+    <string name="si5_user_name">Tên người dùng</string>
+    <string name="si6_sending_otp">Chúng tôi sẽ gửi mã xác minh đến cho bạn</string>
+    <string name="si7_verify_input">Nhập mã xác minh</string>
+    <string name="si8_verify_sended">Mã xác minh đã được gửi đến cho bạn</string>
+    <string name="si9_verify">Mã xác minh đã được gửi đến cho bạn</string>
+    <string name="si10_resend">Gửi lại</string>
+    <string name="si11_verify_ood">Mã xác minh có hiệu lực trong vòng 10 phút</string>
+<!--    Home screen -->
+    <string name="ho1_greeting">Tâm trạng hôm nay của bạn thế nào?</string>
+    <string name="ho2_share_thought">Chia sẻ suy nghĩ của bạn</string>
+    <string name="ho3_share_thought2">Bạn đang nghĩ gì?</string>
+    <string name="ho4_write_diary">Viết nhật ký</string>
+    <string name="ho5_music_for_u">Âm nhạc dành cho bạn</string>
+    <string name="ho6_book_for_u">Những cuốn sách nổi bật</string>
+    <string name="ho7_podcast_for_u">Podcast hôm nay</string>
+<!--    SOS-->
+    <string name="sos1_title">Tìm kiếm sự giúp đỡ</string>
+    <string name="sos2_body">Nếu bạn hoặc người thân của bạn đang trong tình trạng nguy hiểm và cần được giúp đỡ ngay lập tức, hãy liên hệ với những nguồn dưới đây để được hỗ trợ kịp thời!</string>
+    <string name="sos3_information">Cảnh sát: 113  Y tế: 115 Đường dây bảo vệ trẻ em: 111 Đường dây nóng về sức khoẻ tâm lý: 0909 65 80 35 Facebook: https://www.facebook.com/ChamSocSucKhoeVietBKLN</string>
+<!--Diaru-->
+    <string name="di1_folder">Thư mục</string>
+    <string name="di2_default_note">Note </string>
+    <string name="di3_title">Tiêu đề</string>
+    <string name="di4_record">Ghi âm</string>
+<!--    Doctor and Profile-->
+    <string name="do1_suggest">Đề xuất cho bạn</string>
+    <string name="do2_access">Trang chủ</string>
+    <string name="do3_following">Đang theo dõi</string>
+    <string name="do4_follower">Người theo dõi</string>
+    <string name="do5_activity">Tương tác</string>
+    <string name="do6_about_me">Về tôi</string>
+    <string name="do7_receive_notification">Ưu tiên nhận thông báo từ</string>
+    <string name="do8_do_not_receive_notification">Tắt thông báo từ</string>
+    <string name="do9_block">Chặn</string>
+    <string name="do10_report">Báo cáo</string>
+    <string name="do11_introduction">Thông tin cá nhân</string>
+    <string name="do12_profession">Chuyên môn</string>
+    <string name="do13_method">Phương pháp trị liệu</string>
+    <string name="do14_rating">Đánh giá của bệnh nhân</string>
+    <string name="do15_edit_profile">Chỉnh sửa hồ sơ</string>
+    <string name="do16_condition">Tình trạng bản thân</string>
+<!--Appointment-->
+    <string name="ap1_title">Đừng ngần ngại, hãy đặt lịch khám với</string>
+    <string name="ap2_select_field">Bạn muốn được điều trị trong lĩnh vực nào?</string>
+    <string name="ap3_1a">Tổn thương</string>
+    <string name="ap4_1b">Rối loạn điều chỉnh, rối loạn căng thẳng sau sang chấn và rối loạn căng thẳng sau sang chấn phức tạp</string>
+    <string name="ap5_2a">Trầm cảm</string>
+    <string name="ap6_2b">Rối loạn trầm cảm dai dẳng, rối loạn trầm cảm nặng, tự làm hại bản thân, hay có suy nghĩ tự sát</string>
+    <string name="ap7_3a">Căng thẳng/ Lo âu</string>
+    <string name="ap8_3b">Sợ giao tiếp xã hội, sợ bị bỏ rơi, căng thẳng cấp tính, muốn học cách kiểm soát nỗi sợ</string>
+    <string name="ap9_4a">Cá nhân</string>
+    <string name="ap10_4b">Xây dựng sự tự tin, muốn tìm được một mục đích nhất định, học cách xây dựng rào cản cho các mối quan hệ, suy nghĩ bớt tiêu cực</string>
+    <string name="ap11_5a">Giấc ngủ</string>
+    <string name="ap12_5b">Ngủ quá ít, ngủ quá nhiều, ngủ không trọn giấc, hay bị mộng du, hoảng sợ ban đêm</string>
+    <string name="ap13_success">Bạn đã đặt lịch khám thành công!</string>
+    <string name="ap14_appointment_note">Bạn sẽ nhận được tin nhắn chi tiết về buổi điều trị từ $name trong vòng 1 giờ tiếp theo. An Yên chúc bạn có một hành trình trị liệu vui vẻ!</string>
+<!--Community-->
+    <string name="co1_news">Bảng tin</string>
+    <string name="co2_chat">Chat</string>
+    <string name="co3_topic">Chủ đề</string>
+    <string name="co4_recent_activity">Những hoạt động gần đây</string>
+    <string name="co5_activity">Hoạt động</string>
+    <string name="co6_member">Thành viên</string>
+    <string name="co7_your_thought">Bạn đang nghĩ gì?</string>
+    <string name="co8_admin">Quản trị viên</string>
+    <string name="co9_ai_chat">Chat với AI</string>
+    <string name="co10_friend_chat">Chat với bạn bè</string>
+    <string name="co11_sent_pic">Bạn đã gửi</string>
+    <string name="co12_last_activity">Hoạt động $time trước</string>
+    <string name="co13_message">Nhắn tin</string>
+<!--    Profile-->
+    <string name="pr1_account">Tài khoản</string>
+    <string name="pr2_private_and_safety">Riêng tư &amp; an toàn</string>
+    <string name="pr3_notification">Thông báo</string>
+    <string name="pr4_assist">Hỗ trợ</string>
+    <string name="pr5_about_us">Về chúng tôi</string>
+    <string name="pr6_pic">Ảnh</string>
+    <string name="pr7_profile_pic">Ảnh đại diện</string>
+    <string name="pr8_backgrounf_pic">Ảnh bìa</string>
+    <string name="pr9_about_me">Về tôi</string>
+    <string name="pr10_first_name">Tên</string>
+    <string name="pr11_last_name">Họ</string>
+    <string name="pr12_nickname">Biệt danh</string>
+    <string name="pr13_information">Tiểu sử</string>
+    <string name="pr14_my_account">Tài khoản của tôi</string>
+    <string name="pr15_change_email">Đổi email</string>
+    <string name="pr16_delete_account">Xoá tài khoản</string>
+    <string name="pr17_">Tương tác</string>
+    <string name="pr18_">Ai có thể liên hệ với bạn?</string>
+    <string name="pr19_">Tài khoản đã tắt thông báo</string>
+    <string name="pr20_">Tài khoản đã chặn</string>
+    <string name="pr21_">Kiểm soát</string>
+    <string name="pr22_">Trạng thái hoạt động</string>
+    <string name="pr23_">Ai có thể xem bài viết của bạn</string>
+    <string name="pr24_">Lọc từ ngữ</string>
+    <string name="pr25_">Cho phép An Yên gửi thông báo?</string>
+    <string name="pr26_">Âm thanh</string>
+    <string name="pr27_">Rung</string>
+    <string name="pr28_">Hiển thị nội dung</string>
+    <string name="pr29_">Cài đặt thông báo</string>
+    <string name="pr30_">Nhạc chuông</string>
+    <string name="pr31_">Giao diện màn hình hiển thị</string>
+    <string name="pr32_">Xin chào! An Yên có thể giúp gì cho bạn?</string>
+    <string name="pr33_">Câu hỏi thường gặp</string>
+    <string name="pr34_">An Yên là app gì?</string>
+    <string name="pr35_">Tôi nên bắt đầu từ đâu với An Yên?</string>
+    <string name="pr36_">Bạn đang tìm kiếm thứ khác?</string>
+    <string name="pr37_">Các tính năng</string>
+    <string name="pr38_">Quản lý tài khoản</string>
+    <string name="pr39_">Quyền riêng tư và an toàn</string>
+    <string name="pr40_">Thanh toán</string>
+    <string name="pr41_">Liên hệ với chúng tôi!</string>
+    <string name="pr42_">Hãy cùng tìm hiểu rõ hơn về An Yên nhé!</string>
+    <string name="pr43_">Giới thiệu chung</string>
+    <string name="pr44_">Việc làm</string>
+    <string name="pr45_">Nguồn tài nguyên</string>
+    <string name="pr46_">Chính sách</string>
+<!--    Emotion list-->
+    <string name="angry">Tức giận</string>
+    <string name="worried">Lo âu</string>
+    <string name="confused">Bối rối</string>
+    <string name="grateful">Vui vẻ</string>
+    <string name="in_love">Yêu đời</string>
+<!--Music topic-->
+    <string name="relax">Thư giãn</string>
+    <string name="focus">Tập trung</string>
+    <string name="peace">Yên bình</string>
+    <string name="sleep">Giấc ngủ</string>
+    <string name="mood">Tâm trạng</string>
+    <string name="nostalgia">Hoài niệm</string>
+</resources>
