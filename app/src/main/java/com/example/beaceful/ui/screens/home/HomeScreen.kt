@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,12 +37,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.beaceful.R
+import com.example.beaceful.domain.model.Emotions
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
@@ -59,7 +60,7 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
             color = MaterialTheme.colorScheme.primary,
         )
-        EmotionRow(R.string.angry)
+        HomeScreenEmotionsRow()
 
 //        Diary block
         HomeSection(
@@ -395,7 +396,7 @@ fun EmotionItem(
     modifier: Modifier = Modifier,
     @DrawableRes drawable: Int,
     @StringRes text: Int,
-    @StringRes selectedEmotion: Int,
+    onClick: () -> Unit = {},
 ) {
     Image(
         painter = painterResource(drawable),
@@ -405,12 +406,12 @@ fun EmotionItem(
 //            .padding(horizontal = 8.dp)
             .size(width = 50.dp, height = 75.dp)
             .clip(RoundedCornerShape(18.dp))
+            .clickable(onClick = onClick)
     )
 }
 
 @Composable
-fun EmotionRow(
-    @StringRes selectedEmotion: Int,
+fun HomeScreenEmotionsRow(
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
@@ -418,11 +419,10 @@ fun EmotionRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         contentPadding = PaddingValues(horizontal = 36.dp),
     ) {
-        items(emotionList) { item ->
+        items(Emotions.entries) { item ->
             EmotionItem(
-                drawable = item.drawable,
-                text = item.text,
-                selectedEmotion = selectedEmotion
+                drawable = item.iconRes,
+                text = item.descriptionRes,
             )
         }
     }

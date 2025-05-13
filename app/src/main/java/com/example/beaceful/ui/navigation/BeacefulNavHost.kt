@@ -1,17 +1,20 @@
 package com.example.beaceful.ui.navigation
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
-import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.diary.DiaryScreen
+import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
+import com.example.beaceful.ui.screens.diary.SelectEmotionScreen
+import com.example.beaceful.ui.screens.diary.WriteDiaryScreen
 import com.example.beaceful.ui.screens.doctor.DoctorScreen
 import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
@@ -37,7 +40,10 @@ fun BeacefulNavHost(
             DoctorScreen(navController = navController)
         }
         composable(route = Forum.route) {
-            ForumScreen()
+            WriteDiaryScreen(
+                navController = navController,
+                selectedEmotion = Emotions.HAPPY
+            )
         }
         composable(route = Profile.route) {
             ProfileScreen()
@@ -58,6 +64,32 @@ fun BeacefulNavHost(
             PostDetailsScreen(postId = postId)
         }
 
+        composable(
+            route = WriteDiary.route,
+            arguments = listOf(navArgument("emotion") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val emotionArg = backStackEntry.arguments?.getString("emotion")
+            val emotion = runCatching { Emotions.valueOf(emotionArg ?: "") }.getOrNull()
+            if (emotion != null) {
+                WriteDiaryScreen(navController, selectedEmotion = emotion)
+            } else {
+                Text("Emotion không hợp lệ")
+            }
+        }
+        composable(
+            route = WriteDiaryExpand.route
+        ) {
+            FullscreenDiaryScreen(
+                navController = navController
+            )
+        }
+        composable(
+            route = SelectEmotionDiary.route
+        ) {
+            SelectEmotionScreen(
+                navController = navController
+            )
+        }
     }
 }
 
