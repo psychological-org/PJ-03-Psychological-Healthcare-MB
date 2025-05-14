@@ -91,8 +91,8 @@
     <string name="ap14_appointment_note">Bạn sẽ nhận được tin nhắn chi tiết về buổi điều trị từ $name trong vòng 1 giờ tiếp theo. An Yên chúc bạn có một hành trình trị liệu vui vẻ!</string>
 <!--Community-->
     <string name="co1_news">Bảng tin</string>
-    <string name="co2_chat">Chat</string>
-    <string name="co3_topic">Chủ đề</string>
+    <string name="co2_chat">Tin nhắn</string>
+    <string name="co3_communities">Cộng đồng của bạn</string>
     <string name="co4_recent_activity">Những hoạt động gần đây</string>
     <string name="co5_activity">Hoạt động</string>
     <string name="co6_member">Thành viên</string>

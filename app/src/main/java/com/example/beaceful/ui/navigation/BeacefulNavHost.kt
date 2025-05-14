@@ -17,7 +17,10 @@ import com.example.beaceful.ui.screens.diary.SelectEmotionScreen
 import com.example.beaceful.ui.screens.diary.WriteDiaryScreen
 import com.example.beaceful.ui.screens.doctor.DoctorScreen
 import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
+import com.example.beaceful.ui.screens.forum.CommunityScreen
+import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
+import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -40,13 +43,25 @@ fun BeacefulNavHost(
             DoctorScreen(navController = navController)
         }
         composable(route = Forum.route) {
-            WriteDiaryScreen(
-                navController = navController,
-                selectedEmotion = Emotions.HAPPY
-            )
+            ForumScreen(navController = navController)
+        }
+
+        composable(
+            route = CommunityRoute.route,
+            arguments = listOf(navArgument("communityId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val communityId = backStackEntry.arguments?.getInt("communityId") ?: return@composable
+            CommunityScreen(navController = navController, communityId = communityId)
+
         }
         composable(route = Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                userId = 2,
+                navController = navController
+            )
+        }
+        composable(route = EditRoute.route) {
+            EditProfileScreen()
         }
         composable(
             route = SingleDoctorProfile.route,

@@ -45,6 +45,12 @@ data object Forum : BeacefulRoutes {
     override val icon = Icons.Filled.Forum
     override val route = "forum"
 }
+data object CommunityRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Forum
+    override val route = "forum_community/{communityId}"
+
+    fun createRoute(communityId: Int) = "forum_community/$communityId"
+}
 data object Profile : BeacefulRoutes {
     override val icon = Icons.Filled.Person
     override val route = "profile"
@@ -64,5 +70,10 @@ data object PostDetails : BeacefulRoutes {
     fun createRoute(postId: Int): String = "postDetails/$postId"
 }
 
+data object EditRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "profile_edit"
+}
 
-val BeacefulBottomNavPatient = listOf(Home, Diary, Doctor, SelectEmotionDiary, Forum)
+
+val BeacefulBottomNavPatient = listOf(Home, Diary, Doctor, Forum, Profile)
