@@ -102,8 +102,7 @@ data class Community(
     val name: String,
     val content: String,
     val adminId: Int,
-    val imageUrl: String? = null,
-    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val avatarUrl: String? = null
 )
 
 data class ParticipantCommunity(

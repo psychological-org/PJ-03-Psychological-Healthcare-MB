@@ -4,7 +4,6 @@ import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,12 +36,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.beaceful.R
-import com.example.beaceful.domain.model.Emotions
 
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier) {
@@ -56,11 +55,9 @@ fun HomeScreen(modifier: Modifier = Modifier) {
         Text(
             text = stringResource(R.string.ho1_greeting),
             style = MaterialTheme.typography.titleLarge,
-
-
             color = MaterialTheme.colorScheme.primary,
         )
-        HomeScreenEmotionsRow()
+        EmotionRow(R.string.angry)
 
 //        Diary block
         HomeSection(
@@ -396,7 +393,7 @@ fun EmotionItem(
     modifier: Modifier = Modifier,
     @DrawableRes drawable: Int,
     @StringRes text: Int,
-    onClick: () -> Unit = {},
+    @StringRes selectedEmotion: Int,
 ) {
     Image(
         painter = painterResource(drawable),
@@ -406,12 +403,12 @@ fun EmotionItem(
 //            .padding(horizontal = 8.dp)
             .size(width = 50.dp, height = 75.dp)
             .clip(RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick)
     )
 }
 
 @Composable
-fun HomeScreenEmotionsRow(
+fun EmotionRow(
+    @StringRes selectedEmotion: Int,
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
@@ -419,10 +416,11 @@ fun HomeScreenEmotionsRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         contentPadding = PaddingValues(horizontal = 36.dp),
     ) {
-        items(Emotions.entries) { item ->
+        items(emotionList) { item ->
             EmotionItem(
-                drawable = item.iconRes,
-                text = item.descriptionRes,
+                drawable = item.drawable,
+                text = item.text,
+                selectedEmotion = selectedEmotion
             )
         }
     }

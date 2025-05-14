@@ -48,7 +48,6 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
-import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
@@ -112,7 +111,7 @@ fun PostCard(
                     )
                     Row {
                         Text(
-                            formatDateWithHour(post.createdAt), color = MaterialTheme.colorScheme.secondary,
+                            post.createdAt.format(DateTimeFormatter.ofPattern("dd/MM/yy HH:mm")), color = MaterialTheme.colorScheme.secondary,
                             style = MaterialTheme.typography.titleSmall
                         )
                         Spacer(Modifier.width(8.dp))
