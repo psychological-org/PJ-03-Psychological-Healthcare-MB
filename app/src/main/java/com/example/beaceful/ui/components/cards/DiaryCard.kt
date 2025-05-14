@@ -24,18 +24,28 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.beaceful.core.util.formatDiaryDate
 import java.time.format.DateTimeFormatter
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
 import java.time.LocalDate
 import java.time.LocalDateTime
+
+fun formatDiaryDate(date: LocalDateTime): String {
+    val today = LocalDate.now()
+    val yesterday = today.minusDays(1)
+    val dateOnly = date.toLocalDate()
+
+    return when (dateOnly) {
+        today -> "Hôm nay, ngày ${date.dayOfMonth}"
+        yesterday -> "Hôm qua, ngày ${date.dayOfMonth}"
+        else -> "Ngày ${date.dayOfMonth}"
+    }
+}
 
 @Composable
 fun DiaryCard(
@@ -48,16 +58,14 @@ fun DiaryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
             .clickable { onDiaryClick() },
         colors = CardDefaults.cardColors(
             containerColor = diary.emotion.backgroundColor
         )
     ) {
-        Row (modifier = Modifier.padding(8.dp)) {
+        Row (modifier = Modifier.padding(4.dp)) {
             Image(painterResource(diary.emotion.iconRes), contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.clip(RoundedCornerShape(18.dp)).size(48.dp))
+                modifier = Modifier.size(48.dp).clip(RoundedCornerShape(12.dp)))
             Spacer(Modifier.width(8.dp))
             Column {
                 Text(formatDiaryDate(diary.createdAt),  color = MaterialTheme.colorScheme.onPrimary)

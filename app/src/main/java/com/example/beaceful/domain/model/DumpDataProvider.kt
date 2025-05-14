@@ -188,8 +188,8 @@ object DumpDataProvider {
     val posts = listOf(
         Post(
             id = 1,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
+            content = "Short post abcxyz",
+            posterId = 2,
             communityId = 1,
             visibility = PostVisibility.PUBLIC,
             imageUrl = "",
@@ -205,77 +205,7 @@ object DumpDataProvider {
             imageUrl = "",
             reactCount = 12,
             createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 3,
-            content = "Bước vào năm học có thể là điều thú vị đối với nhiều trẻ em, các em rất vui khi được gặp lại bạn bè và thầy cô. Nhưng một số trẻ cảm thấy lo lắng và căng thẳng khi đi học trở lại.",
-            posterId = 2,
-            communityId = 2,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 12,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 4,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 5,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 6,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 7,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 8,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
-        Post(
-            id = 9,
-            content = "Tập thể dục hiện cũng đã được chứng minh là giúp giảm trầm cảm. Vì vậy, làm việc một chút, ngay cả khi chỉ là đi dạo quanh khu phố, là một ý tưởng tuyệt vời. Nhưng nếu bạn bị trầm cảm vào buổi sáng, bạn có thể cố gắng tập thể dục sớm hơn trong ngày và chắc chắn là không tập gần giờ đi ngủ!",
-            posterId = 3,
-            communityId = 1,
-            visibility = PostVisibility.PUBLIC,
-            imageUrl = "",
-            reactCount = 123,
-            createdAt = LocalDateTime.now()
-        ),
+        )
     )
 
     val diaries = listOf(
@@ -338,52 +268,6 @@ object DumpDataProvider {
             posterId = 2,
             createdAt = LocalDateTime.now()
         ),
-    )
-
-    val communities = listOf(
-        Community(
-            id = 1,
-            name = "Trầm cảm",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 1,
-            imageUrl = ""
-        ),
-        Community(
-            id = 2,
-            name = "Trường học",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 2,
-            imageUrl = ""
-        ),
-        Community(
-            id = 3,
-            name = "LGBTQ+",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 3,
-            imageUrl = ""
-        ),
-        Community(
-            id = 4,
-            name = "Gia đình",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 0,
-            imageUrl = ""
-        ),
-        Community(
-            id = 5,
-            name = "Công việc",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 0,
-            imageUrl = ""
-        ),
-        Community(
-            id = 6,
-            name = "Tình cảm",
-            content = "Đây là nơi các bạn học sinh và thầy cô giáo cùng chia sẻ những khó khăn mình gặp phải trong quá trình học tập và giảng dạy, đồng thời chia sẻ kinh nghiệm của chính bản thân trong hành trình trải qua khó khăn đó.",
-            adminId = 0,
-            imageUrl = ""
-        ),
-
     )
 
 }
