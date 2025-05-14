@@ -20,6 +20,7 @@ import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
 import com.example.beaceful.ui.screens.forum.CommunityScreen
 import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
+import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
 
 @Composable
@@ -54,7 +55,13 @@ fun BeacefulNavHost(
 
         }
         composable(route = Profile.route) {
-            ProfileScreen()
+            ProfileScreen(
+                userId = 2,
+                navController = navController
+            )
+        }
+        composable(route = EditRoute.route) {
+            EditProfileScreen()
         }
         composable(
             route = SingleDoctorProfile.route,

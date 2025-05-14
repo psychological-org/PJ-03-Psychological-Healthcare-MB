@@ -70,5 +70,10 @@ data object PostDetails : BeacefulRoutes {
     fun createRoute(postId: Int): String = "postDetails/$postId"
 }
 
+data object EditRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "profile_edit"
+}
+
 
 val BeacefulBottomNavPatient = listOf(Home, Diary, Doctor, Forum, Profile)
