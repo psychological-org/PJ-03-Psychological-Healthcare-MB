@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomSearchBar(
-    suggestions: List<String>,
+    suggestions: List<String>?,
     modifier: Modifier = Modifier,
     placeholder: String = "Tìm kiếm...",
     onSearch: (String) -> Unit = {}
@@ -36,7 +36,7 @@ fun CustomSearchBar(
 
     val filtered = remember(query, suggestions) {
         if (query.isBlank()) suggestions else
-            suggestions.filter { it.contains(query, ignoreCase = true) }
+            suggestions?.filter { it.contains(query, ignoreCase = true) }
     }
 
     SearchBar(
@@ -54,7 +54,7 @@ fun CustomSearchBar(
             if (active) {
                 Icon(
                     Icons.Default.Close, contentDescription = null,
-                    modifier = Modifier.clickable{
+                    modifier = Modifier.clickable {
                         query = ""
                     })
             } else {
@@ -81,28 +81,30 @@ fun CustomSearchBar(
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        if (filtered.isEmpty()) {
-            Text(
-                "Không tìm thấy kết quả",
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.padding(16.dp)
-            )
-        } else {
-            filtered.forEach { item ->
-                ListItem(
-                    headlineContent = { Text(item) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            query = item
-                            onSearch(item)
-                            active = false
-                        },
-                    colors = ListItemDefaults.colors(
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        headlineColor = MaterialTheme.colorScheme.onTertiary
-                    )
+        if (filtered != null) {
+            if (filtered.isEmpty()) {
+                Text(
+                    "Không tìm thấy kết quả",
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp)
                 )
+            } else {
+                filtered.forEach { item ->
+                    ListItem(
+                        headlineContent = { Text(item) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                query = item
+                                onSearch(item)
+                                active = false
+                            },
+                        colors = ListItemDefaults.colors(
+                            containerColor = MaterialTheme.colorScheme.tertiary,
+                            headlineColor = MaterialTheme.colorScheme.onTertiary
+                        )
+                    )
+                }
             }
         }
     }
