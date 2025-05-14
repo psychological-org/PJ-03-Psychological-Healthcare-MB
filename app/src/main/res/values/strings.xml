@@ -47,12 +47,17 @@
     <string name="sos1_title">Tìm kiếm sự giúp đỡ</string>
     <string name="sos2_body">Nếu bạn hoặc người thân của bạn đang trong tình trạng nguy hiểm và cần được giúp đỡ ngay lập tức, hãy liên hệ với những nguồn dưới đây để được hỗ trợ kịp thời!</string>
     <string name="sos3_information">Cảnh sát: 113  Y tế: 115 Đường dây bảo vệ trẻ em: 111 Đường dây nóng về sức khoẻ tâm lý: 0909 65 80 35 Facebook: https://www.facebook.com/ChamSocSucKhoeVietBKLN</string>
-<!--Diaru-->
-    <string name="di1_folder">Thư mục</string>
-    <string name="di2_default_note">Note </string>
+<!--Diary-->
+    <string name="di1_diary">Nhật ký</string>
+    <string name="di2_default_note">Note</string>
     <string name="di3_title">Tiêu đề</string>
     <string name="di4_record">Ghi âm</string>
-<!--    Doctor and Profile-->
+    <string name="di5_greeting">Tâm trạng của bạn thế nào?</string>
+    <string name="di6_record_your_thought">Ghi chép lại tâm trạng của bạn</string>
+    <string name="di7_review">Xem đặt lịch / xem tâm trạng</string>
+    <string name="di8_mood_count">Mood count / các lịch sắp tới</string>
+
+    <!--    Doctor and Profile-->
     <string name="do1_suggest">Đề xuất cho bạn</string>
     <string name="do2_access">Trang chủ</string>
     <string name="do3_following">Đang theo dõi</string>
@@ -86,8 +91,8 @@
     <string name="ap14_appointment_note">Bạn sẽ nhận được tin nhắn chi tiết về buổi điều trị từ $name trong vòng 1 giờ tiếp theo. An Yên chúc bạn có một hành trình trị liệu vui vẻ!</string>
 <!--Community-->
     <string name="co1_news">Bảng tin</string>
-    <string name="co2_chat">Chat</string>
-    <string name="co3_topic">Chủ đề</string>
+    <string name="co2_chat">Tin nhắn</string>
+    <string name="co3_communities">Cộng đồng của bạn</string>
     <string name="co4_recent_activity">Những hoạt động gần đây</string>
     <string name="co5_activity">Hoạt động</string>
     <string name="co6_member">Thành viên</string>
