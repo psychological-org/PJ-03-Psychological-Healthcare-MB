@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.example.beaceful.domain.model.Post
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
@@ -24,8 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.filled.Event
@@ -46,8 +43,7 @@ import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
-import com.example.beaceful.ui.components.cards.PostCard
-import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.components.lists.PostList
 
 @Composable
 fun SingleDoctorProfileScreen(
@@ -158,32 +154,13 @@ fun SingleDoctorProfileScreen(
             HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
 
             when (selectedTab) {
-                0 -> DoctorPostsList(posts = doctorPosts, navController = navController)
+                0 -> PostList(posts = doctorPosts, navController = navController)
                 1 -> DoctorAboutSection(biography = doctor.biography)
             }
         }
     }
 }
 
-@Composable
-fun DoctorPostsList(
-    posts: List<Post>,
-    navController: NavHostController
-) {
-
-    LazyColumn {
-        items(posts) { post ->
-            PostCard(
-                post = post,
-                isLiked = false,
-                onPostClick = {
-                    navController.navigate(PostDetails.createRoute(post.id))
-                },
-                onToggleLike = {},
-            )
-        }
-    }
-}
 
 
 
