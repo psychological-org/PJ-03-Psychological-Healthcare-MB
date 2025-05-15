@@ -18,7 +18,7 @@ data object Home : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "home"
 }
-data object Diary : BeacefulRoutes {
+data object DiaryRoute : BeacefulRoutes {
     override val icon = Icons.Filled.CollectionsBookmark
     override val route = "diary"
 }
@@ -70,10 +70,17 @@ data object PostDetails : BeacefulRoutes {
     fun createRoute(postId: Int): String = "postDetails/$postId"
 }
 
+data object DiaryDetails : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "diary_details/{diaryId}"
+
+    fun createRoute(diaryId: Int): String = "diary_details/$diaryId"
+}
+
 data object EditRoute : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "profile_edit"
 }
 
 
-val BeacefulBottomNavPatient = listOf(Home, Diary, Doctor, Forum, Profile)
+val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)

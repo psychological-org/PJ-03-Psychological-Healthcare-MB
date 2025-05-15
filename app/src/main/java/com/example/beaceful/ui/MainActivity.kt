@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -19,7 +18,7 @@ import com.example.beaceful.ui.components.BottomNavRow
 import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
-import com.example.beaceful.ui.navigation.Diary
+import com.example.beaceful.ui.navigation.DiaryRoute
 import com.example.beaceful.ui.navigation.Doctor
 import com.example.beaceful.ui.navigation.Forum
 import com.example.beaceful.ui.navigation.Home
@@ -48,7 +47,7 @@ fun BeacefulApp() {
                 route == null -> Home
                 route.startsWith("doctor") -> Doctor
                 route.startsWith("forum") -> Forum
-                route.startsWith("diary") -> Diary
+                route.startsWith("diary") -> DiaryRoute
                 else -> Home
             }
         }
@@ -57,7 +56,7 @@ fun BeacefulApp() {
             Home.route,
             Doctor.route,
             Forum.route,
-            Diary.route,
+            DiaryRoute.route,
             SingleDoctorProfile.route
             )
 

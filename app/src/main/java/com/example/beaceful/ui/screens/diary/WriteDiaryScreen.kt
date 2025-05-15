@@ -39,12 +39,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.beaceful.R
 import com.example.beaceful.core.util.formatDiaryDate
 import com.example.beaceful.domain.model.Emotions
@@ -63,7 +65,7 @@ fun SelectEmotionScreen(
 ) {
 
     Column(
-        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxSize()
     ) {
         Text(stringResource(R.string.di5_greeting))
         Text(
@@ -95,7 +97,7 @@ fun WriteDiaryScreen(
     modifier: Modifier = Modifier,
     selectedEmotion: Emotions,
 ) {
-//    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
+    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val diaryContentFromFullScreen = navController
         .currentBackStackEntry
         ?.savedStateHandle
@@ -117,9 +119,9 @@ fun WriteDiaryScreen(
             IconButton(onClick = {navController.popBackStack()}) {
                 Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
-            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null, modifier = Modifier.size(40.dp))
+            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(18.dp)))
         }
-        Spacer(Modifier.height(20.dp))
+        Spacer(Modifier.height(6.dp))
         Card(
             shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
             modifier = Modifier.fillMaxSize(),
@@ -285,7 +287,9 @@ fun FullscreenDiaryScreen(navController: NavHostController) {
 @Preview(showBackground = true, heightDp = 400)
 @Composable
 fun PreviewSelectEmotionScreen() {
-//    SelectEmotionScreen()
+    SelectEmotionScreen(
+        navController = rememberNavController()
+    )
 }
 
 //@Preview(showBackground = true, heightDp = 800)
