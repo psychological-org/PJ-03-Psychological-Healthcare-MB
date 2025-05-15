@@ -28,14 +28,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
 import com.example.beaceful.ui.components.cards.DiaryCard
+import com.example.beaceful.ui.navigation.DiaryDetails
+import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun DiaryScreen() {
+fun DiaryScreen(
+    navController: NavHostController
+) {
     val diaries = remember {
         DumpDataProvider.diaries
     }
@@ -62,14 +68,18 @@ fun DiaryScreen() {
                     Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null)
                 }
             }
-            DiaryListScreen(
-                diaries = diaries,
-
-                )
+//            DiaryListScreen(
+//                diaries = diaries,
+//                navController = navController
+//            )
+            CalendarDiaryScreen(
+                diaryList = diaries,
+                navController = navController
+            )
 
         }
         FloatingActionButton(
-            onClick = {},
+            onClick = {navController.navigate(SelectEmotionDiary.route)},
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 18.dp),
@@ -90,7 +100,7 @@ fun DiaryScreen() {
 fun DiaryListScreen(
     modifier: Modifier = Modifier,
     diaries: List<Diary>,
-//    navController: NavHostController
+    navController: NavHostController
 ) {
 
     LazyColumn(
@@ -101,18 +111,11 @@ fun DiaryListScreen(
         items(diaries) { diary ->
             DiaryCard(diary,
                 onDiaryClick = {
-//                    navController.navigate(SingleDoctorProfile.createRoute(diary.id))
+                    navController.navigate(DiaryDetails.createRoute(diary.id))
                 })
         }
         item {
             Spacer(Modifier.height(80.dp))
         }
     }
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun DiaryScreenPreview() {
-    DiaryScreen()
 }

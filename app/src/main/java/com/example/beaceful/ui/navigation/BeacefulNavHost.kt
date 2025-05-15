@@ -11,6 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
+import com.example.beaceful.ui.screens.diary.DiaryFullScreen
 import com.example.beaceful.ui.screens.diary.DiaryScreen
 import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
 import com.example.beaceful.ui.screens.diary.SelectEmotionScreen
@@ -34,10 +35,10 @@ fun BeacefulNavHost(
         modifier = modifier
     ) {
         composable(route = Home.route) {
-            HomeScreen()
+            HomeScreen(navController = navController)
         }
-        composable(route = Diary.route) {
-            DiaryScreen()
+        composable(route = DiaryRoute.route) {
+            DiaryScreen(navController = navController)
         }
         composable(route = Doctor.route) {
             DoctorScreen(navController = navController)
@@ -78,6 +79,15 @@ fun BeacefulNavHost(
             val postId = backStackEntry.arguments?.getInt("postId") ?: return@composable
             PostDetailsScreen(postId = postId)
         }
+
+        composable(
+            route = DiaryDetails.route,
+            arguments = listOf(navArgument("diaryId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val diaryId = backStackEntry.arguments?.getInt("diaryId") ?: return@composable
+            DiaryFullScreen(diaryId = diaryId)
+        }
+
 
         composable(
             route = WriteDiary.route,
