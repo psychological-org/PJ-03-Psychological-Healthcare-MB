@@ -52,26 +52,19 @@ import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
-import java.time.format.DateTimeFormatter
+import com.example.beaceful.domain.model.User
 
 @Composable
 fun PostCard(
     post: Post,
+    user: User,
+    commentCount: Int,
+    isLiked: Boolean,
     onPostClick: () -> Unit,
     onToggleLike: () -> Unit,
-    isLiked: Boolean,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
-    val comments = remember {
-        DumpDataProvider.comments.filter { it.postId == post.id }
-    }
-    val user = remember {
-        DumpDataProvider.listUser.find { it.id == post.posterId }
-    }
-    if (user == null) {
-        Text("User không tồn tại")
-    } else {
         Card(
             modifier = modifier
                 .fillMaxWidth()
@@ -157,7 +150,6 @@ fun PostCard(
                                 .clickable { expanded = true }
                         )
                     }
-                    // Hành động: thả tim + số comment + chia sẻ
                     Row(
                         horizontalArrangement = Arrangement.End,
                         verticalAlignment = Alignment.CenterVertically,
@@ -184,7 +176,7 @@ fun PostCard(
                             )
                         }
 
-                        Text("${comments.size}", color = MaterialTheme.colorScheme.secondary)
+                        Text("$commentCount", color = MaterialTheme.colorScheme.secondary)
                         Spacer(modifier = Modifier.width(12.dp))
                         IconButton(onClick = {}) {
                             Icon(
@@ -198,18 +190,6 @@ fun PostCard(
 
                 }
             }
-        }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun PostPreview() {
-    PostCard(
-        post = DumpDataProvider.posts[1],
-        onPostClick = {},
-        onToggleLike = {},
-        isLiked = false,
-        modifier = Modifier.padding(20.dp)
-    )
+    }
 }
