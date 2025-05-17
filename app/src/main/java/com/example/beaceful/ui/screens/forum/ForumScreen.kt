@@ -34,20 +34,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Community
-import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.viewmodel.ForumViewModel
 
 @Composable
-fun ForumScreen(navController: NavController) {
+fun ForumScreen(navController: NavController, viewModel: ForumViewModel = hiltViewModel()) {
     val tabTitles =
         listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -70,20 +72,16 @@ fun ForumScreen(navController: NavController) {
         HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
 
         when (selectedTab) {
-            0 -> NewsScreen(navController = navController)
+            0 -> NewsScreen(navController = navController, viewModel = viewModel)
             1 -> ChatScreen()
         }
     }
 }
 
 @Composable
-fun NewsScreen(navController: NavController) {
-    val communities = remember {
-        DumpDataProvider.communities
-    }
-    val posts = remember {
-        DumpDataProvider.posts
-    }
+fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
+    val communities = viewModel.communities
+    val allPosts = viewModel.allPosts
 
     LazyColumn(
         modifier = Modifier
@@ -123,14 +121,23 @@ fun NewsScreen(navController: NavController) {
             )
         }
 
-        items(posts) { post ->
-            PostCard(post = post, onPostClick = {
-                navController.navigate(PostDetails.createRoute(post.id))
-            }, onToggleLike = {}, isLiked = false)
+        items(allPosts) { post ->
+            val user = viewModel.getUserById(post.posterId) ?: return@items
+            val commentCount = viewModel.getCommentCount(post.id)
+            val isLiked = viewModel.isPostLiked(post.id)
+
+            PostCard(
+                post = post,
+                user = user,
+                commentCount = commentCount,
+                isLiked = isLiked,
+                onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
+                onToggleLike = { viewModel.toggleLike(post.id) }
+            )
+
         }
 
     }
-
 }
 
 @Composable
@@ -172,10 +179,3 @@ fun ChatScreen() {
         item { Text(stringResource(R.string.co10_friend_chat)) }
     }
 }
-
-
-//@Preview(widthDp = 360, heightDp = 840, showBackground = true)
-//@Composable
-//fun ForumScreenPreview() {
-//    ForumScreen()
-//}

@@ -32,7 +32,9 @@ import com.example.beaceful.domain.model.Diary
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.beaceful.ui.navigation.DiaryRoute
+import com.example.beaceful.ui.viewmodel.DiaryViewModel
 import java.time.DayOfWeek
 import java.time.LocalDate
 
@@ -40,7 +42,8 @@ import java.time.LocalDate
 fun CalendarDiaryScreen(
     navController: NavHostController,
     diaryList: List<Diary>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val today = remember { LocalDate.now() }
     val firstDayOfMonth = today.withDayOfMonth(1)
@@ -100,9 +103,7 @@ fun CalendarDiaryScreen(
                         val dayNumber = dayIndex - startDayOfWeek + 1
                         if (dayIndex >= startDayOfWeek && dayNumber <= daysInMonth) {
                             val date = firstDayOfMonth.withDayOfMonth(dayNumber)
-                            val diariesOnDay = diaryList.filter {
-                                it.createdAt.toLocalDate() == date
-                            }.sortedByDescending { it.createdAt }
+                            val diariesOnDay = viewModel.getDiariesOnDate(date)
 
                             val colors = diariesOnDay
                                 .take(2)
@@ -117,9 +118,7 @@ fun CalendarDiaryScreen(
                                     .clickable {
                                         val weekStart = date.with(DayOfWeek.MONDAY)
                                         val weekEnd = weekStart.plusDays(6)
-                                        val weeklyDiaries = diaryList.filter {
-                                            it.createdAt.toLocalDate() in weekStart..weekEnd
-                                        }
+                                        val weeklyDiaries = viewModel.getWeeklyDiaries(date)
                                         navController.currentBackStackEntry
                                             ?.savedStateHandle
                                             ?.set("weeklyDiaries", weeklyDiaries)

@@ -25,7 +25,9 @@ import com.example.beaceful.ui.navigation.Home
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.navigation.navigateSingleTopTo
 import com.example.beaceful.ui.theme.BeacefulTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
