@@ -22,6 +22,9 @@ fun PostList(
                     navController.navigate(PostDetails.createRoute(post.id))
                 },
                 onToggleLike = {},
+                user = TODO(),
+                commentCount = TODO(),
+                modifier = TODO(),
             )
         }
     }

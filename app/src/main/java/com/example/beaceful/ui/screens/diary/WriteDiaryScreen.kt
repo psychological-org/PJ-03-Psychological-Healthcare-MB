@@ -41,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -119,7 +120,7 @@ fun WriteDiaryScreen(
             IconButton(onClick = {navController.popBackStack()}) {
                 Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
             }
-            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(18.dp)))
+            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null,contentScale = ContentScale.Crop, modifier = Modifier.size(48.dp).clip(RoundedCornerShape(18.dp)))
         }
         Spacer(Modifier.height(6.dp))
         Card(

@@ -28,18 +28,21 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.beaceful.core.util.formatDiaryDate
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.ui.viewmodel.DiaryViewModel
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun DiaryFullScreen(
     diaryId: Int,
+    modifier: Modifier = Modifier,
     onDiaryClick: () -> Unit = {},
-    modifier: Modifier = Modifier
+    viewModel: DiaryViewModel = hiltViewModel()
 ) {
-    val diary = remember { DumpDataProvider.diaries.find { it.id == diaryId } }
+    val diary = viewModel.getDiary(diaryId)
     val expanded by remember { mutableStateOf(true) }
     if (diary != null) {
         Card(

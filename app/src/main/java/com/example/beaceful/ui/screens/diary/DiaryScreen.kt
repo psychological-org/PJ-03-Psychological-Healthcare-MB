@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
@@ -35,16 +36,16 @@ import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
 import com.example.beaceful.ui.components.cards.DiaryCard
 import com.example.beaceful.ui.navigation.DiaryDetails
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
+import com.example.beaceful.ui.viewmodel.DiaryViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 @Composable
 fun DiaryScreen(
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: DiaryViewModel = hiltViewModel()
 ) {
-    val diaries = remember {
-        DumpDataProvider.diaries
-    }
+    val diaries = viewModel.allDiaries
     Box {
         Column {
             Row(
@@ -68,14 +69,14 @@ fun DiaryScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, contentDescription = null)
                 }
             }
-//            DiaryListScreen(
-//                diaries = diaries,
-//                navController = navController
-//            )
-            CalendarDiaryScreen(
-                diaryList = diaries,
+            DiaryListScreen(
+                diaries = diaries,
                 navController = navController
             )
+//            CalendarDiaryScreen(Dỉa
+//                diaryList = diaries,
+//                navController = navController
+//            )
 
         }
         FloatingActionButton(
