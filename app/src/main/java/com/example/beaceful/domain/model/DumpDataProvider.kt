@@ -287,7 +287,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 5, 2, 9, 15),
         ),
         Diary(
             id = 2,
@@ -296,7 +296,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 5, 18, 20, 45),
         ),
         Diary(
             id = 3,
@@ -306,7 +306,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 5, 18, 14, 5),
         ),
         Diary(
             id = 4,
@@ -316,7 +316,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 5, 7, 11, 30),
         ),
         Diary(
             id = 5,
@@ -326,7 +326,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 4, 20, 18, 0),
         ),
         Diary(
             id = 6,
@@ -336,7 +336,7 @@ object DumpDataProvider {
             imageUrl = null,
             voiceUrl = null,
             posterId = 2,
-            createdAt = LocalDateTime.now()
+            createdAt = LocalDateTime.of(2025, 4, 25, 18, 0),
         ),
     )
 

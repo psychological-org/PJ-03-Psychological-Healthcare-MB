@@ -13,6 +13,14 @@ class DiaryRepository @Inject constructor() {
 
     fun getDiaryById(id: Int): Diary? = DumpDataProvider.diaries.find { it.id == id }
 
+    fun getDiariesInMonth(date: LocalDate): List<Diary> {
+        val year = date.year
+        val month = date.month
+        return DumpDataProvider.diaries.filter {
+            it.createdAt.year == year && it.createdAt.month == month
+        }.sortedByDescending { it.createdAt }
+    }
+
     fun getDiariesInWeek(date: LocalDate): List<Diary> {
         val monday = date.with(java.time.DayOfWeek.MONDAY)
         val sunday = monday.plusDays(6)

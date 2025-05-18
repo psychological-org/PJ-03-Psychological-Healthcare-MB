@@ -37,6 +37,11 @@ data object WriteDiaryExpand : BeacefulRoutes {
     override val route = "diary_write_fullscreen"
 }
 
+data object DiaryCalendar : BeacefulRoutes {
+    override val icon = Icons.Filled.CollectionsBookmark
+    override val route = "diary_calendar"
+}
+
 data object Doctor : BeacefulRoutes {
     override val icon = Icons.Filled.Healing
     override val route = "doctor"
