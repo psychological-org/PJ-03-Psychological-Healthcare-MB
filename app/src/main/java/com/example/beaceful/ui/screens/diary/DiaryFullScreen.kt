@@ -1,39 +1,38 @@
 package com.example.beaceful.ui.screens.diary
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.beaceful.core.util.formatDiaryDate
-import com.example.beaceful.domain.model.Diary
-import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.R
 import com.example.beaceful.ui.viewmodel.DiaryViewModel
-import java.time.format.DateTimeFormatter
 
 @Composable
 fun DiaryFullScreen(
@@ -43,61 +42,127 @@ fun DiaryFullScreen(
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
     val diary = viewModel.getDiary(diaryId)
-    val expanded by remember { mutableStateOf(true) }
-    if (diary != null) {
-        Card(
-            modifier = modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(18.dp))
-                .clickable { onDiaryClick() },
-            colors = CardDefaults.cardColors(
-                containerColor = diary.emotion.backgroundColor
-            )
-        ) {
-            Row(modifier = Modifier.padding(8.dp)) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+    ) {
+        if (diary != null) {
+            Column(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .background(MaterialTheme.colorScheme.background),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 Image(
-                    painterResource(diary.emotion.iconRes), contentDescription = null,
+                    painter = painterResource(diary.emotion.iconRes),
+                    contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
+                        .size(72.dp)
                         .clip(RoundedCornerShape(18.dp))
-                        .size(48.dp)
                 )
-                Spacer(Modifier.width(8.dp))
-                Column {
-                    Text(
-                        formatDiaryDate(diary.createdAt),
-                        color = MaterialTheme.colorScheme.onPrimary
-                    )
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                LazyColumn(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 16.dp)
+                        .padding(top = 16.dp)
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                        .background(MaterialTheme.colorScheme.primary),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    item {
                         Text(
-                            stringResource(diary.emotion.descriptionRes),
-                            color = diary.emotion.textColor,
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Text(
-                            " - ${diary.createdAt.format(DateTimeFormatter.ofPattern("HH:mm"))}",
+                            text = stringResource(R.string.di6_record_your_thought),
+                            style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
-                    Text(diary.title, color = MaterialTheme.colorScheme.onPrimary)
-                    if (diary.content != null) {
-                        Box {
-                            val contentModifier = if (expanded) {
-                                Modifier.fillMaxWidth()
-                            } else {
-                                Modifier
-                                    .fillMaxWidth()
-                                    .heightIn(max = 120.dp)
+                    // --- Diary Text Area ---
+                    item {
+                        Text(
+                            "Nhật ký",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.background,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        if (diary.content != null)
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.TopEnd
+                            ) {
+                                TextField(
+                                    value = diary.content,
+                                    onValueChange = { },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            MaterialTheme.colorScheme.secondary,
+                                            RoundedCornerShape(24.dp)
+                                        ),
+                                )
                             }
+                    }
+                    // --- Image/Video Upload ---
+                    item {
+                        Text(
+                            "Hình ảnh",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.background,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                        Spacer(Modifier.height(4.dp))
 
-                            Text(
-                                text = diary.content,
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.bodyMedium,
-                                maxLines = if (expanded) Int.MAX_VALUE else 5,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = contentModifier
-                            )
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            UploadButton(label = "Từ album") {
+                                // TODO: Mở picker
+                            }
+                            UploadButton(label = "Máy ảnh") {
+                                // TODO: Mở camera
+                            }
+                        }
+                    }
+
+                    // --- Voice Record ---
+                    item {
+                        Text(
+                            "Ghi âm",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.background,
+                                    RoundedCornerShape(8.dp)
+                                )
+                                .padding(horizontal = 12.dp, vertical = 4.dp)
+                        )
+                        Spacer(Modifier.height(4.dp))
+
+                        UploadButton(label = "Nhấn để ghi âm") {
+                            // TODO: Start recording
+                        }
+                    }
+
+                    // --- Confirm Button ---
+                    item {
+                        Button(
+                            onClick = { },
+                            shape = RoundedCornerShape(24.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                        ) {
+                            Text("Xác nhận", color = Color.White)
                         }
                     }
                 }
@@ -105,4 +170,6 @@ fun DiaryFullScreen(
         }
     }
 
+
 }
+

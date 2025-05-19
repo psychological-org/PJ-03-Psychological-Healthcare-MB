@@ -18,10 +18,14 @@ import com.example.beaceful.ui.components.BottomNavRow
 import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
+import com.example.beaceful.ui.navigation.DiaryCalendar
+import com.example.beaceful.ui.navigation.DiaryDetails
 import com.example.beaceful.ui.navigation.DiaryRoute
 import com.example.beaceful.ui.navigation.Doctor
 import com.example.beaceful.ui.navigation.Forum
 import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.Profile
+import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.navigation.navigateSingleTopTo
 import com.example.beaceful.ui.theme.BeacefulTheme
@@ -50,6 +54,7 @@ fun BeacefulApp() {
                 route.startsWith("doctor") -> Doctor
                 route.startsWith("forum") -> Forum
                 route.startsWith("diary") -> DiaryRoute
+                route.startsWith("profile") -> Profile
                 else -> Home
             }
         }
@@ -59,7 +64,11 @@ fun BeacefulApp() {
             Doctor.route,
             Forum.route,
             DiaryRoute.route,
-            SingleDoctorProfile.route
+            DiaryCalendar.route,
+            DiaryDetails.route,
+            SelectEmotionDiary.route,
+            SingleDoctorProfile.route,
+            Profile.route,
             )
 
         val currentScreen = resolveTab(currentDestination?.route)
