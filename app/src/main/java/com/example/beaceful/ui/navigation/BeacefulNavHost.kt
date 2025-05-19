@@ -116,13 +116,13 @@ fun BeacefulNavHost(
                 navController = navController
             )
         }
-        composable(
-            route = DiaryCalendar.route
-        ) {
-            CalendarDiaryScreen(
-                navController = navController
-            )
-        }
+//        composable(
+//            route = DiaryCalendar.route
+//        ) {
+//            CalendarDiaryScreen(
+//                navController = navController
+//            )
+//        }
     }
 }
 

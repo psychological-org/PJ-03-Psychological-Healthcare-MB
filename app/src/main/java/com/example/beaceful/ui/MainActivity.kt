@@ -24,6 +24,7 @@ import com.example.beaceful.ui.navigation.DiaryRoute
 import com.example.beaceful.ui.navigation.Doctor
 import com.example.beaceful.ui.navigation.Forum
 import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.Profile
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.navigation.navigateSingleTopTo
@@ -53,6 +54,7 @@ fun BeacefulApp() {
                 route.startsWith("doctor") -> Doctor
                 route.startsWith("forum") -> Forum
                 route.startsWith("diary") -> DiaryRoute
+                route.startsWith("profile") -> Profile
                 else -> Home
             }
         }
@@ -65,7 +67,8 @@ fun BeacefulApp() {
             DiaryCalendar.route,
             DiaryDetails.route,
             SelectEmotionDiary.route,
-            SingleDoctorProfile.route
+            SingleDoctorProfile.route,
+            Profile.route,
             )
 
         val currentScreen = resolveTab(currentDestination?.route)

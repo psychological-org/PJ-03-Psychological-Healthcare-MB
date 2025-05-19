@@ -14,6 +14,7 @@ import javax.inject.Inject
 class DiaryViewModel @Inject constructor(
     private val repo: DiaryRepository
 ) : ViewModel() {
+    val CURRENT_DIARY_MONTH_KEY = "current_month_diary"
 
     val allDiaries: List<Diary> = repo.getAllDiaries()
 

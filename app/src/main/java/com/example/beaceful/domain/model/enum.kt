@@ -39,3 +39,5 @@ enum class Emotions(
     SAD(Blue250, Blue, R.drawable.diary_mood_worried, R.string.worried),
     ANGRY(Salmon, Red, R.drawable.diary_mood_angry, R.string.angry)
 }
+
+enum class ViewMode { LIST, CALENDAR }
