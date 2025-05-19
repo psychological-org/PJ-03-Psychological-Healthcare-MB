@@ -116,7 +116,7 @@ fun WriteDiaryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
