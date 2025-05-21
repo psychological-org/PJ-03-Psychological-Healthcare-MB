@@ -7,7 +7,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import java.time.LocalDate
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 @HiltViewModel
@@ -20,8 +20,8 @@ class DiaryViewModel @Inject constructor(
 
     fun getDiary(id: Int): Diary? = repo.getDiaryById(id)
 
-    private val _currentMonth = MutableStateFlow(LocalDate.now().withDayOfMonth(1))
-    val currentMonth: StateFlow<LocalDate> = _currentMonth
+    private val _currentMonth = MutableStateFlow(LocalDateTime.now().withDayOfMonth(1))
+    val currentMonth: StateFlow<LocalDateTime> = _currentMonth
 
     fun goToPreviousMonth() {
         _currentMonth.update { it.minusMonths(1).withDayOfMonth(1) }
@@ -31,7 +31,7 @@ class DiaryViewModel @Inject constructor(
         _currentMonth.update { it.plusMonths(1).withDayOfMonth(1) }
     }
 
-    fun setMonth(month: LocalDate) {
+    fun setMonth(month: LocalDateTime) {
         _currentMonth.value = month.withDayOfMonth(1)
     }
 
@@ -40,12 +40,12 @@ class DiaryViewModel @Inject constructor(
         return repo.getDiariesInMonth(month)
     }
 
-    fun getDiariesInMonth(baseDate: LocalDate): List<Diary> =
+    fun getDiariesInMonth(baseDate: LocalDateTime): List<Diary> =
         repo.getDiariesInMonth(baseDate)
 
-    fun getDiariesInWeek(baseDate: LocalDate): List<Diary> =
+    fun getDiariesInWeek(baseDate: LocalDateTime): List<Diary> =
         repo.getDiariesInWeek(baseDate)
 
-    fun getDiariesOnDate(date: LocalDate): List<Diary> =
+    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
         repo.getDiariesOnDate(date)
 }

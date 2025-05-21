@@ -11,7 +11,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
-import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
+import com.example.beaceful.ui.screens.appointment.AppointmentScreen
 import com.example.beaceful.ui.screens.diary.DiaryFullScreen
 import com.example.beaceful.ui.screens.diary.DiaryScreen
 import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
@@ -116,13 +116,13 @@ fun BeacefulNavHost(
                 navController = navController
             )
         }
-//        composable(
-//            route = DiaryCalendar.route
-//        ) {
-//            CalendarDiaryScreen(
-//                navController = navController
-//            )
-//        }
+        composable(
+            route = AppointmentRoute.route
+        ) {
+            AppointmentScreen(
+                navController = navController
+            )
+        }
     }
 }
 

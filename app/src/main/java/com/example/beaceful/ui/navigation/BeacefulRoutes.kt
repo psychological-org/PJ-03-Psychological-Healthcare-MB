@@ -1,11 +1,13 @@
 package com.example.beaceful.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.TagFaces
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.beaceful.domain.model.Emotions
 
@@ -87,5 +89,14 @@ data object EditRoute : BeacefulRoutes {
     override val route = "profile_edit"
 }
 
+data object AppointmentRoute : BeacefulRoutes {
+    override val icon = Icons.Default.CalendarToday
+    override val route = "appointment"
+}
 
-val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)
+data object CustomerRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "customer"
+}
+
+val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, DiaryRoute)
