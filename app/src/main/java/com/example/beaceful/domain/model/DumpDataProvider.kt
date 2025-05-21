@@ -121,15 +121,105 @@ object DumpDataProvider {
     )
 
     /* ---------- APPOINTMENTS ---------- */
-//    val appointments = listOf(
-//        Appointment(
-//            id = 1,
-//            patientId = 2,
-//            doctorId = 1,
-//            appointmentDate = LocalDate.now().plusDays(3),
-//            appointmentTime = LocalTime.of(10, 0)
-//        )
-//    )
+    val appointments = listOf(
+        Appointment(
+            id = 1,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 2, 9, 15),
+            rating = 5,
+            note = "Note gi gi do",
+            review = "Good!",
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 2,
+            patientId = 5,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 6, 15, 0),
+            rating = 4,
+            note = "Something something",
+            review = "Cung cung",
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 3,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 10, 9, 15),
+            rating = null,
+            review = "",
+            status = AppointmentStatus.CANCELLED,
+        ),
+        Appointment(
+            id = 4,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 2, 9, 15),
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 5,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 3, 9, 15),
+            status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 6,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 3, 15, 45),
+            status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 7,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 4, 9, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 8,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 21, 20, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 9,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 21, 18, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 10,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 21, 19, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 11,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 21, 22, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
+        )
+
+
+    )
 
     /* ---------- COLLECTIONS ---------- */
     val collections = listOf(
