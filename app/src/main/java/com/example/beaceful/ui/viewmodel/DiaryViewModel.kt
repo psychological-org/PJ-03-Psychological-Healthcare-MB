@@ -12,7 +12,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-    private val repo: DiaryRepository
+    private val repo: DiaryRepository,
 ) : ViewModel() {
     val CURRENT_DIARY_MONTH_KEY = "current_month_diary"
 

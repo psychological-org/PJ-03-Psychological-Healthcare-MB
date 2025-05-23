@@ -11,7 +11,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
+import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
+import com.example.beaceful.ui.screens.customer.CustomerDetailsScreen
+import com.example.beaceful.ui.screens.customer.CustomerScreen
 import com.example.beaceful.ui.screens.diary.DiaryFullScreen
 import com.example.beaceful.ui.screens.diary.DiaryScreen
 import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
@@ -45,7 +48,7 @@ fun BeacefulNavHost(
             DoctorScreen(navController = navController)
         }
         composable(route = Forum.route) {
-            ForumScreen(navController = navController)
+            CustomerDetailsScreen(navController = navController, customerId = 4)
         }
 
         composable(
@@ -122,6 +125,27 @@ fun BeacefulNavHost(
             AppointmentScreen(
                 navController = navController
             )
+        }
+        composable(
+            route = CustomerRoute.route
+        ) {
+            CustomerScreen(
+                navController = navController
+            )
+        }
+        composable(
+            route = CustomerDetails.route,
+            arguments = listOf(navArgument("customerId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getInt("customerId") ?: return@composable
+            CustomerDetailsScreen(customerId = customerId, navController = navController)
+        }
+        composable(
+            route = AppointmentDetails.route,
+            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
+            AppointmentDetailsScreen(appointmentId = appointmentId)
         }
     }
 }

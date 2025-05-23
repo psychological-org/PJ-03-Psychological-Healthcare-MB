@@ -156,14 +156,14 @@ object DumpDataProvider {
             patientId = 4,
             doctorId = 2,
             appointmentDate = LocalDateTime.of(2025, 6, 2, 9, 15),
-            status = AppointmentStatus.CONFIRMED,
+            status = AppointmentStatus.COMPLETED,
         ),
         Appointment(
             id = 5,
             patientId = 4,
             doctorId = 2,
             appointmentDate = LocalDateTime.of(2025, 6, 3, 9, 15),
-            status = AppointmentStatus.PENDING,
+            status = AppointmentStatus.COMPLETED,
         ),
         Appointment(
             id = 6,

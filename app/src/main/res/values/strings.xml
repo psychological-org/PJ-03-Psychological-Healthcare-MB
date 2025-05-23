@@ -164,4 +164,12 @@
     <string name="sleep">Giấc ngủ</string>
     <string name="mood">Tâm trạng</string>
     <string name="nostalgia">Hoài niệm</string>
+<!--    Customer-->
+    <string name="cu1">Danh sách khách hàng</string>
+    <string name="cu2">Lịch hẹn của</string>
+    <string name="cu3">Lịch hẹn sắp tới</string>
+    <string name="cu4">Lịch hẹn đã hoàn thành</string>
+    <string name="cu5">Lịch hẹn đã hủy</string>
+    <string name="cu6">Lịch hẹn chờ duyệt</string>
+    <string name="cu7">Ghi chép của bác sĩ</string>
 </resources>

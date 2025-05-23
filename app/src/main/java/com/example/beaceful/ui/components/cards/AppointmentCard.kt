@@ -1,5 +1,13 @@
 package com.example.beaceful.ui.components.cards
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.VisibilityThreshold
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,23 +26,29 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -44,6 +58,8 @@ import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Appointment
+import com.example.beaceful.domain.model.AppointmentStatus
+import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
@@ -63,7 +79,7 @@ fun AppointmentCard(
             containerColor = MaterialTheme.colorScheme.primary
         )
     ) {
-        Column (
+        Column(
             modifier = Modifier.padding(8.dp)
         ) {
             Row(modifier = Modifier.padding(8.dp)) {
@@ -107,7 +123,7 @@ fun AppointmentCard(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.onClickReject() },
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary,
@@ -117,7 +133,7 @@ fun AppointmentCard(
                     Text(stringResource(R.string.cancel))
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.onClickAccept() },
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.onPrimary,
@@ -144,10 +160,11 @@ fun AppointmentList(
         modifier = modifier,
     ) {
         items(appointments) { appointment ->
-            AppointmentCard(appointment,
+            AppointmentCard(
+                appointment,
                 onAppointmentClick = {
-//                    navController.navigate(DiaryDetails.createRoute(diary.id))
-                })
+                },
+            )
         }
         item {
             Spacer(Modifier.height(80.dp))
