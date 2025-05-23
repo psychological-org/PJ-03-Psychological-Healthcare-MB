@@ -99,4 +99,19 @@ data object CustomerRoute : BeacefulRoutes {
     override val route = "customer"
 }
 
+data object CustomerDetails : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "customer_details/{customerId}"
+
+    fun createRoute(customerId: Int): String = "customer_details/$customerId"
+}
+
+data object AppointmentDetails : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "appointment_details/{appointmentId}"
+
+    fun createRoute(appointmentId: Int): String = "appointment_details/$appointmentId"
+}
+
+
 val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, DiaryRoute)
