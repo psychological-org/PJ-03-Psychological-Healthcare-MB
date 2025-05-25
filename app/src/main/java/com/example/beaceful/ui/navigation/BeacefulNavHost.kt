@@ -20,6 +20,7 @@ import com.example.beaceful.ui.screens.diary.DiaryScreen
 import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
 import com.example.beaceful.ui.screens.diary.SelectEmotionScreen
 import com.example.beaceful.ui.screens.diary.WriteDiaryScreen
+import com.example.beaceful.ui.screens.doctor.BookingScreen
 import com.example.beaceful.ui.screens.doctor.DoctorScreen
 import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
 import com.example.beaceful.ui.screens.forum.CommunityScreen
@@ -75,7 +76,13 @@ fun BeacefulNavHost(
             val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: return@composable
             SingleDoctorProfileScreen(navController = navController, doctorId = doctorId)
         }
-
+        composable(
+            route = Booking.route,
+            arguments = listOf(navArgument("doctorId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: return@composable
+            BookingScreen(navController = navController, doctorId = doctorId)
+        }
         composable(
             route = PostDetails.route,
             arguments = listOf(navArgument("postId") { type = NavType.IntType })

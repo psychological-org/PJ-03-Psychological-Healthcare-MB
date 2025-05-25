@@ -138,3 +138,9 @@ data class DoctorExpertise(
     val content: String,
     val doctorId: Int
 )
+
+data class TimeSlot(
+    val time: LocalDateTime,
+    val isBooked: Boolean
+)
+

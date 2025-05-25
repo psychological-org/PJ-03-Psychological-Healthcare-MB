@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,7 +32,8 @@ fun CustomCalendar(
     currentMonth: LocalDateTime,
     getColorsForDate: (LocalDateTime) -> List<Color>,
     highlightDates: (LocalDateTime) -> Boolean,
-    onClickDate: (LocalDateTime) -> Unit
+    onClickDate: (LocalDateTime) -> Unit,
+    isBookingMode: Boolean = false
 ) {
     val daysInMonth = currentMonth.toLocalDate().lengthOfMonth()
     val startDayOfWeek = currentMonth.dayOfWeek.value % 7
@@ -63,22 +65,31 @@ fun CustomCalendar(
                             val colors = getColorsForDate(date)
                             val isHighlighted = highlightDates(date)
 
+                            val isPast = if (isBookingMode) date.toLocalDate()
+                                .isBefore(LocalDate.now()) else false
+
+                            val baseModifier = Modifier
+                                .weight(1f)
+                                .aspectRatio(1f)
+                                .clip(CircleShape)
+
+                            val clickableModifier = if (!isPast && isHighlighted)
+                                Modifier.clickable { onClickDate(date) }
+                            else Modifier
+
+                            val borderModifier = if (date.toLocalDate() == LocalDate.now())
+                                Modifier.border(
+                                    2.dp,
+                                    MaterialTheme.colorScheme.secondary,
+                                    CircleShape
+                                )
+                            else Modifier
+
                             if (isHighlighted) {
                                 Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
-                                        .padding(2.dp)
-                                        .clip(CircleShape)
-                                        .clickable(onClick = { onClickDate(date) })
-                                        .then(
-                                            if (date.toLocalDate() == LocalDate.now())
-                                                Modifier.border(
-                                                    width = 2.dp,
-                                                    color = MaterialTheme.colorScheme.secondary,
-                                                    shape = CircleShape
-                                                )
-                                            else Modifier),
+                                    modifier = baseModifier
+                                        .then(clickableModifier)
+                                        .then(borderModifier),
                                     contentAlignment = Alignment.Center
                                 ) {
                                     Canvas(modifier = Modifier.size(36.dp)) {
@@ -98,27 +109,38 @@ fun CustomCalendar(
 
                                     Text(
                                         "$dayNumber",
-                                        color = MaterialTheme.colorScheme.primary,
-                                        style = MaterialTheme.typography.labelMedium,
+                                        color = if (isPast) MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.4f
+                                        )
+                                        else MaterialTheme.colorScheme.primary,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            textDecoration = if (isPast) TextDecoration.LineThrough else null
+                                        ),
                                         modifier = Modifier.align(Alignment.Center)
                                     )
                                 }
                             } else {
                                 Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .aspectRatio(1f)
+                                    modifier = baseModifier
+                                        .then(borderModifier)
                                         .then(
-                                            if (date.toLocalDate() == LocalDate.now())
-                                                Modifier.border(
-                                                    width = 2.dp,
-                                                    color = MaterialTheme.colorScheme.secondary,
-                                                    shape = CircleShape
-                                                )
-                                            else Modifier),
+                                            if (isBookingMode && !isPast)
+                                                Modifier.clickable { onClickDate(date) }
+                                            else Modifier
+                                        ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text("$dayNumber", textAlign = TextAlign.Center)
+                                    Text(
+                                        "$dayNumber",
+                                        color = if (isPast) MaterialTheme.colorScheme.onSurface.copy(
+                                            alpha = 0.4f
+                                        )
+                                        else MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.labelMedium.copy(
+                                            textDecoration = if (isPast) TextDecoration.LineThrough else null
+                                        ),
+                                        textAlign = TextAlign.Center
+                                    )
                                 }
                             }
                         } else {

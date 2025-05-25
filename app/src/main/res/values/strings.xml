@@ -172,4 +172,11 @@
     <string name="cu5">Lịch hẹn đã hủy</string>
     <string name="cu6">Lịch hẹn chờ duyệt</string>
     <string name="cu7">Ghi chép của bác sĩ</string>
+<!--    Booking-->
+    <string name="bo1">Chọn một ngày</string>
+    <string name="bo2">Chọn một khung giờ</string>
+    <string name="bo3">Bạn đã đặt lịch khám thành công!</string>
+    <string name="bo4">Bạn sẽ nhận được tin nhắn chi tiết về buổi điều trị từ</string>
+    <string name="bo5">trong vòng 1 giờ tiếp theo.</string>
+
 </resources>
