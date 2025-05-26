@@ -3,6 +3,7 @@ package com.example.beaceful.ui.navigation
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -12,6 +13,7 @@ import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
 import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
+import com.example.beaceful.ui.screen.ChatDetailScreen
 import com.example.beaceful.ui.screens.diary.DiaryFullScreen
 import com.example.beaceful.ui.screens.diary.DiaryScreen
 import com.example.beaceful.ui.screens.diary.FullscreenDiaryScreen
@@ -123,6 +125,22 @@ fun BeacefulNavHost(
 //                navController = navController
 //            )
 //        }
+        composable(
+            route = ChatDetailRoute.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("userName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+            ChatDetailScreen(
+                userId = userId,
+                userName = userName,
+                onBack = { navController.popBackStack() },
+                viewModel = viewModel()
+            )
+        }
     }
 }
 

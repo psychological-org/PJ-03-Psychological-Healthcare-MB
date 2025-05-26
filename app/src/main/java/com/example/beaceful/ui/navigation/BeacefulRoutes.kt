@@ -1,6 +1,7 @@
 package com.example.beaceful.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Healing
@@ -85,6 +86,13 @@ data object DiaryDetails : BeacefulRoutes {
 data object EditRoute : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "profile_edit"
+}
+
+data object ChatDetailRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Chat
+    override val route = "chatDetail/{userId}/{userName}"
+
+    fun createRoute(userId: Int, userName: String): String = "chatDetail/$userId/$userName"
 }
 
 

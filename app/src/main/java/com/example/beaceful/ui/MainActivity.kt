@@ -13,6 +13,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.beaceful.domain.firebase.FirebaseTest
 import com.example.beaceful.R
 import com.example.beaceful.ui.components.BottomNavRow
 import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
@@ -36,6 +37,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        FirebaseTest.testConnection()
         setContent {
             BeacefulApp()
         }
