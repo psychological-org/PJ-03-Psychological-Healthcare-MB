@@ -29,7 +29,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,9 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
-import com.example.beaceful.core.util.formatAppointmentDate
-import com.example.beaceful.domain.model.Diary
-import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.calendar.CustomCalendar
 import com.example.beaceful.ui.viewmodel.BookingViewModel
 import java.time.LocalDate
@@ -171,6 +167,8 @@ fun BookingScreen(
                         )
 
                         Spacer(Modifier.height(12.dp))
+                        val bookedSlots: List<LocalDateTime> =
+                            viewModel.getBookedTime(doctorId)
 //                        Pick time
                         Box(
                             modifier = Modifier.background(
@@ -190,8 +188,7 @@ fun BookingScreen(
                                     }
                                 }
                             ) { selectedDate ->
-                                val bookedSlots: List<LocalDateTime> =
-                                    viewModel.getBookedAppointments(doctorId, selectedDate)
+
                                 val timeSlots =
                                     viewModel.generateTimeSlots(selectedDate, bookedSlots)
 

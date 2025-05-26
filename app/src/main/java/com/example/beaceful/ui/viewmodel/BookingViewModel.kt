@@ -25,10 +25,6 @@ class BookingViewModel @Inject constructor(
         _currentMonth.update { it.plusMonths(1).withDayOfMonth(1) }
     }
 
-    fun setMonth(month: LocalDateTime) {
-        _currentMonth.value = month.withDayOfMonth(1)
-    }
-
     fun generateTimeSlots(
         selectedDate: LocalDate,
         bookedTimes: List<LocalDateTime>
@@ -42,11 +38,9 @@ class BookingViewModel @Inject constructor(
         }
     }
 
-    fun getBookedAppointments(doctorId: Int, selectedDate: LocalDate): List<LocalDateTime> {
-        return listOf(
-            LocalDateTime.of(2025, 5, 25, 15, 0),
-            LocalDateTime.of(2025, 5, 26, 8, 0)
-        )
+    fun getBookedTime(doctorId: Int): List<LocalDateTime> {
+        val bookedAppointments = repo.getAppointmentsOfDoctor(doctorId)
+        return bookedAppointments.map { it.appointmentDate }
     }
 
 }
