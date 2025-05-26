@@ -10,15 +10,15 @@ object FirebaseTest {
         val auth = FirebaseAuth.getInstance()
         val database = FirebaseDatabase.getInstance("https://chatapplication-a7712-default-rtdb.asia-southeast1.firebasedatabase.app")
 
-        auth.signInWithEmailAndPassword("testuser@gmail.com", "123456")
+        auth.signInWithEmailAndPassword("testuser2@gmail.com", "123456")
             .addOnSuccessListener {
                 Log.d("FirebaseTest", "Login success: ${auth.currentUser?.uid}")
                 val uid = auth.currentUser?.uid ?: return@addOnSuccessListener
                 // Lưu user với uid
                 val user = User(
-                    id = uid.toIntOrNull() ?: 1,
-                    fullName = "quang",
-                    email = "testuser@gmail.com",
+                    id = uid.toIntOrNull() ?: 2,
+                    fullName = "quang 2",
+                    email = "testuser2@gmail.com",
                     roleId = 1,
                     password = "hashed_password"
                 ).copy(uid = uid) // Thêm uid vào model
