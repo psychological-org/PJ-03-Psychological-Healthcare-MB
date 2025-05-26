@@ -19,7 +19,7 @@ enum class RoleType { ADMIN, DOCTOR, PATIENT }
 
 enum class FriendStatus { ACCEPTED, DECLINED, BLOCKED, PENDING }
 
-enum class AppointmentStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }
+enum class AppointmentStatus { PENDING, CONFIRMED, COMPLETED, CANCELLED  }
 
 enum class NotificationType { SYSTEM, FRIEND_REQUEST, APPOINTMENT, OTHER }
 
@@ -41,3 +41,4 @@ enum class Emotions(
 }
 
 enum class ViewMode { LIST, CALENDAR }
+

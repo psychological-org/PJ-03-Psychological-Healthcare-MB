@@ -79,7 +79,7 @@ fun CustomSearchBar(
         ),
         modifier = modifier
             .fillMaxWidth()
-            .padding(16.dp)
+            .padding(horizontal = 16.dp)
     ) {
         if (filtered != null) {
             if (filtered.isEmpty()) {
