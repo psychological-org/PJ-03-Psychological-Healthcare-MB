@@ -1,7 +1,11 @@
 package com.example.beaceful.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
+import com.example.beaceful.domain.model.Appointment
+import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.Diary
+import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.domain.repository.DiaryRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,13 +16,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DiaryViewModel @Inject constructor(
-    private val repo: DiaryRepository,
+    val repo: DiaryRepository,
 ) : ViewModel() {
-    val CURRENT_DIARY_MONTH_KEY = "current_month_diary"
-
-    val allDiaries: List<Diary> = repo.getAllDiaries()
-
-    fun getDiary(id: Int): Diary? = repo.getDiaryById(id)
 
     private val _currentMonth = MutableStateFlow(LocalDateTime.now().withDayOfMonth(1))
     val currentMonth: StateFlow<LocalDateTime> = _currentMonth
@@ -31,21 +30,22 @@ class DiaryViewModel @Inject constructor(
         _currentMonth.update { it.plusMonths(1).withDayOfMonth(1) }
     }
 
-    fun setMonth(month: LocalDateTime) {
-        _currentMonth.value = month.withDayOfMonth(1)
+    fun moodCount(month: LocalDateTime): Map<Emotions, Int> {
+        val count = repo.getDiariesInMonth(month).groupingBy { it.emotion }.eachCount()
+        return Emotions.entries.associateWith { count[it] ?: 0 }
     }
 
-    fun getDiariesInCurrentMonth(): List<Diary> {
-        val month = currentMonth.value
-        return repo.getDiariesInMonth(month)
-    }
+    fun getAppointments(userId: Int): List<Appointment> =
+        DumpDataProvider.appointments.filter { it.patientId == userId }
 
-    fun getDiariesInMonth(baseDate: LocalDateTime): List<Diary> =
-        repo.getDiariesInMonth(baseDate)
+    fun getAppointmentsOnDate(userId: Int, date: LocalDateTime): List<Appointment> =
+        DumpDataProvider.appointments.filter { it.patientId == userId && it.appointmentDate == date }
 
-    fun getDiariesInWeek(baseDate: LocalDateTime): List<Diary> =
-        repo.getDiariesInWeek(baseDate)
+    fun getUpcoming(userId: Int): List<Appointment> = getAppointmentsOnDate(
+        userId = userId,
+        date = LocalDateTime.now()
+    ).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
 
-    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
-        repo.getDiariesOnDate(date)
+    fun getDoctorByAppointment(appointment: Appointment) = repo.getUserById(appointment.doctorId)
+
 }

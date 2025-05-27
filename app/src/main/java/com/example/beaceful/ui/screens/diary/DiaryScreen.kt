@@ -114,7 +114,7 @@ fun DiaryScreen(
                     }
                 ) { month ->
                     DiaryList(
-                        diaries = viewModel.getDiariesInMonth(month),
+                        diaries = viewModel.repo.getDiariesInMonth(month),
                         navController = navController
                     )
                 }
