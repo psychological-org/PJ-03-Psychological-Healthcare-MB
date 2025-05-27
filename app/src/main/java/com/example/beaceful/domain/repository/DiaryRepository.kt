@@ -2,6 +2,7 @@ package com.example.beaceful.domain.repository
 
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.User
 import java.time.LocalDate
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -33,4 +34,6 @@ class DiaryRepository @Inject constructor() {
 
     fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
         DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
+    fun getUserById(userId: Int): User? =
+        DumpDataProvider.listUser.find { it.id == userId }
 }

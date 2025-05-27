@@ -44,7 +44,8 @@ fun CustomCalendar(
                 Text(
                     text = it,
                     modifier = Modifier.weight(1f),
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
             }
         }

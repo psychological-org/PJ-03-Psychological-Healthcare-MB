@@ -33,8 +33,8 @@ enum class Emotions(
     @DrawableRes val iconRes: Int,
     @StringRes val descriptionRes: Int,
 ) {
-    INLOVE(Pink250, Pink, R.drawable.diary_mood_inlove, R.string.in_love),
-    HAPPY(Orange250, Orange, R.drawable.diary_mood_grateful, R.string.grateful),
+    INLOVE(Orange250, Orange, R.drawable.diary_mood_inlove, R.string.in_love),
+    HAPPY(Pink250, Pink, R.drawable.diary_mood_grateful, R.string.grateful),
     CONFUSE(Teal250, Teal, R.drawable.diary_mood_confused, R.string.confused),
     SAD(Blue250, Blue, R.drawable.diary_mood_worried, R.string.worried),
     ANGRY(Salmon, Red, R.drawable.diary_mood_angry, R.string.angry)
