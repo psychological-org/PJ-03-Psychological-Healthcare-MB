@@ -47,6 +47,7 @@ import coil3.compose.AsyncImage
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.ui.components.cards.PostCard
+import com.example.beaceful.ui.navigation.Booking
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.viewmodel.DoctorViewModel
 
@@ -97,7 +98,7 @@ fun SingleDoctorProfileScreen(
 
                     // button
                     Button(
-                        onClick = {},
+                        onClick = {navController.navigate(Booking.createRoute(doctorId))},
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),

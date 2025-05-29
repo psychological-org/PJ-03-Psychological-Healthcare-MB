@@ -121,15 +121,105 @@ object DumpDataProvider {
     )
 
     /* ---------- APPOINTMENTS ---------- */
-//    val appointments = listOf(
-//        Appointment(
-//            id = 1,
-//            patientId = 2,
-//            doctorId = 1,
-//            appointmentDate = LocalDate.now().plusDays(3),
-//            appointmentTime = LocalTime.of(10, 0)
-//        )
-//    )
+    val appointments = listOf(
+        Appointment(
+            id = 1,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 2, 9, 0),
+            rating = 5,
+            note = "Note gi gi do",
+            review = "Good!",
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 2,
+            patientId = 5,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 6, 15, 0),
+            rating = 4,
+            note = "Something something",
+            review = "Cung cung",
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 3,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 10, 9, 0),
+            rating = null,
+            review = "",
+            status = AppointmentStatus.CANCELLED,
+        ),
+        Appointment(
+            id = 4,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 2, 9, 0),
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 5,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 3, 9, 0),
+            status = AppointmentStatus.COMPLETED,
+        ),
+        Appointment(
+            id = 6,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 3, 15, 0),
+            status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 7,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 6, 4, 9, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 8,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 21, 14, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 9,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 28, 10, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 10,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 27, 14, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.CONFIRMED,
+        ),
+        Appointment(
+            id = 11,
+            patientId = 4,
+            doctorId = 2,
+            appointmentDate = LocalDateTime.of(2025, 5, 26, 7, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
+        )
+
+
+    )
 
     /* ---------- COLLECTIONS ---------- */
     val collections = listOf(
@@ -337,6 +427,26 @@ object DumpDataProvider {
             voiceUrl = null,
             posterId = 2,
             createdAt = LocalDateTime.of(2025, 4, 25, 18, 0),
+        ),
+        Diary(
+            id = 7,
+            emotion = Emotions.HAPPY,
+            title = "Nhật ký 6",
+            content = "Long post abcxyz \nSeodit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
+            imageUrl = null,
+            voiceUrl = null,
+            posterId = 2,
+            createdAt = LocalDateTime.of(2025, 5, 25, 18, 0),
+        ),
+        Diary(
+            id = 8,
+            emotion = Emotions.HAPPY,
+            title = "Nhật ký 6",
+            content = "Long post abcxyz \nSeodit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem. Ut enim ad minima veniam, quis nostrum exercitationem ullam corporis suscipit laboriosam, nisi ut aliquid ex ea commodi consequatur? Quis autem vel eum iure reprehenderit qui in ea voluptate velit esse quam nihil molestiae consequatur, vel illum qui dolorem eum fugiat quo voluptas nulla pariatur?",
+            imageUrl = null,
+            voiceUrl = null,
+            posterId = 2,
+            createdAt = LocalDateTime.of(2025, 5, 11, 18, 0),
         ),
     )
 

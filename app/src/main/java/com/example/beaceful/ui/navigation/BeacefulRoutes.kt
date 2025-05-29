@@ -2,11 +2,13 @@ package com.example.beaceful.ui.navigation
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Healing
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.TagFaces
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.beaceful.domain.model.Emotions
 
@@ -93,7 +95,37 @@ data object ChatDetailRoute : BeacefulRoutes {
     override val route = "chatDetail/{userId}/{userName}"
 
     fun createRoute(userId: Int, userName: String): String = "chatDetail/$userId/$userName"
+
+data object AppointmentRoute : BeacefulRoutes {
+    override val icon = Icons.Default.CalendarToday
+    override val route = "appointment"
+}
+
+data object CustomerRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "customer"
+}
+
+data object CustomerDetails : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "customer_details/{customerId}"
+
+    fun createRoute(customerId: Int): String = "customer_details/$customerId"
+}
+
+data object AppointmentDetails : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "appointment_details/{appointmentId}"
+
+    fun createRoute(appointmentId: Int): String = "appointment_details/$appointmentId"
+}
+
+data object Booking : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "doctorProfile/{doctorId}/booking"
+
+    fun createRoute(doctorId: Int) = "doctorProfile/$doctorId/booking"
 }
 
 
-val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)
+val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, DiaryRoute)

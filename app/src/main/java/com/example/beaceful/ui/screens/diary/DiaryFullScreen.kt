@@ -41,7 +41,7 @@ fun DiaryFullScreen(
     onDiaryClick: () -> Unit = {},
     viewModel: DiaryViewModel = hiltViewModel()
 ) {
-    val diary = viewModel.getDiary(diaryId)
+    val diary = viewModel.repo.getDiaryById(diaryId)
     Box(
         modifier = Modifier
             .fillMaxSize()

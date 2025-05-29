@@ -62,8 +62,8 @@ data class Appointment(
     val status: AppointmentStatus = AppointmentStatus.PENDING,
     val patientId: Int,
     val doctorId: Int,
-    val appointmentDate: LocalDate,
-    val appointmentTime: LocalTime,
+    val appointmentDate: LocalDateTime,
+    val note: String? = null,
     val rating: Int? = null,          // 1–5 sao
     val review: String? = null
 )
@@ -139,3 +139,9 @@ data class DoctorExpertise(
     val content: String,
     val doctorId: Int
 )
+
+data class TimeSlot(
+    val time: LocalDateTime,
+    val isBooked: Boolean
+)
+

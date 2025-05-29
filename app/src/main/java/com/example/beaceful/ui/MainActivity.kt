@@ -17,9 +17,12 @@ import com.example.beaceful.domain.firebase.FirebaseTest
 import com.example.beaceful.R
 import com.example.beaceful.domain.amazon.S3Manager
 import com.example.beaceful.ui.components.BottomNavRow
+import com.example.beaceful.ui.navigation.AppointmentRoute
 import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
+import com.example.beaceful.ui.navigation.Booking
+import com.example.beaceful.ui.navigation.CustomerRoute
 import com.example.beaceful.ui.navigation.DiaryCalendar
 import com.example.beaceful.ui.navigation.DiaryDetails
 import com.example.beaceful.ui.navigation.DiaryRoute
@@ -73,6 +76,9 @@ fun BeacefulApp() {
             SelectEmotionDiary.route,
             SingleDoctorProfile.route,
             Profile.route,
+            Booking.route,
+            AppointmentRoute.route,
+            CustomerRoute.route
             )
 
         val currentScreen = resolveTab(currentDestination?.route)

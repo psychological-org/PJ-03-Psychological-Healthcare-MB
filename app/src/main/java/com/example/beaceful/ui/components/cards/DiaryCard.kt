@@ -2,15 +2,20 @@ package com.example.beaceful.ui.components.cards
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -20,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,14 +32,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.beaceful.core.util.formatDiaryDate
 import java.time.format.DateTimeFormatter
 import com.example.beaceful.domain.model.Diary
-import com.example.beaceful.domain.model.DumpDataProvider
-import java.time.LocalDate
-import java.time.LocalDateTime
+import com.example.beaceful.ui.navigation.DiaryDetails
 
 @Composable
 fun DiaryCard(
@@ -95,11 +97,25 @@ fun DiaryCard(
     }
 }
 
-@Preview(showBackground = true)
 @Composable
-fun DiaryPreview() {
-    DiaryCard(
-        diary = DumpDataProvider.diaries[0],
-        onDiaryClick = {},
-    )
+fun DiaryList(
+    modifier: Modifier = Modifier,
+    diaries: List<Diary>,
+    navController: NavHostController
+) {
+    LazyColumn(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier,
+    ) {
+        items(diaries) { diary ->
+            DiaryCard(diary,
+                onDiaryClick = {
+                    navController.navigate(DiaryDetails.createRoute(diary.id))
+                })
+        }
+        item {
+            Spacer(Modifier.height(80.dp))
+        }
+    }
 }

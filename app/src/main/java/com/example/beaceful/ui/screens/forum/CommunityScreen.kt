@@ -44,7 +44,7 @@ import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.ui.components.CustomInputField
 import com.example.beaceful.ui.components.cards.PostCard
-import com.example.beaceful.ui.components.lists.UserList
+import com.example.beaceful.ui.components.cards.UserList
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.viewmodel.ForumViewModel

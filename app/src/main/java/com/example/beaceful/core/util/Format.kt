@@ -21,5 +21,17 @@ fun formatDate (date: LocalDateTime): String {
 }
 
 fun formatDateWithHour (date: LocalDateTime): String {
-    return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))
+    return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy - HH:mm"))
+}
+
+fun formatAppointmentDate(date: LocalDateTime): String {
+    val today = LocalDate.now()
+    val tomorrow = today.plusDays(1)
+    val dateFormated = formatDateWithHour(date)
+
+    return when (date.toLocalDate()) {
+        today -> "Hôm nay, $dateFormated"
+        tomorrow -> "Ngày mai, $dateFormated"
+        else -> dateFormated
+    }
 }
