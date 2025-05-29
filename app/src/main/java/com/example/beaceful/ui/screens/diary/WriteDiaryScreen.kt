@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -39,12 +40,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.beaceful.R
 import com.example.beaceful.core.util.formatDiaryDate
 import com.example.beaceful.domain.model.Emotions
@@ -63,7 +67,9 @@ fun SelectEmotionScreen(
 ) {
 
     Column(
-        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.fillMaxSize()
     ) {
         Text(stringResource(R.string.di5_greeting))
         Text(
@@ -95,13 +101,13 @@ fun WriteDiaryScreen(
     modifier: Modifier = Modifier,
     selectedEmotion: Emotions,
 ) {
-//    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val diaryContentFromFullScreen = navController
         .currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow(SAVED_DIARY_KEY, "")
     var diaryText by remember { mutableStateOf("") }
-    val latestDiaryText by diaryContentFromFullScreen?.collectAsState() ?: remember { mutableStateOf("") }
+    val latestDiaryText by diaryContentFromFullScreen?.collectAsState()
+        ?: remember { mutableStateOf("") }
 
     LaunchedEffect(latestDiaryText) {
         diaryText = latestDiaryText
@@ -110,28 +116,47 @@ fun WriteDiaryScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = {navController.popBackStack()}) {
-                Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ChevronLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null, modifier = Modifier.size(40.dp))
+            Image(
+                painter = painterResource(selectedEmotion.iconRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(18.dp))
+            )
         }
-        Spacer(Modifier.height(20.dp))
-        Card(
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            modifier = Modifier.fillMaxSize(),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+        Spacer(Modifier.height(6.dp))
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .background(MaterialTheme.colorScheme.primary),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            item {
                 Text(
                     text = stringResource(R.string.di6_record_your_thought),
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
+            }
 
-                // --- Diary Text Area ---
+            // --- Diary Text Area ---
+            item {
                 Text(
                     "Nhật ký",
                     style = MaterialTheme.typography.labelSmall,
@@ -140,6 +165,8 @@ fun WriteDiaryScreen(
                         .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+                Spacer(Modifier.height(4.dp))
+
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                     TextField(
                         value = diaryText,
@@ -152,13 +179,12 @@ fun WriteDiaryScreen(
                                 MaterialTheme.colorScheme.secondary,
                                 RoundedCornerShape(24.dp)
                             ),
-//                        colors = TextFieldDefaults.colors(
-//                            containerColor = Color.Transparent,
-//                            textColor = Color(0xFF1A0033)
-//                        )
                     )
                     IconButton(onClick = {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(SAVED_DIARY_KEY, diaryText)
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            SAVED_DIARY_KEY,
+                            diaryText
+                        )
                         navController.navigate(WriteDiaryExpand.route)
                     }) {
                         Icon(
@@ -168,18 +194,22 @@ fun WriteDiaryScreen(
                         )
                     }
                 }
-
-                Spacer(Modifier.height(12.dp))
-
-                // --- Image/Video Upload ---
+            }
+            // --- Image/Video Upload ---
+            item {
                 Text(
                     "Hình ảnh",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+                Spacer(Modifier.height(4.dp))
+
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     UploadButton(label = "Từ album") {
                         // TODO: Mở picker
@@ -188,27 +218,32 @@ fun WriteDiaryScreen(
                         // TODO: Mở camera
                     }
                 }
+            }
 
-                Spacer(Modifier.height(12.dp))
-
-                // --- Voice Record ---
+            // --- Voice Record ---
+            item {
                 Text(
                     "Ghi âm",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+                Spacer(Modifier.height(4.dp))
+
                 UploadButton(label = "Nhấn để ghi âm") {
                     // TODO: Start recording
                 }
+            }
 
-                Spacer(Modifier.height(16.dp))
-
-                // --- Confirm Button ---
+            // --- Confirm Button ---
+            item {
                 Button(
-                    onClick = {  },
+                    onClick = { },
                     shape = RoundedCornerShape(24.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -219,6 +254,7 @@ fun WriteDiaryScreen(
         }
     }
 }
+
 
 @Composable
 fun UploadButton(label: String, onClick: () -> Unit) {
@@ -285,7 +321,9 @@ fun FullscreenDiaryScreen(navController: NavHostController) {
 @Preview(showBackground = true, heightDp = 400)
 @Composable
 fun PreviewSelectEmotionScreen() {
-//    SelectEmotionScreen()
+    SelectEmotionScreen(
+        navController = rememberNavController()
+    )
 }
 
 //@Preview(showBackground = true, heightDp = 800)

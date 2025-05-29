@@ -25,6 +25,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,30 +46,30 @@ import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.DumpDataProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.PostVisibility
+import com.example.beaceful.domain.model.User
+import com.example.beaceful.ui.viewmodel.PostDetailsViewModel
 import java.time.LocalDateTime
 
 
 @Composable
 fun PostDetailsScreen(
     postId: Int,
+    viewModel: PostDetailsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val post = remember {
-        DumpDataProvider.posts.find { it.id == postId }
-    }
-    val author = remember {
-        DumpDataProvider.listUser.find { it.id == post?.posterId }
-    }
-    val comments = remember {
-        DumpDataProvider.comments.filter { it.postId == postId }
-    }
+    val post = viewModel.getPost(postId)
+    val author = viewModel.getAuthor(postId)
+    val initialComments = remember { viewModel.getComments(postId) }
+
     var commentText by remember { mutableStateOf("") }
 
-    val localComments =
-        remember { mutableStateListOf<Comment>().apply { addAll(comments) } }
-
+    LaunchedEffect(Unit) {
+        viewModel.localComments.clear()
+        viewModel.localComments.addAll(initialComments)
+    }
     if (post == null) {
         Text("Post không tồn tại")
     } else {
@@ -98,7 +99,7 @@ fun PostDetailsScreen(
                                     shape = CircleShape
                                 )
                         )
-                        Column (modifier = Modifier.padding(start = 8.dp)) {
+                        Column(modifier = Modifier.padding(start = 8.dp)) {
                             Text(
                                 author.fullName, color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.titleMedium
@@ -142,28 +143,23 @@ fun PostDetailsScreen(
                 )
             }
             item {
-                CustomInputField (
+                CustomInputField(
                     placeholder = R.string.write_your_comment,
                     inputText = commentText,
                     onTextChange = { commentText = it },
-                    onSent = {localComments.add(
-                    Comment(
-                        id = localComments.size + 1,
-                        postId = post.id,
-                        userId = 0,
-                        content = commentText.trim(),
-                        createdAt = LocalDateTime.now()
-                    )
+                    onSent = {
+                        viewModel.submitComment(post.id, 0, commentText)
+                        commentText = ""
+                    }
                 )
-                    commentText = ""})
             }
-            if (localComments.size == 0) {
+            if (viewModel.localComments.isEmpty()) {
                 item {
                     Text("Chưa có bình luận", color = MaterialTheme.colorScheme.secondary)
                 }
             } else {
-                items(localComments) { comment ->
-                    CommentCard(comment = comment)
+                items(viewModel.localComments) { comment ->
+                    CommentCard(comment = comment, commenter = viewModel.getCommenter(comment))
                 }
             }
         }
@@ -171,8 +167,7 @@ fun PostDetailsScreen(
 }
 
 @Composable
-fun CommentCard(comment: Comment) {
-    val commenter = remember { DumpDataProvider.listUser.find { it.id == comment.userId } }
+fun CommentCard(comment: Comment, commenter: User?) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RectangleShape,
@@ -208,7 +203,8 @@ fun CommentCard(comment: Comment) {
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    formatDateWithHour(comment.createdAt), color = MaterialTheme.colorScheme.secondary,
+                    formatDateWithHour(comment.createdAt),
+                    color = MaterialTheme.colorScheme.secondary,
                     style = MaterialTheme.typography.titleSmall
                 )
                 Spacer(Modifier.height(6.dp))

@@ -1,4 +1,4 @@
-package com.example.beaceful.ui.components.lists
+package com.example.beaceful.ui.components.cards
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

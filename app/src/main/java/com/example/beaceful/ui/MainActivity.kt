@@ -5,7 +5,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -16,17 +15,26 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.beaceful.R
 import com.example.beaceful.ui.components.BottomNavRow
+import com.example.beaceful.ui.navigation.AppointmentRoute
 import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
-import com.example.beaceful.ui.navigation.Diary
+import com.example.beaceful.ui.navigation.Booking
+import com.example.beaceful.ui.navigation.CustomerRoute
+import com.example.beaceful.ui.navigation.DiaryCalendar
+import com.example.beaceful.ui.navigation.DiaryDetails
+import com.example.beaceful.ui.navigation.DiaryRoute
 import com.example.beaceful.ui.navigation.Doctor
 import com.example.beaceful.ui.navigation.Forum
 import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.Profile
+import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.navigation.navigateSingleTopTo
 import com.example.beaceful.ui.theme.BeacefulTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +56,8 @@ fun BeacefulApp() {
                 route == null -> Home
                 route.startsWith("doctor") -> Doctor
                 route.startsWith("forum") -> Forum
-                route.startsWith("diary") -> Diary
+                route.startsWith("diary") -> DiaryRoute
+                route.startsWith("profile") -> Profile
                 else -> Home
             }
         }
@@ -57,8 +66,15 @@ fun BeacefulApp() {
             Home.route,
             Doctor.route,
             Forum.route,
-            Diary.route,
-            SingleDoctorProfile.route
+            DiaryRoute.route,
+            DiaryCalendar.route,
+            DiaryDetails.route,
+            SelectEmotionDiary.route,
+            SingleDoctorProfile.route,
+            Profile.route,
+            Booking.route,
+            AppointmentRoute.route,
+            CustomerRoute.route
             )
 
         val currentScreen = resolveTab(currentDestination?.route)
