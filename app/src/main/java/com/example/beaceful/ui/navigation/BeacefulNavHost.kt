@@ -3,6 +3,7 @@ package com.example.beaceful.ui.navigation
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
+import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
+import com.example.beaceful.ui.screen.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
 import com.example.beaceful.ui.screens.customer.CustomerDetailsScreen
@@ -124,6 +127,29 @@ fun BeacefulNavHost(
         ) {
             SelectEmotionScreen(
                 navController = navController
+            )
+        }
+//        composable(
+//            route = DiaryCalendar.route
+//        ) {
+//            CalendarDiaryScreen(
+//                navController = navController
+//            )
+//        }
+        composable(
+            route = ChatDetailRoute.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("userName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+            ChatDetailScreen(
+                userId = userId,
+                userName = userName,
+                onBack = { navController.popBackStack() },
+                viewModel = viewModel()
             )
         }
         composable(

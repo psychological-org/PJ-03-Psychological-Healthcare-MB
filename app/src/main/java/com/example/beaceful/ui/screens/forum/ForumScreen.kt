@@ -46,6 +46,7 @@ import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.screen.ChatScreen
 import com.example.beaceful.ui.viewmodel.ForumViewModel
 
 @Composable
@@ -73,7 +74,14 @@ fun ForumScreen(navController: NavController, viewModel: ForumViewModel = hiltVi
 
         when (selectedTab) {
             0 -> NewsScreen(navController = navController, viewModel = viewModel)
-            1 -> ChatScreen()
+            1 -> ChatScreen(
+                onUserClick = { userId, fullName ->
+                    navController.navigate("chatDetail/$userId/$fullName")
+                },
+                onLogout = {
+                    // TODO: Thêm logic đăng xuất (ví dụ: quay về màn hình login)
+                }
+            )
         }
     }
 }
@@ -169,13 +177,5 @@ fun CommunityItem(
         )
         Spacer(Modifier.height(8.dp))
         Text(text = community.name)
-    }
-}
-
-@Composable
-fun ChatScreen() {
-    LazyColumn {
-        item { CustomSearchBar(suggestions = null) }
-        item { Text(stringResource(R.string.co10_friend_chat)) }
     }
 }
