@@ -42,6 +42,7 @@ import com.example.beaceful.R
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.User
+import com.example.beaceful.ui.navigation.ChatDetailRoute
 import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.DiaryDetails
 
