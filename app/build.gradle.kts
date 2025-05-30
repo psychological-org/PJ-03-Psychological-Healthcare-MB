@@ -4,6 +4,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.hilt)
+    id("com.google.gms.google-services")
+    alias(libs.plugins.kotlin.serialization)
 }
 
 android {
@@ -18,6 +20,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "AWS_ACCESS_KEY", "\"${rootProject.extra["awsAccessKey"]}\"")
+        buildConfigField("String", "AWS_SECRET_KEY", "\"${rootProject.extra["awsSecretKey"]}\"")
     }
 
     buildTypes {
@@ -39,6 +43,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     packaging {
         resources {
@@ -84,4 +89,21 @@ dependencies {
     implementation(libs.dagger.compiler)
     ksp(libs.hilt.android.compiler)
     ksp(libs.hilt.compile)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.firebase.database)
+    implementation(libs.firebase.messaging)
+    implementation(libs.aws.core)
+    implementation(libs.aws.s3)
+    implementation(libs.camera.core)
+    implementation(libs.camera.camera2)
+    implementation(libs.camera.lifecycle)
+    implementation(libs.camera.view)
+    implementation(libs.media3.exoplayer)
+    implementation(libs.media3.ui)
+    implementation(libs.accompanist.permissions)
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+
 }

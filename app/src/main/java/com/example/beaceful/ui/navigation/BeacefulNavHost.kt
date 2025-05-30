@@ -3,6 +3,7 @@ package com.example.beaceful.ui.navigation
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -11,6 +12,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
+import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
+import com.example.beaceful.ui.screen.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
 import com.example.beaceful.ui.screens.customer.CustomerDetailsScreen
@@ -84,6 +87,13 @@ fun BeacefulNavHost(
             BookingScreen(navController = navController, doctorId = doctorId)
         }
         composable(
+            route = Booking.route,
+            arguments = listOf(navArgument("doctorId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getInt("doctorId") ?: return@composable
+            BookingScreen(navController = navController, doctorId = doctorId)
+        }
+        composable(
             route = PostDetails.route,
             arguments = listOf(navArgument("postId") { type = NavType.IntType })
         ) { backStackEntry ->
@@ -96,7 +106,10 @@ fun BeacefulNavHost(
             arguments = listOf(navArgument("diaryId") { type = NavType.IntType })
         ) { backStackEntry ->
             val diaryId = backStackEntry.arguments?.getInt("diaryId") ?: return@composable
-            DiaryFullScreen(diaryId = diaryId)
+            DiaryFullScreen(
+                diaryId = diaryId,
+                navController = navController
+            )
         }
 
 
@@ -125,6 +138,57 @@ fun BeacefulNavHost(
             SelectEmotionScreen(
                 navController = navController
             )
+        }
+//        composable(
+//            route = DiaryCalendar.route
+//        ) {
+//            CalendarDiaryScreen(
+//                navController = navController
+//            )
+//        }
+        composable(
+            route = ChatDetailRoute.route,
+            arguments = listOf(
+                navArgument("userId") { type = NavType.IntType },
+                navArgument("userName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val userId = backStackEntry.arguments?.getInt("userId") ?: 0
+            val userName = backStackEntry.arguments?.getString("userName") ?: ""
+            ChatDetailScreen(
+                userId = userId,
+                userName = userName,
+                onBack = { navController.popBackStack() },
+                viewModel = viewModel()
+            )
+        }
+        composable(
+            route = AppointmentRoute.route
+        ) {
+            AppointmentScreen(
+                navController = navController
+            )
+        }
+        composable(
+            route = CustomerRoute.route
+        ) {
+            CustomerScreen(
+                navController = navController
+            )
+        }
+        composable(
+            route = CustomerDetails.route,
+            arguments = listOf(navArgument("customerId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val customerId = backStackEntry.arguments?.getInt("customerId") ?: return@composable
+            CustomerDetailsScreen(customerId = customerId, navController = navController)
+        }
+        composable(
+            route = AppointmentDetails.route,
+            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
+            AppointmentDetailsScreen(appointmentId = appointmentId)
         }
         composable(
             route = AppointmentRoute.route

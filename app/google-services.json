@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "296804589471",
+    "firebase_url": "https://chatapplication-a7712-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "chatapplication-a7712",
+    "storage_bucket": "chatapplication-a7712.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296804589471:android:6b33487921fe14ea92e7aa",
+        "android_client_info": {
+          "package_name": "com.example.beaceful"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKqzJrnaLm6LqGfrb04uqtmiacW1V0pbs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:296804589471:android:443cd9f3cc6747ac92e7aa",
+        "android_client_info": {
+          "package_name": "com.example.chatapplication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBKqzJrnaLm6LqGfrb04uqtmiacW1V0pbs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

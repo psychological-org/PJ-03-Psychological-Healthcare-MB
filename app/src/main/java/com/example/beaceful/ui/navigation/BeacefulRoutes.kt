@@ -1,6 +1,7 @@
 package com.example.beaceful.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.CollectionsBookmark
 import androidx.compose.material.icons.filled.Forum
@@ -89,6 +90,12 @@ data object EditRoute : BeacefulRoutes {
     override val route = "profile_edit"
 }
 
+data object ChatDetailRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Chat
+    override val route = "chatDetail/{userId}/{userName}"
+
+    fun createRoute(userId: Int, userName: String): String = "chatDetail/$userId/$userName"
+}
 data object AppointmentRoute : BeacefulRoutes {
     override val icon = Icons.Default.CalendarToday
     override val route = "appointment"
@@ -121,4 +128,5 @@ data object Booking : BeacefulRoutes {
 }
 
 
-val BeacefulBottomNavPatient = listOf(Doctor, CustomerRoute, Doctor, Forum, DiaryRoute)
+
+val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, DiaryRoute)
