@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.forum
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
@@ -68,6 +70,9 @@ fun CommunityScreen(
         listOf(stringResource(R.string.co5_activity), stringResource(R.string.co6_member))
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    val communityIds = viewModel.getUserCommunityIds(4)
+    val isJoined: Boolean = communityId in communityIds
+    Log.d("log", "communityId: $communityId, communityIds: $communityIds, communityId in communityIds: ${communityId in communityIds} $isJoined")
 
     if (community != null) {
         LazyColumn {
@@ -119,28 +124,40 @@ fun CommunityScreen(
             }
             when (selectedTab) {
                 0 -> item {
+                    if (isJoined) {
                     CustomInputField(
                         placeholder = R.string.co7_your_thought,
                         inputText = post,
                         onTextChange = { viewModel.onPostTextChange(it) },
-                        onSent = {viewModel.submitPost(communityId)
+                        onSent = {
+                            viewModel.submitPost(communityId)
                         },
                         modifier = Modifier.padding(24.dp, 16.dp)
-                    )
+                    )} else {
+                        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+
+                            Button(onClick = {viewModel.joinCommunity()}) {
+                                Text("Yêu cầu tham gia")
+                            }
+                        }
+                    }
                 }
             }
             when (selectedTab) {
                 0 -> items(localPosts) { post ->
+                    val user = viewModel.repository.getUserById(post.posterId) ?: return@items
+                    val commentCount = viewModel.repository.getCommentCountForPost(post.id)
+                    val isLiked = viewModel.repository.isPostLiked(post.id)
                     PostCard(
                         post = post,
-                        isLiked = false,
+                        isLiked = isLiked,
                         onPostClick = {
                             navController.navigate(PostDetails.createRoute(post.id))
                         },
                         onToggleLike = {},
-                        user = TODO(),
-                        commentCount = TODO(),
-                        modifier = TODO(),
+                        user = user,
+                        commentCount = commentCount,
+                        onDeletePost = {}
                     )
                 }
 

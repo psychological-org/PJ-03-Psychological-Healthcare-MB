@@ -47,5 +47,4 @@ class DiaryViewModel @Inject constructor(
     ).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
 
     fun getDoctorByAppointment(appointment: Appointment) = repo.getUserById(appointment.doctorId)
-
 }

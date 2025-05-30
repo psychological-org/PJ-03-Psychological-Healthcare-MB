@@ -52,6 +52,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.SearchItem
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
@@ -69,7 +70,7 @@ fun DoctorScreen(
 
     var query by remember { mutableStateOf("") }
     val nameSuggestions = remember(allDoctors) {
-        allDoctors.map { it.fullName }
+        allDoctors.map { SearchItem(it.id, it.fullName) }
     }
 
     val filteredDoctors = remember(query, allDoctors) {
@@ -83,7 +84,7 @@ fun DoctorScreen(
             suggestions = nameSuggestions,
             placeholder = "Tìm bác sĩ...",
             onSearch = { selected ->
-                query = selected
+                query = selected.name
             },
             modifier = Modifier.fillMaxWidth()
         )

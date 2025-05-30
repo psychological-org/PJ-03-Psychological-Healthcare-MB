@@ -49,7 +49,7 @@ fun BeacefulNavHost(
             DoctorScreen(navController = navController)
         }
         composable(route = Forum.route) {
-            CustomerDetailsScreen(navController = navController, customerId = 4)
+            ForumScreen(navController = navController, userId = 4)
         }
 
         composable(

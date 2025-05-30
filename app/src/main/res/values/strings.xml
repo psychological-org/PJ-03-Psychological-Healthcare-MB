@@ -17,6 +17,12 @@
     <string name="publish">Đăng</string>
     <string name="booking">Đặt lịch</string>
     <string name="write_your_comment">Nhập bình luận của bạn</string>
+    <string name="hide_title">Ẩn bài viết?</string>
+    <string name="hide_content">Bạn có chắc chắn muốn ẩn bài viết này không?</string>
+    <string name="hide">Ẩn</string>
+    <string name="delete_title">Xóa bài viết?</string>
+    <string name="delete_content">Bạn có chắc chắn muốn xóa bài viết này không?</string>
+    <string name="delete">Xóa</string>
 <!--    Carousel car-->
     <string name="ca1_title_1">Hãy dành một chút thời gian cho bản thân</string>
     <string name="ca2_title_2">Tìm kiếm một bác sĩ tâm lý phù hợp</string>

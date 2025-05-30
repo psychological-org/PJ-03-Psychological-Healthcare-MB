@@ -173,7 +173,8 @@ fun ProfileScreen(
                         commentCount = commentCount,
                         isLiked = isLiked,
                         onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = { viewModel.toggleLike(post.id) }
+                        onToggleLike = { viewModel.toggleLike(post.id) },
+                        onDeletePost = {}
                     )
                 }
 

@@ -494,6 +494,30 @@ object DumpDataProvider {
             imageUrl = ""
         ),
 
-    )
+        )
 
+
+    val participantCommunities = listOf(
+        ParticipantCommunity(
+            userId = 4,
+            communityId = 1
+        ),
+        ParticipantCommunity(
+            userId = 4,
+            communityId = 2
+        ),
+        ParticipantCommunity(
+            userId = 4,
+            communityId = 4
+        ),
+        ParticipantCommunity(
+            userId = 4,
+            communityId = 5
+        ),
+        ParticipantCommunity(
+            userId = 4,
+            communityId = 6
+        ),
+
+        )
 }

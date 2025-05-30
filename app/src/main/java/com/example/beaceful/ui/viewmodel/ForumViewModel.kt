@@ -16,11 +16,33 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ForumViewModel @Inject constructor(
-    private val repository: PostRepository
+    val repository: PostRepository
 ) :
     ViewModel() {
-    //    Data
-    val communities: List<Community> = DumpDataProvider.communities
+    fun getAllCommunities(): List<Community> = DumpDataProvider.communities
+    fun getUserCommunityIds(userId: Int): List<Int> {
+        return DumpDataProvider.participantCommunities
+            .filter { it.userId == userId }
+            .map { it.communityId }
+    }
+
+
+    private val _hiddenPostIds = mutableStateListOf<Int>()
+    val hiddenPostIds: List<Int> get() = _hiddenPostIds
+
+    fun hidePost(postId: Int) {
+        if (!_hiddenPostIds.contains(postId)) {
+            _hiddenPostIds.add(postId)
+        }
+    }
+//    post in community that user join only
+    fun getUserCommunityPosts(userId: Int): List<Post> {
+        val userCommunityIds = getUserCommunityIds(userId)
+        return allPosts
+            .filter { it.communityId in userCommunityIds }
+            .filterNot { it.id in hiddenPostIds }
+    }
+
 
     val allPosts: List<Post> = repository.getAllPosts()
     val allUsers: List<User> = repository.getAllUsers()
@@ -31,9 +53,9 @@ class ForumViewModel @Inject constructor(
     private val _postText = mutableStateOf("")
     val postText: State<String> = _postText
 
-    //    Func
+    //    post in one community
     fun initCommunityPosts(communityId: Int) {
-        val filteredPosts = allPosts.filter { it.communityId == communityId }
+        val filteredPosts = allPosts.filter { it.communityId == communityId }.filterNot { it.id in hiddenPostIds }
         _localPosts.clear()
         _localPosts.addAll(filteredPosts)
     }
@@ -58,19 +80,15 @@ class ForumViewModel @Inject constructor(
     }
 
     fun getCommunityById(id: Int): Community? {
-        return communities.find { it.id == id }
+        return getAllCommunities().find { it.id == id }
     }
 
     fun getAdminByCommunity(community: Community?): User? {
         return DumpDataProvider.listUser.find { it.id == community?.adminId }
     }
 
-    fun getUserById(id: Int) = repository.getUserById(id)
-    fun getCommentCount(postId: Int) = repository.getCommentCountForPost(postId)
+    fun joinCommunity() {
 
-    fun isPostLiked(postId: Int) = repository.isPostLiked(postId)
-
-    fun toggleLike(postId: Int) = repository.toggleLike(postId)
-
+    }
 
 }
