@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -27,6 +28,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -46,29 +49,55 @@ import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 import java.util.UUID
 
 const val SAVED_DIARY_KEY = "diary_content"
 
-@OptIn(ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3Api::class
+)
 @Composable
 fun SelectEmotionScreen(
-    dateTime: LocalDateTime = LocalDateTime.now(),
     navController: NavHostController,
 ) {
+    val currentTime by remember { mutableStateOf(Calendar.getInstance()) }
+
+    val datePickerState = rememberDatePickerState()
+    var showDatePicker by remember { mutableStateOf(false) }
+
+    var showTimePicker by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
+        initialMinute = currentTime.get(Calendar.MINUTE),
+        is24Hour = true,)
+
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.fillMaxSize()
     ) {
         Text(stringResource(R.string.di5_greeting))
-        Text(
-            "${dateTime.dayOfMonth} tháng ${dateTime.monthValue} lúc ${
-                dateTime.format(
-                    DateTimeFormatter.ofPattern("HH:mm")
-                )
-            }"
-        )
+//date picker
+        Button(
+            onClick = {
+                showDatePicker = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = "Date  ${datePickerState.selectedDateMillis}")
+        }
+
+//time picker
+        Button(
+            onClick = {
+                showTimePicker = true
+            },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(text = "Time Picker")
+        }
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -80,6 +109,113 @@ fun SelectEmotionScreen(
                     text = item.descriptionRes,
                     onClick = { navController.navigate(WriteDiary.createRoute(item)) },
                 )
+            }
+        }
+    }
+    // date picker component
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismissRequest = { /*TODO*/ },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val selectedDate = Calendar.getInstance().apply {
+                            timeInMillis = datePickerState.selectedDateMillis!!
+                        }
+                        if (selectedDate.before(Calendar.getInstance())) {
+                            showDatePicker = false
+                        } else {
+
+                        }
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showDatePicker = false
+                    }
+                ) { Text("Cancel") }
+            }
+        )
+        {
+            DatePicker(state = datePickerState)
+        }
+    }
+
+// time picker component
+    if (showTimePicker) {
+        TimePickerDialog(
+            onDismissRequest = { /*TODO*/ },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTimePicker = false
+                    }
+                ) { Text("OK") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showTimePicker = false
+                    }
+                ) { Text("Cancel") }
+            }
+        )
+        {
+            TimePicker(state = timePickerState)
+        }
+    }
+}
+
+@Composable
+fun TimePickerDialog(
+    title: String = "Select Time",
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable (() -> Unit),
+    dismissButton: @Composable (() -> Unit)? = null,
+    containerColor: Color = MaterialTheme.colorScheme.surface,
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false
+        ),
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.extraLarge,
+            tonalElevation = 6.dp,
+            modifier = Modifier
+                .width(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min)
+                .background(
+                    shape = MaterialTheme.shapes.extraLarge,
+                    color = containerColor
+                ),
+            color = containerColor
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    text = title,
+                    style = MaterialTheme.typography.labelMedium
+                )
+                content()
+                Row(
+                    modifier = Modifier
+                        .height(40.dp)
+                        .fillMaxWidth()
+                ) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    dismissButton?.invoke()
+                    confirmButton()
+                }
             }
         }
     }
@@ -97,8 +233,11 @@ fun WriteDiaryScreen(
         .currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow(SAVED_DIARY_KEY, "")
-    var diaryText by remember { mutableStateOf("") }
-    val latestDiaryText by diaryContentFromFullScreen?.collectAsState() ?: remember { mutableStateOf("") }
+    var diaryContent by remember { mutableStateOf("") }
+    var diaryTitle by remember { mutableStateOf("No title") }
+
+    val latestDiaryText by diaryContentFromFullScreen?.collectAsState()
+        ?: remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var recordedVoiceUri by remember { mutableStateOf<Uri?>(null) }
     var isRecording by remember { mutableStateOf(false) }
@@ -112,18 +251,20 @@ fun WriteDiaryScreen(
     val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     // Launcher để chọn ảnh từ thư viện
-    val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        selectedImageUri = uri
-    }
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            selectedImageUri = uri
+        }
 
     // Launcher để chụp ảnh từ máy ảnh
-    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            selectedImageUri?.let { uri ->
-                selectedImageUri = uri
+    val takePictureLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                selectedImageUri?.let { uri ->
+                    selectedImageUri = uri
+                }
             }
         }
-    }
 
     // MediaRecorder để ghi âm
     val mediaRecorder = remember { mutableStateOf<MediaRecorder?>(null) }
@@ -132,7 +273,8 @@ fun WriteDiaryScreen(
     fun saveImageToInternalStorage(uri: Uri): String? {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
-            val file = File(context.filesDir, "images/diary_image_${System.currentTimeMillis()}.jpg")
+            val file =
+                File(context.filesDir, "images/diary_image_${System.currentTimeMillis()}.jpg")
             file.parentFile?.mkdirs()
             inputStream?.use { input ->
                 file.outputStream().use { output ->
@@ -197,7 +339,8 @@ fun WriteDiaryScreen(
 
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
-        recordAudioPermissionState.status.shouldShowRationale) {
+        recordAudioPermissionState.status.shouldShowRationale
+    ) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text("Yêu cầu quyền") },
@@ -251,7 +394,7 @@ fun WriteDiaryScreen(
     }
 
     LaunchedEffect(latestDiaryText) {
-        diaryText = latestDiaryText
+        diaryContent = latestDiaryText
     }
 
     Column(
@@ -277,7 +420,6 @@ fun WriteDiaryScreen(
                     .clip(RoundedCornerShape(18.dp))
             )
         }
-        Spacer(Modifier.height(6.dp))
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -285,9 +427,30 @@ fun WriteDiaryScreen(
                 .padding(top = 16.dp)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(MaterialTheme.colorScheme.primary),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(16.dp)
         ) {
+            item {
+                OutlinedTextField(
+                    value = diaryTitle,
+                    onValueChange = { diaryTitle = it },
+                    placeholder = { Text("No title", color = Color.Gray) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Clear, contentDescription = null,
+                            modifier = Modifier.clickable(onClick = {diaryTitle = ""})
+                        )
+                    }
+                )
+            }
             item {
                 Text(
                     text = stringResource(R.string.di6_record_your_thought),
@@ -310,8 +473,8 @@ fun WriteDiaryScreen(
 
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                     TextField(
-                        value = diaryText,
-                        onValueChange = { diaryText = it },
+                        value = diaryContent,
+                        onValueChange = { diaryContent = it },
                         placeholder = { Text("Nhập ghi chép...", color = Color.Gray) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -324,7 +487,7 @@ fun WriteDiaryScreen(
                     IconButton(onClick = {
                         navController.currentBackStackEntry?.savedStateHandle?.set(
                             SAVED_DIARY_KEY,
-                            diaryText
+                            diaryContent
                         )
                         navController.navigate(WriteDiaryExpand.route)
                     }) {
@@ -378,7 +541,11 @@ fun WriteDiaryScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = { selectedImageUri = null }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Image", tint = Color.Gray)
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Image",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -416,8 +583,14 @@ fun WriteDiaryScreen(
                             modifier = Modifier.weight(1f),
                             color = Color.White
                         )
-                        IconButton(onClick = { recordedVoiceUri = null; tempVoiceFile.value?.delete() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Voice", tint = Color.Gray)
+                        IconButton(onClick = {
+                            recordedVoiceUri = null; tempVoiceFile.value?.delete()
+                        }) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Voice",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -427,10 +600,12 @@ fun WriteDiaryScreen(
             item {
                 Button(
                     onClick = {
-                        val savedImagePath = selectedImageUri?.let { saveImageToInternalStorage(it) }
+                        val savedImagePath =
+                            selectedImageUri?.let { saveImageToInternalStorage(it) }
                         viewModel.saveDiary(
                             emotion = selectedEmotion,
-                            content = diaryText.takeIf { it.isNotBlank() },
+                            title = diaryTitle,
+                            content = diaryContent.takeIf { it.isNotBlank() },
                             imageUrl = savedImagePath,
                             voiceUrl = recordedVoiceUri?.toString(),
                             posterId = 1
@@ -463,10 +638,8 @@ fun UploadButton(label: String, onClick: () -> Unit) {
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-        modifier = Modifier
-            .height(48.dp)
     ) {
-        Text(label, color = Color(0xFF1A0033))
+        Text(label, color = MaterialTheme.colorScheme.onTertiary)
     }
 }
 
