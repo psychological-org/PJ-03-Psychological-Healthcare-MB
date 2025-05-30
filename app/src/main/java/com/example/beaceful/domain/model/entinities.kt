@@ -14,7 +14,8 @@ data class User(
     val email: String,
     val phone: String? = null,
     val password: String,
-    val headline: String? = null
+    val headline: String? = null,
+    val uid: String? = null
 )
 
 data class Role(
@@ -142,5 +143,10 @@ data class DoctorExpertise(
 data class TimeSlot(
     val time: LocalDateTime,
     val isBooked: Boolean
+)
+
+data class SearchItem(
+    val id: Int,
+    val name: String
 )
 

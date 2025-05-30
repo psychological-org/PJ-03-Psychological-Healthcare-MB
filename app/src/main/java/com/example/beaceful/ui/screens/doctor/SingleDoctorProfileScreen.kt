@@ -45,7 +45,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
-import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.Booking
 import com.example.beaceful.ui.navigation.PostDetails
@@ -173,7 +172,8 @@ fun SingleDoctorProfileScreen(
                         commentCount = commentCount,
                         isLiked = isLiked,
                         onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = { viewModel.toggleLike(post.id) }
+                        onToggleLike = { viewModel.toggleLike(post.id) },
+                        onDeletePost = {}
                     )
                 }
 

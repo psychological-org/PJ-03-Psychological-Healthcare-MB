@@ -2,7 +2,10 @@ package com.example.beaceful.ui.components
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
@@ -22,28 +25,30 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.beaceful.domain.model.SearchItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomSearchBar(
-    suggestions: List<String>?,
+    suggestions: List<SearchItem>?,
     modifier: Modifier = Modifier,
     placeholder: String = "Tìm kiếm...",
-    onSearch: (String) -> Unit = {}
+    onSearch: (SearchItem) -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }
 
     val filtered = remember(query, suggestions) {
-        if (query.isBlank()) suggestions else
-            suggestions?.filter { it.contains(query, ignoreCase = true) }
+        if (query.isBlank()) suggestions?.take(10) else
+            suggestions?.filter { it.name.contains(query, ignoreCase = true) }?.take(10)
     }
 
     SearchBar(
         query = query,
         onQueryChange = { query = it },
         onSearch = {
-            onSearch(query)
+            val selected = suggestions?.find { it.name.equals(query, ignoreCase = true) }
+            if (selected != null) onSearch(selected)
             active = false
         },
         active = active,
@@ -91,11 +96,11 @@ fun CustomSearchBar(
             } else {
                 filtered.forEach { item ->
                     ListItem(
-                        headlineContent = { Text(item) },
+                        headlineContent = { Text(item.name) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                query = item
+                                query = item.name
                                 onSearch(item)
                                 active = false
                             },
