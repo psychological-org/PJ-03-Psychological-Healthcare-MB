@@ -105,13 +105,13 @@ fun CalendarDiaryScreen(
             item {
                 CustomCalendar(
                     currentMonth = currentMonth,
-                    highlightDates = { date -> viewModel.getDiariesOnDate(date).isNotEmpty() },
+                    highlightDates = { date -> viewModel.repo.getDiariesOnDate(date).isNotEmpty() },
                     getColorsForDate = { date ->
-                        viewModel.getDiariesOnDate(date)
+                        viewModel.repo.getDiariesOnDate(date)
                             .take(2)
                             .map { it.emotion.textColor }
                     },
-                    onClickDate = { date -> selectedDiaries = viewModel.getDiariesOnDate(date) }
+                    onClickDate = { date -> selectedDiaries = viewModel.repo.getDiariesOnDate(date) }
                 )
                 Spacer(Modifier.height(8.dp))
 

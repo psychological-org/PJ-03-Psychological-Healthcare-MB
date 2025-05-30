@@ -134,5 +134,4 @@ class DiaryViewModel @Inject constructor(
         }
     }
     fun getDoctorByAppointment(appointment: Appointment) = repo.getUserById(appointment.doctorId)
-
 }

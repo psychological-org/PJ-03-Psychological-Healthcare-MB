@@ -145,3 +145,8 @@ data class TimeSlot(
     val isBooked: Boolean
 )
 
+data class SearchItem(
+    val id: Int,
+    val name: String
+)
+
