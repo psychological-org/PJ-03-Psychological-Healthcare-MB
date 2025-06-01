@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.TagFaces
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.beaceful.domain.model.Emotions
+import java.time.LocalDateTime
 
 sealed interface BeacefulRoutes {
     val icon: ImageVector
@@ -33,7 +34,9 @@ data object WriteDiary : BeacefulRoutes {
     override val icon = Icons.Filled.CollectionsBookmark
     override val route = "diary_write/{emotion}"
 
-    fun createRoute(emotion: Emotions) : String = "diary_write/${emotion.name}"
+    fun createRoute(emotion: Emotions, datetime: LocalDateTime): String {
+        return "diary_write/${emotion.name}/$datetime"
+    }
 }
 data object WriteDiaryExpand : BeacefulRoutes {
     override val icon = Icons.Filled.CollectionsBookmark

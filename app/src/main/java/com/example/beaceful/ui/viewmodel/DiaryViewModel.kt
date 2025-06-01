@@ -81,7 +81,8 @@ class DiaryViewModel @Inject constructor(
         content: String? = null,
         imageUrl: String? = null,
         voiceUrl: String? = null,
-        posterId: Int
+        posterId: Int,
+        createAt: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC+7"))
     ) {
         viewModelScope.launch {
             val newId = (_allDiaries.value.maxOfOrNull { it.id } ?: 0) + 1
@@ -93,7 +94,7 @@ class DiaryViewModel @Inject constructor(
                 imageUrl = imageUrl,
                 voiceUrl = voiceUrl,
                 posterId = posterId,
-                createdAt = LocalDateTime.now(ZoneId.of("UTC+7"))
+                createdAt = createAt,
             )
             repo.saveDiary(diary)
             loadDiaries()

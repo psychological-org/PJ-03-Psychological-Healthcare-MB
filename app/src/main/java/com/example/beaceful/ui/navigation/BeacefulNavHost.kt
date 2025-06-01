@@ -31,6 +31,7 @@ import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
 import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
+import java.time.LocalDateTime
 
 @Composable
 fun BeacefulNavHost(
@@ -114,17 +115,25 @@ fun BeacefulNavHost(
 
 
         composable(
-            route = WriteDiary.route,
-            arguments = listOf(navArgument("emotion") { type = NavType.StringType })
+            route = "diary_write/{emotion}/{datetime}",
+            arguments = listOf(
+                navArgument("emotion") { type = NavType.StringType },
+                navArgument("datetime") { type = NavType.StringType }
+            )
         ) { backStackEntry ->
             val emotionArg = backStackEntry.arguments?.getString("emotion")
+            val datetimeArg = backStackEntry.arguments?.getString("datetime")
+
             val emotion = runCatching { Emotions.valueOf(emotionArg ?: "") }.getOrNull()
-            if (emotion != null) {
-                WriteDiaryScreen(navController, selectedEmotion = emotion)
+            val datetime = runCatching { LocalDateTime.parse(datetimeArg) }.getOrNull()
+
+            if (emotion != null && datetime != null) {
+                WriteDiaryScreen(navController, selectedEmotion = emotion, selectedDateTime = datetime)
             } else {
-                Text("Emotion không hợp lệ")
+                Text("Emotion hoặc thời gian không hợp lệ")
             }
         }
+
         composable(
             route = WriteDiaryExpand.route
         ) {
