@@ -28,15 +28,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Emotions
@@ -50,152 +45,13 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File
-import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.Calendar
-import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 const val SAVED_DIARY_KEY = "diary_content"
-fun convertLongToLocalDateTime(millis: Long): LocalDateTime {
-    return Instant.ofEpochMilli(millis)
-        .atZone(ZoneId.systemDefault())
-        .toLocalDateTime()
-}
-
-fun convertMillisToDate(millis: Long): String {
-    val formatter = SimpleDateFormat("MM/dd/yyyy", Locale.getDefault())
-    return formatter.format(Date(millis))
-}
-
-@OptIn(ExperimentalPermissionsApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3Api::class
-)
-@Composable
-fun SelectEmotionScreen(
-    navController: NavHostController,
-) {
-    val now = remember { LocalDateTime.now() }
-    var selectedDateTime by remember { mutableStateOf(now) }
-
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
-
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = now.toLocalDate()
-            .atStartOfDay(ZoneId.systemDefault())
-            .toInstant()
-            .toEpochMilli(),
-        initialDisplayedMonthMillis = null,
-        selectableDates = object : SelectableDates {
-            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
-                return utcTimeMillis <= Instant.now().toEpochMilli()
-            }
-        }
-    )
-
-    val timePickerState = rememberTimePickerState(
-        initialHour = now.hour,
-        initialMinute = now.minute,
-        is24Hour = true
-    )
-
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(stringResource(R.string.di5_greeting))
-        Text("Ngày: ${selectedDateTime.toLocalDate().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))}")
-        Text("Giờ: ${selectedDateTime.toLocalTime().format(DateTimeFormatter.ofPattern("HH:mm"))}")
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = { showDatePicker = true }) {
-                Text("Chọn ngày")
-            }
-            Button(onClick = { showTimePicker = true }) {
-                Text("Chọn giờ")
-            }
-        }
-
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            contentPadding = PaddingValues(horizontal = 36.dp),
-        ) {
-            items(Emotions.entries) { item ->
-                EmotionItem(
-                    drawable = item.iconRes,
-                    text = item.descriptionRes,
-                    onClick = {
-                        navController.navigate(WriteDiary.createRoute(item, selectedDateTime))
-                    }
-                )
-            }
-        }
-    }
-    // date picker component
-    if (showDatePicker) {
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { millis ->
-                            val selectedDate = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
-                            if (selectedDate.atTime(selectedDateTime.toLocalTime()).isBefore(LocalDateTime.now())) {
-                                selectedDateTime = selectedDateTime.withYear(selectedDate.year)
-                                    .withMonth(selectedDate.monthValue)
-                                    .withDayOfMonth(selectedDate.dayOfMonth)
-                            }
-                        }
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("Chọn")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { showDatePicker = false }) { Text("Hủy") }
-            }
-        ) {
-            DatePicker(
-                state = datePickerState,
-            )
-        }
-    }
-
-
-// time picker component
-    if (showTimePicker) {
-        TimePickerDialog(
-            onDismissRequest = { showTimePicker = false },
-            confirmButton = {
-                Button(
-                    onClick = {
-                        val newDateTime = selectedDateTime.withHour(timePickerState.hour).withMinute(timePickerState.minute)
-                        if (newDateTime.isBefore(LocalDateTime.now())) {
-                            selectedDateTime = newDateTime
-                        }
-                        showTimePicker = false
-                    }
-                ) {
-                    Text("Chọn")
-                }
-            },
-            dismissButton = {
-                Button(onClick = { showTimePicker = false }) { Text("Hủy") }
-            }
-        ) {
-            TimePicker(state = timePickerState)
-        }
-    }
-
-}
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
@@ -576,26 +432,27 @@ fun WriteDiaryScreen(
 
             // --- Confirm Button ---
             item {
-                Button(
-                    onClick = {
-                        val savedImagePath =
-                            selectedImageUri?.let { saveImageToInternalStorage(it) }
-                        viewModel.saveDiary(
-                            emotion = selectedEmotion,
-                            title = diaryTitle,
-                            content = diaryContent.takeIf { it.isNotBlank() },
-                            imageUrl = savedImagePath,
-                            voiceUrl = recordedVoiceUri?.toString(),
-                            posterId = 1,
-                            createAt = selectedDate,
-                        )
-                        navController.popBackStack("diary", inclusive = false)
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Xác nhận", color = Color.White)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    Button(
+                        onClick = {
+                            val savedImagePath =
+                                selectedImageUri?.let { saveImageToInternalStorage(it) }
+                            viewModel.saveDiary(
+                                emotion = selectedEmotion,
+                                title = diaryTitle,
+                                content = diaryContent.takeIf { it.isNotBlank() },
+                                imageUrl = savedImagePath,
+                                voiceUrl = recordedVoiceUri?.toString(),
+                                posterId = 1,
+                                createAt = selectedDate,
+                            )
+                            navController.popBackStack("diary", inclusive = false)
+                        },
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Xác nhận", color = Color.White)
+                    }
                 }
             }
         }

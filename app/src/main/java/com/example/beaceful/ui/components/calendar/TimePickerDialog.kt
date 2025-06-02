@@ -1,6 +1,7 @@
 package com.example.beaceful.ui.components.calendar
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
@@ -22,7 +23,7 @@ import androidx.compose.ui.window.DialogProperties
 
 @Composable
 fun TimePickerDialog(
-    title: String = "Select Time",
+    title: String = "Chọn giờ",
     onDismissRequest: () -> Unit,
     confirmButton: @Composable (() -> Unit),
     dismissButton: @Composable (() -> Unit)? = null,
@@ -56,13 +57,14 @@ fun TimePickerDialog(
                         .fillMaxWidth()
                         .padding(bottom = 20.dp),
                     text = title,
-                    style = MaterialTheme.typography.labelMedium
+                    color = MaterialTheme.colorScheme.primary
                 )
                 content()
                 Row(
                     modifier = Modifier
                         .height(40.dp)
-                        .fillMaxWidth()
+                        .fillMaxWidth(),
+                    horizontalArrangement =Arrangement.spacedBy(12.dp)
                 ) {
                     Spacer(modifier = Modifier.weight(1f))
                     dismissButton?.invoke()

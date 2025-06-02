@@ -128,7 +128,7 @@ fun BeacefulNavHost(
             val datetime = runCatching { LocalDateTime.parse(datetimeArg) }.getOrNull()
 
             if (emotion != null && datetime != null) {
-                WriteDiaryScreen(navController, selectedEmotion = emotion, selectedDateTime = datetime)
+                WriteDiaryScreen(navController, selectedEmotion = emotion, selectedDate = datetime)
             } else {
                 Text("Emotion hoặc thời gian không hợp lệ")
             }

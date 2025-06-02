@@ -46,6 +46,8 @@ import com.example.beaceful.R
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Composable
 fun HomeScreen(
@@ -433,7 +435,8 @@ fun HomeScreenEmotionsRow(
             EmotionItem(
                 drawable = item.iconRes,
                 text = item.descriptionRes,
-                onClick = {navController.navigate(WriteDiary.createRoute(item))}
+                onClick = {navController.navigate(WriteDiary.createRoute(item, datetime = LocalDateTime.now(
+                    ZoneId.of("UTC+7")) ))}
             )
         }
     }
