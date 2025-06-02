@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.forum
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -14,16 +15,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -36,45 +37,42 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
-import com.example.beaceful.domain.model.Post
-import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.ui.components.CustomInputField
 import com.example.beaceful.ui.components.cards.PostCard
-import com.example.beaceful.ui.components.lists.UserList
+import com.example.beaceful.ui.components.cards.UserList
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
-import java.time.LocalDateTime
+import com.example.beaceful.ui.viewmodel.ForumViewModel
 
 @Composable
 fun CommunityScreen(
     navController: NavHostController,
-    communityId: Int
+    communityId: Int,
+    viewModel: ForumViewModel = hiltViewModel()
 ) {
-    val community = remember {
-        DumpDataProvider.communities.find { it.id == communityId }
+    val community = viewModel.getCommunityById(communityId)
+    val communityAdmin = viewModel.getAdminByCommunity(community)
+
+    LaunchedEffect(communityId) {
+        viewModel.initCommunityPosts(communityId)
     }
-
-    var post by remember { mutableStateOf("") }
-
-    val posts = remember {
-        DumpDataProvider.posts.filter { it.communityId == communityId }
-    }
-
-    val localPosts =
-        remember { mutableStateListOf<Post>().apply { addAll(posts) } }
-
+    val post = viewModel.postText.value
+    val localPosts = viewModel.localPosts
 
     val tabTitles =
         listOf(stringResource(R.string.co5_activity), stringResource(R.string.co6_member))
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    val communityAdmin = remember { DumpDataProvider.listUser.find { it.id == community?.adminId } }
+    val communityIds = viewModel.getUserCommunityIds(4)
+    val isJoined: Boolean = communityId in communityIds
+    Log.d("log", "communityId: $communityId, communityIds: $communityIds, communityId in communityIds: ${communityId in communityIds} $isJoined")
 
     if (community != null) {
         LazyColumn {
@@ -126,38 +124,40 @@ fun CommunityScreen(
             }
             when (selectedTab) {
                 0 -> item {
+                    if (isJoined) {
                     CustomInputField(
                         placeholder = R.string.co7_your_thought,
                         inputText = post,
-                        onTextChange = { post = it },
+                        onTextChange = { viewModel.onPostTextChange(it) },
                         onSent = {
-                            localPosts.add(
-                                Post(
-                                    id = localPosts.size + 1,
-                                    content = post,
-                                    posterId = 1,
-                                    communityId = communityId,
-                                    visibility = PostVisibility.PUBLIC,
-                                    imageUrl = "",
-                                    reactCount = 0,
-                                    createdAt = LocalDateTime.now()
-                                ),
-                            )
-                            post = ""
+                            viewModel.submitPost(communityId)
                         },
                         modifier = Modifier.padding(24.dp, 16.dp)
-                    )
+                    )} else {
+                        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+
+                            Button(onClick = {viewModel.joinCommunity()}) {
+                                Text("Yêu cầu tham gia")
+                            }
+                        }
+                    }
                 }
             }
             when (selectedTab) {
                 0 -> items(localPosts) { post ->
+                    val user = viewModel.repository.getUserById(post.posterId) ?: return@items
+                    val commentCount = viewModel.repository.getCommentCountForPost(post.id)
+                    val isLiked = viewModel.repository.isPostLiked(post.id)
                     PostCard(
                         post = post,
-                        isLiked = false,
+                        isLiked = isLiked,
                         onPostClick = {
                             navController.navigate(PostDetails.createRoute(post.id))
                         },
                         onToggleLike = {},
+                        user = user,
+                        commentCount = commentCount,
+                        onDeletePost = {}
                     )
                 }
 

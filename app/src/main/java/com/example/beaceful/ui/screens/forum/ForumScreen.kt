@@ -34,20 +34,27 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Community
-import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.SearchItem
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.screen.ChatScreen
+import com.example.beaceful.ui.viewmodel.ForumViewModel
 
 @Composable
-fun ForumScreen(navController: NavController) {
+fun ForumScreen(
+    navController: NavController,
+    viewModel: ForumViewModel = hiltViewModel(),
+    userId: Int
+) {
     val tabTitles =
         listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -70,67 +77,98 @@ fun ForumScreen(navController: NavController) {
         HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
 
         when (selectedTab) {
-            0 -> NewsScreen(navController = navController)
-            1 -> ChatScreen()
+            0 -> NewsScreen(navController = navController, viewModel = viewModel)
+            1 -> ChatScreen(
+                onUserClick = { userId, fullName ->
+                    navController.navigate("chatDetail/$userId/$fullName")
+                },
+                onLogout = {
+                    // TODO: Thêm logic đăng xuất (ví dụ: quay về màn hình login)
+                }
+            )
         }
     }
 }
 
 @Composable
-fun NewsScreen(navController: NavController) {
-    val communities = remember {
-        DumpDataProvider.communities
+fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
+    val communityIds = viewModel.getUserCommunityIds(4)
+    val communityPosts = viewModel.getUserCommunityPosts(4)
+    val allCommunities = remember {
+        viewModel.getAllCommunities()
     }
-    val posts = remember {
-        DumpDataProvider.posts
+    val nameSuggestions = remember(allCommunities) {
+        allCommunities.map { SearchItem(it.id, it.name) }
     }
+    Column(modifier = Modifier.fillMaxSize()) {
+        CustomSearchBar(
+            suggestions = nameSuggestions,
+            onSearch = { selected -> navController.navigate(CommunityRoute.createRoute(selected.id))},
+            modifier = Modifier.padding(horizontal =  16.dp),
+        )
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize(),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        item {
-            CustomSearchBar(
-                suggestions = null,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
-        item {
-            Text(
-                stringResource(R.string.co3_communities),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            Spacer(Modifier.height(16.dp))
-            LazyRow(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                items(communities) { community ->
-                    CommunityItem(
-                        community = community,
-                        onClick = { navController.navigate(CommunityRoute.createRoute(community.id)) }
-                    )
+        Spacer(Modifier.height(16.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize(),
+        ) {
+            item {
+                Text(
+                    stringResource(R.string.co3_communities),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(Modifier.height(16.dp))
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentPadding = PaddingValues(horizontal = 16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    items(communityIds) { communityId ->
+                        val community: Community? = viewModel.getCommunityById(communityId)
+                        if (community != null)
+                            CommunityItem(
+                                community = community,
+                                onClick = {
+                                    navController.navigate(
+                                        CommunityRoute.createRoute(
+                                            communityId
+                                        )
+                                    )
+                                }
+                            )
+                    }
                 }
+                Spacer(Modifier.height(16.dp))
             }
-        }
 
-        item {
-            Text(
-                stringResource(R.string.co4_recent_activity),
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-        }
+            item {
+                Text(
+                    stringResource(R.string.co4_recent_activity),
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                Spacer(Modifier.height(16.dp))
+            }
 
-        items(posts) { post ->
-            PostCard(post = post, onPostClick = {
-                navController.navigate(PostDetails.createRoute(post.id))
-            }, onToggleLike = {}, isLiked = false)
-        }
+            items(communityPosts) { post ->
+                val user = viewModel.repository.getUserById(post.posterId) ?: return@items
+                val commentCount = viewModel.repository.getCommentCountForPost(post.id)
+                val isLiked = viewModel.repository.isPostLiked(post.id)
 
+                PostCard(
+                    post = post,
+                    user = user,
+                    commentCount = commentCount,
+                    isLiked = isLiked,
+                    onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
+                    onToggleLike = { viewModel.repository.toggleLike(post.id) },
+                    community = if (post.communityId != null) viewModel.getCommunityById(post.communityId) else null,
+                    onDeletePost = { viewModel.hidePost(post.id) }
+                )
+
+            }
+
+        }
     }
-
 }
 
 @Composable
@@ -164,18 +202,3 @@ fun CommunityItem(
         Text(text = community.name)
     }
 }
-
-@Composable
-fun ChatScreen() {
-    LazyColumn {
-        item { CustomSearchBar(suggestions = null) }
-        item { Text(stringResource(R.string.co10_friend_chat)) }
-    }
-}
-
-
-//@Preview(widthDp = 360, heightDp = 840, showBackground = true)
-//@Composable
-//fun ForumScreenPreview() {
-//    ForumScreen()
-//}

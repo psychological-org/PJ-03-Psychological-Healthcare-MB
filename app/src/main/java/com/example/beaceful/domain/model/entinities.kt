@@ -14,7 +14,8 @@ data class User(
     val email: String,
     val phone: String? = null,
     val password: String,
-    val headline: String? = null
+    val headline: String? = null,
+    val uid: String? = null
 )
 
 data class Role(
@@ -61,8 +62,8 @@ data class Appointment(
     val status: AppointmentStatus = AppointmentStatus.PENDING,
     val patientId: Int,
     val doctorId: Int,
-    val appointmentDate: LocalDate,
-    val appointmentTime: LocalTime,
+    val appointmentDate: LocalDateTime,
+    val note: String? = null,
     val rating: Int? = null,          // 1–5 sao
     val review: String? = null
 )
@@ -138,3 +139,14 @@ data class DoctorExpertise(
     val content: String,
     val doctorId: Int
 )
+
+data class TimeSlot(
+    val time: LocalDateTime,
+    val isBooked: Boolean
+)
+
+data class SearchItem(
+    val id: Int,
+    val name: String
+)
+

@@ -44,30 +44,33 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.SearchItem
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
+import com.example.beaceful.viewmodel.DoctorViewModel
 
 @Composable
 fun DoctorScreen(
     navController: NavHostController,
+    viewModel: DoctorViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
     val allDoctors = remember {
-        DumpDataProvider.listUser.filter { it.roleId == 2 }   // roleId 2 = DOCTOR
+        viewModel.getAllDoctors()
     }
 
     var query by remember { mutableStateOf("") }
     val nameSuggestions = remember(allDoctors) {
-        allDoctors.map { it.fullName }
+        allDoctors.map { SearchItem(it.id, it.fullName) }
     }
 
     val filteredDoctors = remember(query, allDoctors) {
@@ -81,13 +84,13 @@ fun DoctorScreen(
             suggestions = nameSuggestions,
             placeholder = "Tìm bác sĩ...",
             onSearch = { selected ->
-                query = selected
+                query = selected.name
             },
             modifier = Modifier.fillMaxWidth()
         )
         UserListScreen(
             modifier = Modifier.fillMaxSize(),
-            doctors = filteredDoctors,
+            users = filteredDoctors,
             navController = navController
         )
     }
@@ -97,7 +100,7 @@ fun DoctorScreen(
 @Composable
 fun UserListScreen(
     modifier: Modifier = Modifier,
-    doctors: List<User>,
+    users: List<User>,
     navController: NavHostController
 ) {
 
@@ -108,7 +111,7 @@ fun UserListScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier,
     ) {
-        items(doctors) { doctor ->
+        items(users) { doctor ->
             UserCard(doctor,
                 onProfileClick = {
                     navController.navigate(SingleDoctorProfile.createRoute(doctor.id))
@@ -189,7 +192,10 @@ fun UserCard(
                         .width(120.dp)
                         .height(36.dp)
                 ) {
-                    Text(stringResource(R.string.do2_access), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        stringResource(R.string.do2_access),
+                        style = MaterialTheme.typography.titleSmall
+                    )
                 }
             }
         }

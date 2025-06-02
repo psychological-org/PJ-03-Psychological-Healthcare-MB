@@ -41,11 +41,18 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavHostController
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Emotions
+import com.example.beaceful.ui.navigation.SelectEmotionDiary
+import com.example.beaceful.ui.navigation.WriteDiary
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(
+    navController: NavHostController,
+    modifier: Modifier = Modifier) {
     Box() {
         Image(painter = painterResource(R.drawable.home_background_night), contentDescription = null)
     Column(
@@ -60,14 +67,18 @@ fun HomeScreen(modifier: Modifier = Modifier) {
 
             color = MaterialTheme.colorScheme.primary,
         )
-        HomeScreenEmotionsRow()
+        HomeScreenEmotionsRow(
+            navController = navController
+        )
 
 //        Diary block
         HomeSection(
             title = R.string.ho2_share_thought,
             onClickSeeMore = {}
         ) {
-            HomeDiaryBlock(onClick = {})
+            HomeDiaryBlock(onClick = {
+                navController.navigate(SelectEmotionDiary.route)
+            })
         }
 //        Music
         HomeSection(
@@ -315,7 +326,7 @@ fun HomeDiaryBlock(
     @StringRes buttonText: Int = R.string.ho4_write_diary
 ) {
     Card(
-        onClick = onClick,                               // click áp dụng cho toàn bộ Card
+        onClick = onClick,
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp)
@@ -412,6 +423,7 @@ fun EmotionItem(
 
 @Composable
 fun HomeScreenEmotionsRow(
+    navController: NavHostController,
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
@@ -423,6 +435,8 @@ fun HomeScreenEmotionsRow(
             EmotionItem(
                 drawable = item.iconRes,
                 text = item.descriptionRes,
+                onClick = {navController.navigate(WriteDiary.createRoute(item, datetime = LocalDateTime.now(
+                    ZoneId.of("UTC+7")) ))}
             )
         }
     }
@@ -438,12 +452,6 @@ fun HomeScreenEmotionsRow(
 //    }
 //    HomeDiaryBlock(onClick = {})
 //}
-
-@Preview(widthDp = 360, heightDp = 640, backgroundColor = 0xFF230B45, showBackground = true)
-@Composable
-fun HomeScreenPreview() {
-    HomeScreen()
-}
 
 data class DrawableStringPair(
     @DrawableRes val drawable: Int,

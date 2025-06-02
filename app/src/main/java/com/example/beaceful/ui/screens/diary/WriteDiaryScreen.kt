@@ -1,137 +1,300 @@
 package com.example.beaceful.ui.screens.diary
 
+import android.Manifest
+import android.content.Context
+import android.media.MediaRecorder
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronLeft
-import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
 import com.example.beaceful.R
-import com.example.beaceful.core.util.formatDiaryDate
 import com.example.beaceful.domain.model.Emotions
+import com.example.beaceful.ui.components.calendar.TimePickerDialog
 import com.example.beaceful.ui.navigation.WriteDiary
 import com.example.beaceful.ui.navigation.WriteDiaryExpand
 import com.example.beaceful.ui.screens.home.EmotionItem
+import com.example.beaceful.ui.viewmodel.DiaryViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.accompanist.permissions.shouldShowRationale
+import java.io.File
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 const val SAVED_DIARY_KEY = "diary_content"
 
-@Composable
-fun SelectEmotionScreen(
-    dateTime: LocalDateTime = LocalDateTime.now(),
-    navController: NavHostController,
-) {
-
-    Column(
-        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(stringResource(R.string.di5_greeting))
-        Text(
-            "${formatDiaryDate(dateTime)} tháng ${dateTime.monthValue} lúc ${
-                dateTime.format(
-                    DateTimeFormatter.ofPattern("HH:mm")
-                )
-            }"
-        )
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            contentPadding = PaddingValues(horizontal = 36.dp),
-        ) {
-            items(Emotions.entries) { item ->
-                EmotionItem(
-                    drawable = item.iconRes,
-                    text = item.descriptionRes,
-                    onClick = { navController.navigate(WriteDiary.createRoute(item)) },
-                )
-            }
-        }
-    }
-}
-
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun WriteDiaryScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier,
     selectedEmotion: Emotions,
+    selectedDate: LocalDateTime,
+    modifier: Modifier = Modifier,
+    viewModel: DiaryViewModel = hiltViewModel(),
 ) {
-//    val savedStateHandle = navController.currentBackStackEntry?.savedStateHandle
     val diaryContentFromFullScreen = navController
         .currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow(SAVED_DIARY_KEY, "")
-    var diaryText by remember { mutableStateOf("") }
-    val latestDiaryText by diaryContentFromFullScreen?.collectAsState() ?: remember { mutableStateOf("") }
+    var diaryContent by remember { mutableStateOf("") }
+    var diaryTitle by remember { mutableStateOf("No title") }
+
+    val latestDiaryText by diaryContentFromFullScreen?.collectAsState()
+        ?: remember { mutableStateOf("") }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
+    var recordedVoiceUri by remember { mutableStateOf<Uri?>(null) }
+    var isRecording by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+
+    // Quyền đọc ảnh
+    val readImagePermissionState = rememberPermissionState(Manifest.permission.READ_MEDIA_IMAGES)
+    // Quyền máy ảnh
+    val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
+    // Quyền ghi âm
+    val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
+
+    // Launcher để chọn ảnh từ thư viện
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            selectedImageUri = uri
+        }
+
+    // Launcher để chụp ảnh từ máy ảnh
+    val takePictureLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                selectedImageUri?.let { uri ->
+                    selectedImageUri = uri
+                }
+            }
+        }
+
+    // MediaRecorder để ghi âm
+    val mediaRecorder = remember { mutableStateOf<MediaRecorder?>(null) }
+    val tempVoiceFile = remember { mutableStateOf<File?>(null) }
+
+    fun saveImageToInternalStorage(uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val file =
+                File(context.filesDir, "images/diary_image_${System.currentTimeMillis()}.jpg")
+            file.parentFile?.mkdirs()
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+            file.absolutePath
+        } catch (e: Exception) {
+            println("Error saving image: ${e.message}")
+            null
+        }
+    }
+
+    // Tạo URI tạm thời cho ảnh chụp từ máy ảnh
+    fun createImageUri(context: Context): Uri {
+        val file = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
+        return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
+    }
+
+    // Bắt đầu ghi âm
+    fun startRecording() {
+        if (recordAudioPermissionState.status.isGranted) {
+            try {
+                tempVoiceFile.value = File(context.cacheDir, "voice_${UUID.randomUUID()}.m4a")
+                mediaRecorder.value = MediaRecorder().apply {
+                    setAudioSource(MediaRecorder.AudioSource.MIC)
+                    setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+                    setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+                    setOutputFile(tempVoiceFile.value!!.absolutePath)
+                    prepare()
+                    start()
+                }
+                isRecording = true
+                println("Started recording: ${tempVoiceFile.value!!.absolutePath}")
+            } catch (e: Exception) {
+                println("Error starting recording: ${e.message}")
+                isRecording = false
+            }
+        } else {
+            recordAudioPermissionState.launchPermissionRequest()
+        }
+    }
+
+    // Dừng ghi âm
+    fun stopRecording() {
+        try {
+            mediaRecorder.value?.apply {
+                stop()
+                release()
+            }
+            mediaRecorder.value = null
+            isRecording = false
+            tempVoiceFile.value?.let { file ->
+                recordedVoiceUri = Uri.fromFile(file)
+                println("Stopped recording: ${file.absolutePath}")
+            }
+        } catch (e: Exception) {
+            println("Error stopping recording: ${e.message}")
+            isRecording = false
+        }
+    }
+
+    if (readImagePermissionState.status.shouldShowRationale ||
+        cameraPermissionState.status.shouldShowRationale ||
+        recordAudioPermissionState.status.shouldShowRationale
+    ) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text("Yêu cầu quyền") },
+            text = { Text("Ứng dụng cần quyền truy cập ảnh, máy ảnh hoặc ghi âm để thêm hình ảnh và tin nhắn thoại vào nhật ký.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    readImagePermissionState.launchPermissionRequest()
+                    cameraPermissionState.launchPermissionRequest()
+                    recordAudioPermissionState.launchPermissionRequest()
+                }) { Text("Cấp quyền") }
+            },
+            dismissButton = {
+                TextButton(onClick = { /* Không làm gì */ }) { Text("Từ chối") }
+            }
+        )
+    }
+
+    // Dialog chọn nguồn ảnh
+    var showImageSourceDialog by remember { mutableStateOf(false) }
+    if (showImageSourceDialog) {
+        AlertDialog(
+            onDismissRequest = { showImageSourceDialog = false },
+            title = { Text("Chọn nguồn ảnh") },
+            text = {
+                Column {
+                    TextButton(onClick = {
+                        if (readImagePermissionState.status.isGranted) {
+                            pickImageLauncher.launch("image/*")
+                            showImageSourceDialog = false
+                        } else {
+                            readImagePermissionState.launchPermissionRequest()
+                        }
+                    }) { Text("Thư viện") }
+                    TextButton(onClick = {
+                        if (cameraPermissionState.status.isGranted) {
+                            val newUri = createImageUri(context)
+                            selectedImageUri = newUri
+                            takePictureLauncher.launch(newUri)
+                            showImageSourceDialog = false
+                        } else {
+                            cameraPermissionState.launchPermissionRequest()
+                        }
+                    }) { Text("Máy ảnh") }
+                }
+            },
+            confirmButton = { },
+            dismissButton = {
+                TextButton(onClick = { showImageSourceDialog = false }) { Text("Hủy") }
+            }
+        )
+    }
 
     LaunchedEffect(latestDiaryText) {
-        diaryText = latestDiaryText
+        diaryContent = latestDiaryText
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(top = 16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = {navController.popBackStack()}) {
-                Icon(imageVector = Icons.Default.ChevronLeft, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(
+                    imageVector = Icons.Default.ChevronLeft,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary
+                )
             }
-            Image(painter = painterResource(selectedEmotion.iconRes), contentDescription = null, modifier = Modifier.size(40.dp))
+            Image(
+                painter = painterResource(selectedEmotion.iconRes),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(RoundedCornerShape(18.dp))
+            )
         }
-        Spacer(Modifier.height(20.dp))
-        Card(
-            shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-            modifier = Modifier.fillMaxSize(),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
+        LazyColumn(
+            modifier = modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .background(MaterialTheme.colorScheme.primary),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            item {
+                OutlinedTextField(
+                    value = diaryTitle,
+                    onValueChange = { diaryTitle = it },
+                    placeholder = { Text("No title", color = Color.Gray) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Clear, contentDescription = null,
+                            modifier = Modifier.clickable(onClick = {diaryTitle = ""})
+                        )
+                    }
+                )
+            }
+            item {
                 Text(
                     text = stringResource(R.string.di6_record_your_thought),
                     style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
+            }
 
-                // --- Diary Text Area ---
+            // --- Diary Text Area ---
+            item {
                 Text(
                     "Nhật ký",
                     style = MaterialTheme.typography.labelSmall,
@@ -140,10 +303,12 @@ fun WriteDiaryScreen(
                         .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+                Spacer(Modifier.height(4.dp))
+
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                     TextField(
-                        value = diaryText,
-                        onValueChange = { diaryText = it },
+                        value = diaryContent,
+                        onValueChange = { diaryContent = it },
                         placeholder = { Text("Nhập ghi chép...", color = Color.Gray) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -152,13 +317,12 @@ fun WriteDiaryScreen(
                                 MaterialTheme.colorScheme.secondary,
                                 RoundedCornerShape(24.dp)
                             ),
-//                        colors = TextFieldDefaults.colors(
-//                            containerColor = Color.Transparent,
-//                            textColor = Color(0xFF1A0033)
-//                        )
                     )
                     IconButton(onClick = {
-                        navController.currentBackStackEntry?.savedStateHandle?.set(SAVED_DIARY_KEY, diaryText)
+                        navController.currentBackStackEntry?.savedStateHandle?.set(
+                            SAVED_DIARY_KEY,
+                            diaryContent
+                        )
                         navController.navigate(WriteDiaryExpand.route)
                     }) {
                         Icon(
@@ -168,53 +332,137 @@ fun WriteDiaryScreen(
                         )
                     }
                 }
+            }
 
-                Spacer(Modifier.height(12.dp))
-
-                // --- Image/Video Upload ---
+            // --- Image/Video Upload ---
+            item {
                 Text(
                     "Hình ảnh",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
+                Spacer(Modifier.height(4.dp))
+
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     UploadButton(label = "Từ album") {
-                        // TODO: Mở picker
+                        showImageSourceDialog = true
                     }
                     UploadButton(label = "Máy ảnh") {
-                        // TODO: Mở camera
+                        showImageSourceDialog = true
                     }
                 }
 
-                Spacer(Modifier.height(12.dp))
+                // Hiển thị ảnh đã chọn
+                selectedImageUri?.let { uri ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        AsyncImage(
+                            model = uri,
+                            contentDescription = "Image Preview",
+                            modifier = Modifier
+                                .size(100.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        IconButton(onClick = { selectedImageUri = null }) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Image",
+                                tint = Color.Gray
+                            )
+                        }
+                    }
+                }
+            }
 
-                // --- Voice Record ---
+            // --- Voice Record ---
+            item {
                 Text(
                     "Ghi âm",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
-                        .background(MaterialTheme.colorScheme.background, RoundedCornerShape(8.dp))
+                        .background(
+                            MaterialTheme.colorScheme.background,
+                            RoundedCornerShape(8.dp)
+                        )
                         .padding(horizontal = 12.dp, vertical = 4.dp)
                 )
-                UploadButton(label = "Nhấn để ghi âm") {
-                    // TODO: Start recording
+                Spacer(Modifier.height(4.dp))
+
+                UploadButton(label = if (isRecording) "Dừng ghi âm" else "Nhấn để ghi âm") {
+                    if (isRecording) stopRecording() else startRecording()
                 }
 
-                Spacer(Modifier.height(16.dp))
-
-                // --- Confirm Button ---
-                Button(
-                    onClick = {  },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Xác nhận", color = Color.White)
+                // Hiển thị voice đã ghi
+                recordedVoiceUri?.let { uri ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Tin nhắn thoại",
+                            modifier = Modifier.weight(1f),
+                            color = Color.White
+                        )
+                        IconButton(onClick = {
+                            recordedVoiceUri = null; tempVoiceFile.value?.delete()
+                        }) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Voice",
+                                tint = Color.Gray
+                            )
+                        }
+                    }
                 }
+            }
+
+            // --- Confirm Button ---
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    Button(
+                        onClick = {
+                            val savedImagePath =
+                                selectedImageUri?.let { saveImageToInternalStorage(it) }
+                            viewModel.saveDiary(
+                                emotion = selectedEmotion,
+                                title = diaryTitle,
+                                content = diaryContent.takeIf { it.isNotBlank() },
+                                imageUrl = savedImagePath,
+                                voiceUrl = recordedVoiceUri?.toString(),
+                                posterId = 1,
+                                createAt = selectedDate,
+                            )
+                            navController.popBackStack("diary", inclusive = false)
+                        },
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Xác nhận", color = Color.White)
+                    }
+                }
+            }
+        }
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            mediaRecorder.value?.release()
+            if (!isRecording) {
+                tempVoiceFile.value?.delete()
             }
         }
     }
@@ -226,10 +474,8 @@ fun UploadButton(label: String, onClick: () -> Unit) {
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-        modifier = Modifier
-            .height(48.dp)
     ) {
-        Text(label, color = Color(0xFF1A0033))
+        Text(label, color = MaterialTheme.colorScheme.onTertiary)
     }
 }
 
@@ -280,17 +526,3 @@ fun FullscreenDiaryScreen(navController: NavHostController) {
         }
     }
 }
-
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-fun PreviewSelectEmotionScreen() {
-//    SelectEmotionScreen()
-}
-
-//@Preview(showBackground = true, heightDp = 800)
-//@Composable
-//fun PreviewWriteDiaryScreen() {
-//    WriteDiaryScreen(
-//    )
-//}
