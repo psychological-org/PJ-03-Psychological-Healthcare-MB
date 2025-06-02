@@ -24,8 +24,6 @@ import javax.inject.Inject
 class DiaryViewModel @Inject constructor(
     val repo: DiaryRepository,
 ) : ViewModel() {
-    val CURRENT_DIARY_MONTH_KEY = "current_month_diary"
-
     private val _allDiaries = MutableStateFlow<List<Diary>>(emptyList())
     val allDiaries: StateFlow<List<Diary>> = _allDiaries.asStateFlow()
 
@@ -69,8 +67,6 @@ class DiaryViewModel @Inject constructor(
         return repo.getDiaryById(id)
     }
 
-    fun getDiariesInMonth(baseDate: LocalDateTime): List<Diary> =
-        repo.getDiariesInMonth(baseDate)
     fun getAppointmentsOnDate(userId: Int, date: LocalDateTime): List<Appointment> =
         DumpDataProvider.appointments.filter { it.patientId == userId && it.appointmentDate == date }
 
@@ -79,16 +75,14 @@ class DiaryViewModel @Inject constructor(
         date = LocalDateTime.now()
     ).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
 
-    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
-        repo.getDiariesOnDate(date)
-
     fun saveDiary(
         emotion: Emotions,
         title: String = "No title",
         content: String? = null,
         imageUrl: String? = null,
         voiceUrl: String? = null,
-        posterId: Int
+        posterId: Int,
+        createAt: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC+7"))
     ) {
         viewModelScope.launch {
             val newId = (_allDiaries.value.maxOfOrNull { it.id } ?: 0) + 1
@@ -100,7 +94,7 @@ class DiaryViewModel @Inject constructor(
                 imageUrl = imageUrl,
                 voiceUrl = voiceUrl,
                 posterId = posterId,
-                createdAt = LocalDateTime.now(ZoneId.of("UTC+7"))
+                createdAt = createAt,
             )
             repo.saveDiary(diary)
             loadDiaries()

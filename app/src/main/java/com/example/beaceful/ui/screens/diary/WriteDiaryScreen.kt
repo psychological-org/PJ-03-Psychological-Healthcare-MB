@@ -4,10 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -25,16 +28,14 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Emotions
+import com.example.beaceful.ui.components.calendar.TimePickerDialog
 import com.example.beaceful.ui.navigation.WriteDiary
 import com.example.beaceful.ui.navigation.WriteDiaryExpand
 import com.example.beaceful.ui.screens.home.EmotionItem
@@ -44,52 +45,21 @@ import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 const val SAVED_DIARY_KEY = "diary_content"
 
-@OptIn(ExperimentalPermissionsApi::class)
-@Composable
-fun SelectEmotionScreen(
-    dateTime: LocalDateTime = LocalDateTime.now(),
-    navController: NavHostController,
-) {
-    Column(
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        Text(stringResource(R.string.di5_greeting))
-        Text(
-            "${dateTime.dayOfMonth} tháng ${dateTime.monthValue} lúc ${
-                dateTime.format(
-                    DateTimeFormatter.ofPattern("HH:mm")
-                )
-            }"
-        )
-        LazyRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            contentPadding = PaddingValues(horizontal = 36.dp),
-        ) {
-            items(Emotions.entries) { item ->
-                EmotionItem(
-                    drawable = item.iconRes,
-                    text = item.descriptionRes,
-                    onClick = { navController.navigate(WriteDiary.createRoute(item)) },
-                )
-            }
-        }
-    }
-}
-
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun WriteDiaryScreen(
     navController: NavHostController,
     selectedEmotion: Emotions,
+    selectedDate: LocalDateTime,
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel(),
 ) {
@@ -97,8 +67,11 @@ fun WriteDiaryScreen(
         .currentBackStackEntry
         ?.savedStateHandle
         ?.getStateFlow(SAVED_DIARY_KEY, "")
-    var diaryText by remember { mutableStateOf("") }
-    val latestDiaryText by diaryContentFromFullScreen?.collectAsState() ?: remember { mutableStateOf("") }
+    var diaryContent by remember { mutableStateOf("") }
+    var diaryTitle by remember { mutableStateOf("No title") }
+
+    val latestDiaryText by diaryContentFromFullScreen?.collectAsState()
+        ?: remember { mutableStateOf("") }
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
     var recordedVoiceUri by remember { mutableStateOf<Uri?>(null) }
     var isRecording by remember { mutableStateOf(false) }
@@ -112,18 +85,20 @@ fun WriteDiaryScreen(
     val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     // Launcher để chọn ảnh từ thư viện
-    val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        selectedImageUri = uri
-    }
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            selectedImageUri = uri
+        }
 
     // Launcher để chụp ảnh từ máy ảnh
-    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            selectedImageUri?.let { uri ->
-                selectedImageUri = uri
+    val takePictureLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                selectedImageUri?.let { uri ->
+                    selectedImageUri = uri
+                }
             }
         }
-    }
 
     // MediaRecorder để ghi âm
     val mediaRecorder = remember { mutableStateOf<MediaRecorder?>(null) }
@@ -132,7 +107,8 @@ fun WriteDiaryScreen(
     fun saveImageToInternalStorage(uri: Uri): String? {
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
-            val file = File(context.filesDir, "images/diary_image_${System.currentTimeMillis()}.jpg")
+            val file =
+                File(context.filesDir, "images/diary_image_${System.currentTimeMillis()}.jpg")
             file.parentFile?.mkdirs()
             inputStream?.use { input ->
                 file.outputStream().use { output ->
@@ -197,7 +173,8 @@ fun WriteDiaryScreen(
 
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
-        recordAudioPermissionState.status.shouldShowRationale) {
+        recordAudioPermissionState.status.shouldShowRationale
+    ) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text("Yêu cầu quyền") },
@@ -251,7 +228,7 @@ fun WriteDiaryScreen(
     }
 
     LaunchedEffect(latestDiaryText) {
-        diaryText = latestDiaryText
+        diaryContent = latestDiaryText
     }
 
     Column(
@@ -277,7 +254,6 @@ fun WriteDiaryScreen(
                     .clip(RoundedCornerShape(18.dp))
             )
         }
-        Spacer(Modifier.height(6.dp))
         LazyColumn(
             modifier = modifier
                 .fillMaxSize()
@@ -285,9 +261,30 @@ fun WriteDiaryScreen(
                 .padding(top = 16.dp)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(MaterialTheme.colorScheme.primary),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(16.dp)
         ) {
+            item {
+                OutlinedTextField(
+                    value = diaryTitle,
+                    onValueChange = { diaryTitle = it },
+                    placeholder = { Text("No title", color = Color.Gray) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                    ),
+                    trailingIcon = {
+                        Icon(
+                            Icons.Default.Clear, contentDescription = null,
+                            modifier = Modifier.clickable(onClick = {diaryTitle = ""})
+                        )
+                    }
+                )
+            }
             item {
                 Text(
                     text = stringResource(R.string.di6_record_your_thought),
@@ -310,8 +307,8 @@ fun WriteDiaryScreen(
 
                 Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.TopEnd) {
                     TextField(
-                        value = diaryText,
-                        onValueChange = { diaryText = it },
+                        value = diaryContent,
+                        onValueChange = { diaryContent = it },
                         placeholder = { Text("Nhập ghi chép...", color = Color.Gray) },
                         modifier = Modifier
                             .fillMaxWidth()
@@ -324,7 +321,7 @@ fun WriteDiaryScreen(
                     IconButton(onClick = {
                         navController.currentBackStackEntry?.savedStateHandle?.set(
                             SAVED_DIARY_KEY,
-                            diaryText
+                            diaryContent
                         )
                         navController.navigate(WriteDiaryExpand.route)
                     }) {
@@ -378,7 +375,11 @@ fun WriteDiaryScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = { selectedImageUri = null }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Image", tint = Color.Gray)
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Image",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -416,8 +417,14 @@ fun WriteDiaryScreen(
                             modifier = Modifier.weight(1f),
                             color = Color.White
                         )
-                        IconButton(onClick = { recordedVoiceUri = null; tempVoiceFile.value?.delete() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Voice", tint = Color.Gray)
+                        IconButton(onClick = {
+                            recordedVoiceUri = null; tempVoiceFile.value?.delete()
+                        }) {
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Voice",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -425,23 +432,27 @@ fun WriteDiaryScreen(
 
             // --- Confirm Button ---
             item {
-                Button(
-                    onClick = {
-                        val savedImagePath = selectedImageUri?.let { saveImageToInternalStorage(it) }
-                        viewModel.saveDiary(
-                            emotion = selectedEmotion,
-                            content = diaryText.takeIf { it.isNotBlank() },
-                            imageUrl = savedImagePath,
-                            voiceUrl = recordedVoiceUri?.toString(),
-                            posterId = 1
-                        )
-                        navController.popBackStack("diary", inclusive = false)
-                    },
-                    shape = RoundedCornerShape(24.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                    modifier = Modifier.align(Alignment.CenterHorizontally)
-                ) {
-                    Text("Xác nhận", color = Color.White)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    Button(
+                        onClick = {
+                            val savedImagePath =
+                                selectedImageUri?.let { saveImageToInternalStorage(it) }
+                            viewModel.saveDiary(
+                                emotion = selectedEmotion,
+                                title = diaryTitle,
+                                content = diaryContent.takeIf { it.isNotBlank() },
+                                imageUrl = savedImagePath,
+                                voiceUrl = recordedVoiceUri?.toString(),
+                                posterId = 1,
+                                createAt = selectedDate,
+                            )
+                            navController.popBackStack("diary", inclusive = false)
+                        },
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Text("Xác nhận", color = Color.White)
+                    }
                 }
             }
         }
@@ -463,10 +474,8 @@ fun UploadButton(label: String, onClick: () -> Unit) {
         onClick = onClick,
         shape = RoundedCornerShape(24.dp),
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary),
-        modifier = Modifier
-            .height(48.dp)
     ) {
-        Text(label, color = Color(0xFF1A0033))
+        Text(label, color = MaterialTheme.colorScheme.onTertiary)
     }
 }
 
@@ -516,12 +525,4 @@ fun FullscreenDiaryScreen(navController: NavHostController) {
             Text("Lưu")
         }
     }
-}
-
-@Preview(showBackground = true, heightDp = 400)
-@Composable
-fun PreviewSelectEmotionScreen() {
-    SelectEmotionScreen(
-        navController = rememberNavController()
-    )
 }
