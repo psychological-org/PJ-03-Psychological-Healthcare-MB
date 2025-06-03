@@ -216,6 +216,15 @@ object DumpDataProvider {
             rating = 5,
             review = "Good!",
             status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 12,
+            patientId = 4,
+            doctorId = 3,
+            appointmentDate = LocalDateTime.of(2025, 6, 26, 7, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
         )
 
 

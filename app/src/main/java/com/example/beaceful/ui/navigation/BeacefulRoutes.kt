@@ -93,6 +93,11 @@ data object EditRoute : BeacefulRoutes {
     override val route = "profile_edit"
 }
 
+data object EditAccountRoute : BeacefulRoutes {
+    override val icon = Icons.Filled.Home
+    override val route = "profile_edit_account"
+}
+
 data object ChatDetailRoute : BeacefulRoutes {
     override val icon = Icons.Filled.Chat
     override val route = "chatDetail/{userId}/{userName}"
@@ -111,16 +116,20 @@ data object CustomerRoute : BeacefulRoutes {
 
 data object CustomerDetails : BeacefulRoutes {
     override val icon = Icons.Filled.Home
-    override val route = "customer_details/{customerId}"
+    override val route = "customer_details/{customerId}/{isDoctorView}"
 
-    fun createRoute(customerId: Int): String = "customer_details/$customerId"
+    fun createRoute(customerId: Int, isDoctorView: Boolean): String {
+        return "customer_details/$customerId/$isDoctorView"
+    }
 }
 
 data object AppointmentDetails : BeacefulRoutes {
     override val icon = Icons.Filled.Home
-    override val route = "appointment_details/{appointmentId}"
+    override val route = "appointment_details/{appointmentId}/{isDoctorView}"
 
-    fun createRoute(appointmentId: Int): String = "appointment_details/$appointmentId"
+    fun createRoute(appointmentId: Int, isDoctorView: Boolean): String {
+        return "appointment_details/$appointmentId/$isDoctorView"
+    }
 }
 
 data object Booking : BeacefulRoutes {
@@ -132,4 +141,4 @@ data object Booking : BeacefulRoutes {
 
 
 
-val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, DiaryRoute)
+val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, Profile)
