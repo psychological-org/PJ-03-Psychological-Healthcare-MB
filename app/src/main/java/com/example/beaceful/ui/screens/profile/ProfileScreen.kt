@@ -4,8 +4,10 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -45,7 +47,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
+import com.example.beaceful.ui.components.CustomInputField
 import com.example.beaceful.ui.components.cards.PostCard
+import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.EditRoute
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.screens.doctor.DoctorAboutSection
@@ -62,11 +66,11 @@ fun ProfileScreen(
         listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
     var selectedTab by remember { mutableIntStateOf(0) }
 
-    val doctor = remember { viewModel.getDoctorById(userId) }
+    val user = remember { viewModel.getDoctorById(userId) }
     val doctorPosts = remember { viewModel.getPostsByDoctor(userId) }
 
-    if (doctor == null) {
-        Text("Bác sĩ không tồn tại")
+    if (user == null) {
+        Text("Không tồn tại")
     } else {
 
         LazyColumn(
@@ -85,7 +89,7 @@ fun ProfileScreen(
                             .height(180.dp)
                     )
                     AsyncImage(
-                        model = doctor.avatarUrl,
+                        model = user.avatarUrl,
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -96,27 +100,20 @@ fun ProfileScreen(
                         contentScale = ContentScale.Crop
                     )
 
-                    // button
-                    Button(
-                        onClick = {navController.navigate(EditRoute.route)},
-                        shape = RoundedCornerShape(20.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
-                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .offset(x = (-24).dp, y = 50.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.Edit,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            stringResource(R.string.do15_edit_profile),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+//                    Button(
+//                        onClick = { navController.navigate(CustomerDetails.createRoute(4, false)) },
+//                        shape = RoundedCornerShape(20.dp),
+//                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+//                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+//                        modifier = Modifier
+//                            .align(Alignment.BottomEnd)
+//                            .offset(x = (-24).dp, y = 50.dp)
+//                    ) {
+//                        Text(
+//                            "Xem lịch hẹn",
+//                            color = MaterialTheme.colorScheme.primary
+//                        )
+//                    }
                 }
             }
 
@@ -125,13 +122,13 @@ fun ProfileScreen(
 
                 // Tên
                 Text(
-                    text = doctor.fullName,
+                    text = user.fullName,
                     style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 Text(
-                    text = doctor.headline ?: "",
+                    text = user.headline ?: "",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.7f
@@ -140,6 +137,41 @@ fun ProfileScreen(
                     modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
                 )
 
+                Spacer(Modifier.height(8.dp))
+            }
+            item {
+                Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(space = 16.dp, alignment = Alignment.CenterHorizontally)) {
+                    Button(
+                        onClick = {navController.navigate(EditRoute.route)},
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    ) {
+//                        Icon(
+//                            Icons.Default.Edit,
+//                            contentDescription = null,
+//                            tint = MaterialTheme.colorScheme.primary
+//                        )
+//                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            stringResource(R.string.do15_edit_profile),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Button(
+                        onClick = { navController.navigate(CustomerDetails.createRoute(4, false)) },
+                        shape = RoundedCornerShape(20.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+                    ) {
+                        Text(
+                            "Xem lịch hẹn",
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+            item {
                 Spacer(Modifier.height(16.dp))
 
                 // Tabs
@@ -162,6 +194,20 @@ fun ProfileScreen(
             }
 
             when (selectedTab) {
+                0 -> item {
+                    CustomInputField(
+                        placeholder = R.string.co7_your_thought,
+                        inputText = "",
+                        onTextChange = { },
+                        onSent = {
+
+                        },
+                        modifier = Modifier.padding(24.dp, 16.dp)
+                    )
+                }
+            }
+
+            when (selectedTab) {
                 0 -> items(doctorPosts) { post ->
                     val user = viewModel.getUserById(post.posterId) ?: return@items
                     val commentCount = viewModel.getCommentCount(post.id)
@@ -179,7 +225,7 @@ fun ProfileScreen(
                 }
 
                 1 -> item {
-                    DoctorAboutSection(biography = doctor.biography)
+                    DoctorAboutSection(biography = user.biography)
                 }
             }
         }

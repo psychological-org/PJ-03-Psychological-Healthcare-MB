@@ -1,7 +1,6 @@
 package com.example.beaceful.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
-import androidx.navigation.NavHostController
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.User
@@ -15,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppointmentViewModel @Inject constructor(
-    private val repo: AppointmentRepository
+    val repo: AppointmentRepository
 ):ViewModel() {
     private val _currentMonth = MutableStateFlow(LocalDateTime.now().withDayOfMonth(1))
     val currentMonth: StateFlow<LocalDateTime> = _currentMonth
@@ -42,7 +41,7 @@ class AppointmentViewModel @Inject constructor(
     fun getUpcoming(): List<Appointment> = getAppointmentsOnDate(LocalDateTime.now()).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
     fun getAppointments(doctorId: Int): List<Appointment> =
         repo.getAppointmentsOfDoctor(doctorId)
-    fun getAppointmentsOfPatient(doctorId: Int, customerId: Int) =
+    fun getAppointmentsOfPatientByDoctor(doctorId: Int, customerId: Int) =
         repo.getAppointmentsOfDoctor(doctorId).filter { it.patientId == customerId }
     fun getPatients(doctorId: Int): List<User> {
         return getAppointments(doctorId)
