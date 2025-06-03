@@ -1,5 +1,6 @@
 package com.example.beaceful.domain.model
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.*
 
 data class User(
@@ -148,5 +149,11 @@ data class TimeSlot(
 data class SearchItem(
     val id: Int,
     val name: String
+)
+
+data class ProfileSelection(
+    val title: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
 )
 

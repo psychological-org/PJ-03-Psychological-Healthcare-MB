@@ -1,9 +1,163 @@
 package com.example.beaceful.ui.screens.profile
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Help
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.Help
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import coil3.compose.AsyncImage
+import com.example.beaceful.R
+import com.example.beaceful.domain.model.ProfileSelection
+import com.example.beaceful.ui.navigation.CustomerDetails
+import com.example.beaceful.ui.navigation.EditAccountRoute
+import com.example.beaceful.viewmodel.DoctorViewModel
 
 @Composable
-fun EditProfileScreen() {
-    Text("Edit screen")
+fun EditProfileScreen(
+    navController: NavHostController,
+    viewModel: DoctorViewModel = hiltViewModel(),
+) {
+    val user = remember { viewModel.getDoctorById(1) }
+    val listSelection = listOf(
+        ProfileSelection("Tài khoản", Icons.Default.AccountCircle) {
+            navController.navigate(
+                EditAccountRoute.route
+            )
+        },
+        ProfileSelection("Riêng tư & an toàn", Icons.Default.Lock, {}),
+        ProfileSelection("Thông báo", Icons.Default.Notifications, {}),
+        ProfileSelection("Hỗ trợ", Icons.AutoMirrored.Filled.Help, {}),
+        ProfileSelection("Về chúng tôi", Icons.Default.Info, {}),
+    )
+    if (user == null) {
+        Text("Không tồn tại")
+    } else {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+        ) {
+            item {
+                Box {
+                    Image(
+                        painter = painterResource(id = R.drawable.profile_background),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(180.dp)
+                    )
+                    AsyncImage(
+                        model = user.avatarUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .offset(x = 24.dp, y = 50.dp)
+                            .border(4.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                            .size(120.dp)
+                            .clip(CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+
+            item {
+                Spacer(Modifier.height(60.dp))
+
+                // Tên
+                Text(
+                    text = user.fullName,
+                    style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary),
+                    modifier = Modifier.padding(horizontal = 24.dp)
+                )
+
+                Spacer(Modifier.height(16.dp))
+            }
+            items(listSelection) { selection ->
+                Row(Modifier.padding(horizontal = 16.dp)) {
+                    Button(
+                        onClick = selection.onClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp)
+                    ) {
+                        Icon(
+                            selection.icon,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            selection.title, color = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.fillMaxWidth().padding(4.dp),
+                            textAlign = TextAlign.Left,
+                        )
+                    }
+                }
+            }
+            item {
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(top = 18.dp),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.Logout,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSecondary
+                        )
+                        Spacer(Modifier.width(12.dp))
+                        Text("Đăng xuất", color = MaterialTheme.colorScheme.onSecondary)
+                    }
+                }
+            }
+        }
+    }
 }
+

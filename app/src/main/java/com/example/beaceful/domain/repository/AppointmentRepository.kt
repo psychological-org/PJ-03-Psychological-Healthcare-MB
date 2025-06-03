@@ -46,6 +46,7 @@ class AppointmentRepository @Inject constructor() {
             .toSet()
         return DumpDataProvider.listUser.filter { it.id in patientIds }
     }
+    fun getAllAppointmentsOfPatient(patientId: Int) : List<Appointment> = DumpDataProvider.appointments.filter { it.patientId == patientId }
 
 
 }
