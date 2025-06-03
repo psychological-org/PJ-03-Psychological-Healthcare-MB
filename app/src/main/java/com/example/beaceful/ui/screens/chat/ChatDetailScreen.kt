@@ -1,4 +1,4 @@
-package com.example.beaceful.ui.screen
+package com.example.beaceful.ui.screens.chat
 
 import android.Manifest
 import android.content.Context
@@ -6,7 +6,9 @@ import android.media.MediaPlayer
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -38,8 +40,10 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import java.time.format.DateTimeFormatter
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import com.example.beaceful.R
 import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File
 
@@ -71,18 +75,20 @@ fun ChatDetailScreen(
     val recordAudioPermissionState = rememberPermissionState(Manifest.permission.RECORD_AUDIO)
 
     // Launcher để chọn ảnh từ thư viện
-    val pickImageLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        viewModel.setSelectedImage(uri)
-    }
+    val pickImageLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            viewModel.setSelectedImage(uri)
+        }
 
     // Launcher để chụp ảnh từ máy ảnh
-    val takePictureLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
-        if (success) {
-            viewModel.selectedImageUri.value?.let { uri ->
-                viewModel.setSelectedImage(uri)
+    val takePictureLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { success ->
+            if (success) {
+                viewModel.selectedImageUri.value?.let { uri ->
+                    viewModel.setSelectedImage(uri)
+                }
             }
         }
-    }
 
     // Tạo URI tạm thời cho ảnh chụp từ máy ảnh
     fun createImageUri(context: Context): Uri {
@@ -93,7 +99,8 @@ fun ChatDetailScreen(
     // Dialog hiển thị khi cần giải thích quyền
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
-        recordAudioPermissionState.status.shouldShowRationale) {
+        recordAudioPermissionState.status.shouldShowRationale
+    ) {
         AlertDialog(
             onDismissRequest = {},
             title = { Text("Yêu cầu quyền") },
@@ -160,39 +167,42 @@ fun ChatDetailScreen(
         )
     }
 
-    val gradientBackground = Brush.verticalGradient(
-        colors = listOf(Color(0xFF4A148C), Color(0xFFAB47BC)),
-        startY = 0f,
-        endY = Float.POSITIVE_INFINITY
-    )
-
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AsyncImage(
-                            model = "https://via.placeholder.com/30",
-                            contentDescription = "Avatar",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clip(CircleShape)
-                                .padding(end = 8.dp)
-                        )
-                        Text(
-                            text = userName,
-                            fontWeight = FontWeight.Bold,
-                            color = Color.White
-                        )
-                    }
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Color.White)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFF6A1B9A))
-            )
+            Column {
+                TopAppBar(
+                    title = {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            AsyncImage(
+                                model = "https://via.placeholder.com/30",
+                                contentDescription = "Avatar",
+                                modifier = Modifier
+                                    .size(50.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                            )
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                text = userName,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                Icons.Default.ArrowBack,
+                                contentDescription = "Back",
+                                tint = Color.White
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                )
+                HorizontalDivider(modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.secondary),)
+            }
         },
         bottomBar = {
             Column(
@@ -219,7 +229,11 @@ fun ChatDetailScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         IconButton(onClick = { viewModel.clearSelectedImage() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Image", tint = Color.Gray)
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Image",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -237,7 +251,11 @@ fun ChatDetailScreen(
                             color = Color.Black
                         )
                         IconButton(onClick = { viewModel.clearRecordedVoice() }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Clear Voice", tint = Color.Gray)
+                            Icon(
+                                Icons.Default.Clear,
+                                contentDescription = "Clear Voice",
+                                tint = Color.Gray
+                            )
                         }
                     }
                 }
@@ -245,7 +263,11 @@ fun ChatDetailScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     IconButton(onClick = { showImageSourceDialog = true }) {
-                        Icon(Icons.Default.AttachFile, contentDescription = "Attach", tint = Color.Gray)
+                        Icon(
+                            Icons.Default.AttachFile,
+                            contentDescription = "Attach",
+                            tint = Color.Gray
+                        )
                     }
                     IconButton(onClick = {
                         if (recordAudioPermissionState.status.isGranted) {
@@ -293,7 +315,11 @@ fun ChatDetailScreen(
                             }
                         }
                     ) {
-                        Icon(Icons.Default.Send, contentDescription = "Send", tint = Color(0xFF6A1B9A))
+                        Icon(
+                            Icons.Default.Send,
+                            contentDescription = "Send",
+                            tint = Color(0xFF6A1B9A)
+                        )
                     }
                 }
             }
@@ -302,9 +328,12 @@ fun ChatDetailScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(gradientBackground)
-                .padding(padding)
         ) {
+            Image(
+                painter = painterResource(R.drawable.chat_bg),
+                contentDescription = null,
+                contentScale = ContentScale.Crop
+            )
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -312,9 +341,11 @@ fun ChatDetailScreen(
                 reverseLayout = true,
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                item { Spacer(Modifier.height(60.dp)) }
                 items(messages.reversed()) { message ->
                     MessageItem(message, viewModel.currentUserId ?: 0)
                 }
+                item { Spacer(Modifier.height(90.dp)) }
             }
         }
     }
@@ -340,21 +371,23 @@ fun MessageItem(message: Message, currentUserId: Int) {
                     .size(24.dp)
                     .clip(CircleShape)
                     .align(Alignment.Top)
+                    .background(MaterialTheme.colorScheme.primary)
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
         Surface(
-            shape = RoundedCornerShape(12.dp),
-            color = if (isSentByCurrentUser) Color(0xFF9575CD) else Color.White,
+            shape = RoundedCornerShape(18.dp),
+            color = if (isSentByCurrentUser) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier
                 .widthIn(max = 250.dp)
+                .border(1.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(18.dp))
         ) {
             Column(modifier = Modifier.padding(8.dp)) {
                 var hasContent = false
                 if (!message.content.isNullOrBlank()) {
                     Text(
                         text = message.content,
-                        color = if (isSentByCurrentUser) Color.White else Color.Black,
+                        color = if (isSentByCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                         fontSize = 16.sp
                     )
                     hasContent = true
@@ -410,12 +443,12 @@ fun MessageItem(message: Message, currentUserId: Int) {
                             Icon(
                                 imageVector = if (isPlaying) Icons.Default.Stop else Icons.Default.PlayArrow,
                                 contentDescription = if (isPlaying) "Stop Voice" else "Play Voice",
-                                tint = if (isSentByCurrentUser) Color.White else Color.Black
+                                tint = if (isSentByCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                             )
                         }
                         Text(
                             text = "Tin nhắn thoại",
-                            color = if (isSentByCurrentUser) Color.White else Color.Black,
+                            color = if (isSentByCurrentUser) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
                             fontSize = 16.sp
                         )
                     }
@@ -424,7 +457,7 @@ fun MessageItem(message: Message, currentUserId: Int) {
                 if (hasContent) {
                     Text(
                         text = message.createdAt.format(DateTimeFormatter.ofPattern("HH:mm")),
-                        color = if (isSentByCurrentUser) Color.White.copy(alpha = 0.7f) else Color.Gray,
+                        color = Color.Gray,
                         fontSize = 12.sp,
                         modifier = Modifier.align(Alignment.End)
                     )
@@ -440,6 +473,7 @@ fun MessageItem(message: Message, currentUserId: Int) {
                     .size(24.dp)
                     .clip(CircleShape)
                     .align(Alignment.Top)
+                    .background(MaterialTheme.colorScheme.primary)
             )
         }
     }

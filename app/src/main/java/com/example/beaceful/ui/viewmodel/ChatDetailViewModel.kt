@@ -54,10 +54,14 @@ class ChatDetailViewModel : ViewModel() {
     }
 
     fun setChatPartner(userId: Int, userName: String) {
-        otherUserId = userId
-        otherUserName = userName
-        println("setChatPartner: userId=$userId, userName=$userName")
-        loadMessages()
+        viewModelScope.launch {
+            if (currentUserId == null) {
+                loadCurrentUserId()
+            }
+            otherUserId = userId
+            otherUserName = userName
+            loadMessages()
+        }
     }
 
     fun loadMessages() {

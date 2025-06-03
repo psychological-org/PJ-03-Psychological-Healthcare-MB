@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,7 +47,7 @@ import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
-import com.example.beaceful.ui.screen.ChatScreen
+import com.example.beaceful.ui.screens.chat.ChatScreen
 import com.example.beaceful.ui.viewmodel.ForumViewModel
 
 @Composable
@@ -57,7 +58,7 @@ fun ForumScreen(
 ) {
     val tabTitles =
         listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
-    var selectedTab by remember { mutableIntStateOf(0) }
+    var selectedTab by rememberSaveable { mutableIntStateOf(0) }
     // Tabs
     Column {
         TabRow(

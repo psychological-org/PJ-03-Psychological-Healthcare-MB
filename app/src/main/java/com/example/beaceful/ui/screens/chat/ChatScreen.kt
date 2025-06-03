@@ -1,10 +1,13 @@
-package com.example.beaceful.ui.screen
+package com.example.beaceful.ui.screens.chat
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
@@ -23,6 +26,7 @@ import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.viewmodel.ChatPreview
 import com.example.beaceful.ui.viewmodel.ChatViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.beaceful.ui.components.CustomSearchBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,39 +38,36 @@ fun ChatScreen(
     val users by viewModel.users
     val chatPreviews by viewModel.chatPreviews
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Chat") },
-                actions = {
-                    IconButton(onClick = onLogout) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Logout")
-                    }
-                }
+    LazyColumn (contentPadding = PaddingValues(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            CustomSearchBar(
+                suggestions = null,
             )
         }
-    ) { padding ->
         if (users.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Không có người dùng nào", color = Color.Gray)
+            item {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Không có người dùng nào", color = Color.Gray)
+                }
             }
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-            ) {
-                items(users) { user ->
-                    UserItem(
-                        user = user,
-                        preview = chatPreviews[user.id],
-                        onClick = { onUserClick(user.id, user.fullName) }
-                    )
+            item {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    users.forEach() { user ->
+                        UserItem(
+                            user = user,
+                            preview = chatPreviews[user.id],
+                            onClick = { onUserClick(user.id, user.fullName) }
+                        )
+                    }
                 }
             }
         }
@@ -83,8 +84,14 @@ fun UserItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .border(
+                width = 1.dp,
+                color = MaterialTheme.colorScheme.secondary,
+                shape = RoundedCornerShape(18.dp)
+            )
+            .padding(16.dp)
+        ,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         AsyncImage(
             model = user.avatarUrl ?: "https://via.placeholder.com/50",
@@ -92,33 +99,32 @@ fun UserItem(
             modifier = Modifier
                 .size(50.dp)
                 .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary)
         )
         Spacer(modifier = Modifier.width(12.dp))
         Column(
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f).fillMaxWidth()
         ) {
             Text(
                 text = user.fullName,
                 fontWeight = if (preview?.isNewMessage == true) FontWeight.Bold else FontWeight.Normal,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = preview?.lastMessage ?: "Chưa có tin nhắn",
                 fontSize = 14.sp,
                 fontWeight = if (preview?.isNewMessage == true) FontWeight.Bold else FontWeight.Normal,
-                color = Color.Gray,
+                color = MaterialTheme.colorScheme.secondary,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+                overflow = TextOverflow.Ellipsis,
+
+                )
         }
-        Column(
-            horizontalAlignment = Alignment.End
-        ) {
             Text(
                 text = preview?.createdAt ?: "",
                 fontSize = 12.sp,
-                color = Color.Gray
+                color = MaterialTheme.colorScheme.secondary,
             )
-        }
     }
 }

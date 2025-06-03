@@ -14,8 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
-import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
-import com.example.beaceful.ui.screen.ChatDetailScreen
+import com.example.beaceful.ui.screens.chat.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
 import com.example.beaceful.ui.screens.customer.CustomerDetailsScreen
