@@ -50,7 +50,6 @@ import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
 import com.example.beaceful.ui.components.cards.DiaryList
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.viewmodel.DiaryViewModel
-import java.time.LocalDateTime
 
 @Composable
 fun DiaryScreen(
@@ -59,17 +58,7 @@ fun DiaryScreen(
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
     val currentMonth by viewModel.currentMonth.collectAsState()
-
-//    LaunchedEffect(Unit) {
-//        val returnedMonth = navController.currentBackStackEntry
-//            ?.savedStateHandle
-//            ?.get<LocalDateTime>("selectedMonth")
-//
-//        if (returnedMonth != null) {
-//            viewModel.setMonth(returnedMonth)
-//            navController.currentBackStackEntry?.savedStateHandle?.remove<LocalDateTime>("selectedMonth")
-//        }
-//    }
+    val diariesForMonth by viewModel.diariesForMonth.collectAsState()
 
     Box {
         Column(modifier = Modifier.fillMaxHeight()) {
@@ -113,9 +102,14 @@ fun DiaryScreen(
                         }
                     }
                 ) { month ->
+                    LaunchedEffect(currentMonth) {
+                        viewModel.loadDiariesForMonth(month)
+                    }
                     DiaryList(
-                        diaries = viewModel.repo.getDiariesInMonth(month),
-                        navController = navController
+//                        diaries = viewModel.repo.getDiariesInMonth(month),
+                        diaries = diariesForMonth,
+                        navController = navController,
+                        onDeleteDiary = { diary -> viewModel.deleteDiary(diary.id) }
                     )
                 }
             }

@@ -181,10 +181,10 @@ fun DiaryFullScreen(
     if (showImageSourceDialog) {
         AlertDialog(
             onDismissRequest = { showImageSourceDialog = false },
-            title = { Text("Chọn nguồn ảnh") },
+            title = { Text("Chọn nguồn ảnh", color = MaterialTheme.colorScheme.primary) },
             text = {
-                Column {
-                    TextButton(onClick = {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Button (onClick = {
                         if (readImagePermissionState.status.isGranted) {
                             pickImageLauncher.launch("image/*")
                             showImageSourceDialog = false
@@ -192,7 +192,7 @@ fun DiaryFullScreen(
                             readImagePermissionState.launchPermissionRequest()
                         }
                     }) { Text("Thư viện") }
-                    TextButton(onClick = {
+                    Button(onClick = {
                         if (cameraPermissionState.status.isGranted) {
                             val newUri = createImageUri(context)
                             selectedImageUri = newUri
@@ -313,12 +313,11 @@ fun DiaryFullScreen(
                 )
                 Spacer(Modifier.height(4.dp))
 
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    UploadButton(label = "Từ album") {
-                        showImageSourceDialog = true
-                    }
-                    UploadButton(label = "Máy ảnh") {
-                        showImageSourceDialog = true
+                if(selectedImageUri == null){
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        UploadButton(label = "Chọn ảnh") {
+                            showImageSourceDialog = true
+                        }
                     }
                 }
 

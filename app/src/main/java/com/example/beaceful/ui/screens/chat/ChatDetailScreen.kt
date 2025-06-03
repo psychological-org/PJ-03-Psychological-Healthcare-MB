@@ -124,20 +124,18 @@ fun ChatDetailScreen(
     if (showImageSourceDialog) {
         AlertDialog(
             onDismissRequest = { showImageSourceDialog = false },
-            title = { Text("Chọn nguồn ảnh") },
+            title = { Text("Chọn nguồn ảnh", color = MaterialTheme.colorScheme.primary) },
             text = {
-                Column {
-                    TextButton(onClick = {
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Button (onClick = {
                         if (readImagePermissionState.status.isGranted) {
                             pickImageLauncher.launch("image/*")
                             showImageSourceDialog = false
                         } else {
                             readImagePermissionState.launchPermissionRequest()
                         }
-                    }) {
-                        Text("Thư viện")
-                    }
-                    TextButton(onClick = {
+                    }) { Text("Thư viện") }
+                    Button(onClick = {
                         if (cameraPermissionState.status.isGranted) {
                             val newUri = createImageUri(context)
                             viewModel.setSelectedImage(newUri)
