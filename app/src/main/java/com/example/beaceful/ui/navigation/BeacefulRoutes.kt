@@ -141,4 +141,4 @@ data object Booking : BeacefulRoutes {
 
 
 
-val BeacefulBottomNavPatient = listOf(AppointmentRoute, CustomerRoute, Doctor, Forum, Profile)
+val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
