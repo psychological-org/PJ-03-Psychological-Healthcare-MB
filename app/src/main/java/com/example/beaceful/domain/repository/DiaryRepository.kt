@@ -161,8 +161,8 @@ class DiaryRepository @Inject constructor(
         file.writeText(jsonString)
         println("Updated diary to ${file.absolutePath}")
     }
-    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
-        DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
+//    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
+//        DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
     fun getUserById(userId: Int): User? =
         DumpDataProvider.listUser.find { it.id == userId }
 }
