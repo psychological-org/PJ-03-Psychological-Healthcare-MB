@@ -88,7 +88,7 @@ data class Topic(
 
 data class Collection(
     val id: Int,
-    val content: String,
+    val name: String,
     val resourceId: String,
     val topicId: Int,
     val type: CollectionType = CollectionType.MUSIC
