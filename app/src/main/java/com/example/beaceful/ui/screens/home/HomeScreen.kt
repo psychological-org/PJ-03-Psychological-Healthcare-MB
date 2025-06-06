@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
@@ -23,15 +24,20 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,77 +47,122 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Emotions
+import com.example.beaceful.ui.components.cards.MiniMusicPlayer
+import com.example.beaceful.ui.components.cards.MusicListScreen
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
+import com.example.beaceful.ui.viewmodel.MusicPlayerViewModel
 import java.time.LocalDateTime
 import java.time.ZoneId
 
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    modifier: Modifier = Modifier) {
+    modifier: Modifier = Modifier
+) {
+    val musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel()
+    val current by musicPlayerViewModel.currentCollection.collectAsState()
+    val isPlaying by musicPlayerViewModel.isPlaying.collectAsState()
+    val currentPosition by musicPlayerViewModel.currentPosition.collectAsState()
+    val duration by musicPlayerViewModel.duration.collectAsState()
+
     Box() {
-        Image(painter = painterResource(R.drawable.home_background_night), contentDescription = null)
-    Column(
-        modifier.verticalScroll(rememberScrollState()),
-    ) {
-        Spacer(Modifier.height(256.dp))
+        Image(
+            painter = painterResource(R.drawable.home_background_night),
+            contentDescription = null
+        )
+        Column(
+            modifier.verticalScroll(rememberScrollState()),
+        ) {
+            Spacer(Modifier.height(256.dp))
 //        Greeting block
-        Text(
-            text = stringResource(R.string.ho1_greeting),
-            style = MaterialTheme.typography.titleLarge,
-
-
-            color = MaterialTheme.colorScheme.primary,
-        )
-        HomeScreenEmotionsRow(
-            navController = navController
-        )
+            Text(
+                text = stringResource(R.string.ho1_greeting),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            HomeScreenEmotionsRow(
+                navController = navController
+            )
 
 //        Diary block
-        HomeSection(
-            title = R.string.ho2_share_thought,
-            onClickSeeMore = {}
-        ) {
-            HomeDiaryBlock(onClick = {
-                navController.navigate(SelectEmotionDiary.route)
-            })
-        }
-//        Music
-        HomeSection(
-            title = R.string.ho5_music_for_u,
-            onClickSeeMore = {}
-        ) {
-            ForYouRow(list = musicList) { item ->
-                MusicItem(background = item.drawable, title = item.text)
+            HomeSection(
+                title = R.string.ho2_share_thought,
+                onClickSeeMore = {}
+            ) {
+                HomeDiaryBlock(onClick = {
+                    navController.navigate(SelectEmotionDiary.route)
+                })
             }
-        }
+//        Music
+            HomeSection(
+                title = R.string.ho5_music_for_u,
+                onClickSeeMore = {}
+            ) {
+                val collection = DumpDataProvider.collections
+//            ForYouRow(list = musicList) { item ->
+//                MusicItem(background = item.drawable, title = item.text)
+//            }
+                MusicListScreen(collection)
+            }
 
 //        Book
-        HomeSection(
-            title = R.string.ho6_book_for_u,
-            onClickSeeMore = {}
-        ) {
-            ForYouRow(list = bookList) { item ->
-                BookItem(background = item.drawable, title = item.text)
+            HomeSection(
+                title = R.string.ho6_book_for_u,
+                onClickSeeMore = {}
+            ) {
+                ForYouRow(list = bookList) { item ->
+                    BookItem(background = item.drawable, title = item.text)
+                }
             }
-        }
 
 //        Podcast
-        HomeSection(
-            title = R.string.ho7_podcast_for_u,
-            onClickSeeMore = {}
-        ) {
-            ForYouRow(list = podcastList) { item ->
-                PodcastItem(background = item.drawable, title = item.text)
+            HomeSection(
+                title = R.string.ho7_podcast_for_u,
+                onClickSeeMore = {}
+            ) {
+                ForYouRow(list = podcastList) { item ->
+                    PodcastItem(background = item.drawable, title = item.text)
+                }
+            }
+            if (current != null) {
+                Spacer(Modifier.height(80.dp))
             }
         }
 
+        if (current != null) {
+            MiniMusicPlayer(
+                collection = current!!,
+                isPlaying = isPlaying,
+                currentPosition = currentPosition,
+                duration = duration,
+                onTogglePlayPause = { musicPlayerViewModel.togglePlayback() },
+                onSeekTo = { pos -> musicPlayerViewModel.seekTo(pos) },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
+            IconButton(
+                onClick = { musicPlayerViewModel.stopAndClear() },
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x= (-16).dp, y = (-56).dp)
+                    .size(28.dp),
+                colors = IconButtonDefaults.iconButtonColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary
+                )
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = "",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        }
     }
-}
 }
 
 @Composable
@@ -435,8 +486,15 @@ fun HomeScreenEmotionsRow(
             EmotionItem(
                 drawable = item.iconRes,
                 text = item.descriptionRes,
-                onClick = {navController.navigate(WriteDiary.createRoute(item, datetime = LocalDateTime.now(
-                    ZoneId.of("UTC+7")) ))}
+                onClick = {
+                    navController.navigate(
+                        WriteDiary.createRoute(
+                            item, datetime = LocalDateTime.now(
+                                ZoneId.of("UTC+7")
+                            )
+                        )
+                    )
+                }
             )
         }
     }

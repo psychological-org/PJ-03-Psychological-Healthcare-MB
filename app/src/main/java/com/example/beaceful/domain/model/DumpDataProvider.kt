@@ -234,15 +234,44 @@ object DumpDataProvider {
     val collections = listOf(
         Collection(
             id = 1,
-            content = "Lo‑fi Chill Mix",
-            resourceId = "https://cdn.example.com/audio/lofi.mp3",
+            name = "Thư giãn",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/1.mp3",
             topicId = 1,
             type = CollectionType.MUSIC
         ),
         Collection(
             id = 2,
-            content = "Mindfulness Podcast Ep.1",
-            resourceId = "https://cdn.example.com/podcast/ep1.mp3",
+            name = "Tập trung",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/2.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+        ),
+        Collection(
+            id = 3,
+            name = "Yên bình",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/3.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+        ),
+        Collection(
+            id = 4,
+            name = "Giấc ngủ",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/4.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+
+        ),
+        Collection(
+            id = 5,
+            name = "Tâm trạng",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/5.mp3",
+            topicId = 1,
+            type = CollectionType.PODCAST
+        ),
+        Collection(
+            id = 6,
+            name = "Hoài niệm",
+            resourceId = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/6.mp3",
             topicId = 1,
             type = CollectionType.PODCAST
         )
