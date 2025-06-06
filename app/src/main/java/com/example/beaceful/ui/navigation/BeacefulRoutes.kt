@@ -139,6 +139,26 @@ data object Booking : BeacefulRoutes {
     fun createRoute(doctorId: Int) = "doctorProfile/$doctorId/booking"
 }
 
+data object LoginRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "login"
+}
 
+data object SignUpRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "signUp"
+}
+data object ForgotRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "login_forgot"
+}
 
-val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
+data object VerifyRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "login_forgot_verify"
+}
+
+val BeacefulBottomNavPatient = listOf(LoginRoute, SignUpRoute, ForgotRoute, VerifyRoute, Profile)
+
+// val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
+

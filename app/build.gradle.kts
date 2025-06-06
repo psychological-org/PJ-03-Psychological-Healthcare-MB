@@ -102,10 +102,11 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.accompanist.permissions)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
-    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
-    implementation("io.coil-kt.coil3:coil-compose:3.1.0")
+
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.accompanist.permissions.v0360)
+    implementation(libs.coil.compose)
+
     implementation(libs.androidx.media3.exoplayer.v131)
     implementation(libs.androidx.media3.ui.v131)
-
 }
