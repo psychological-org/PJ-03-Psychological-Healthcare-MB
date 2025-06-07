@@ -29,11 +29,11 @@ import com.example.beaceful.domain.model.SearchItem
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CustomSearchBar(
-    suggestions: List<SearchItem>?,
+fun <T> CustomSearchBar(
+    suggestions: List<SearchItem<T>>?,
     modifier: Modifier = Modifier,
     placeholder: String = "Tìm kiếm...",
-    onSearch: (SearchItem) -> Unit = {},
+    onSearch: (SearchItem<T>) -> Unit = {},
 ) {
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(false) }

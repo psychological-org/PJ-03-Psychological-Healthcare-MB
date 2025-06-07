@@ -58,9 +58,9 @@ data object Forum : BeacefulRoutes {
 }
 data object CommunityRoute : BeacefulRoutes {
     override val icon = Icons.Filled.Forum
-    override val route = "forum_community/{communityId}"
+    override val route = "forum_community/{communityId}/{userId}"
 
-    fun createRoute(communityId: Int) = "forum_community/$communityId"
+    fun createRoute(communityId: Int, userId: String) = "forum_community/$communityId/$userId"
 }
 data object Profile : BeacefulRoutes {
     override val icon = Icons.Filled.Person
@@ -71,7 +71,7 @@ data object SingleDoctorProfile : BeacefulRoutes {
     override val icon = Icons.Filled.Person
     override val route = "doctorProfile/{doctorId}"
 
-    fun createRoute(doctorId: Int) = "doctorProfile/$doctorId"
+    fun createRoute(doctorId: String) = "doctorProfile/$doctorId"
 }
 
 data object PostDetails : BeacefulRoutes {
@@ -113,7 +113,7 @@ data object CustomerDetails : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "customer_details/{customerId}"
 
-    fun createRoute(customerId: Int): String = "customer_details/$customerId"
+    fun createRoute(customerId: String): String = "customer_details/$customerId"
 }
 
 data object AppointmentDetails : BeacefulRoutes {
@@ -127,7 +127,7 @@ data object Booking : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "doctorProfile/{doctorId}/booking"
 
-    fun createRoute(doctorId: Int) = "doctorProfile/$doctorId/booking"
+    fun createRoute(doctorId: String) = "doctorProfile/$doctorId/booking"
 }
 
 

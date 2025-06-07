@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,8 +58,14 @@ fun AppointmentScreen(
     viewModel: AppointmentViewModel = hiltViewModel(),
 ) {
     var viewMode by remember { mutableStateOf(ViewMode.LIST) }
-    val appointments = viewModel.getAppointments(2)
+//    val appointments = viewModel.getAppointments(2)
+    val appointments by viewModel.appointments.collectAsState()
     val currentMonth by viewModel.currentMonth.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    LaunchedEffect(2) {
+        viewModel.getAppointments("68400bdcfcf44b6d4980cba2")
+    }
 
     Box {
         Column(modifier = Modifier.fillMaxHeight()) {

@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -29,9 +31,14 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,28 +52,68 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.EditRoute
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.screens.doctor.DoctorAboutSection
 import com.example.beaceful.viewmodel.DoctorViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
     navController: NavHostController,
-    userId: Int,
     modifier: Modifier = Modifier,
     viewModel: DoctorViewModel = hiltViewModel(),
 ) {
-    val tabTitles =
-        listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
+    val userId = UserSession.getCurrentUserId()
+    val tabTitles = listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
     var selectedTab by remember { mutableIntStateOf(0) }
+    val doctor = viewModel.getDoctorById(userId)
+    val doctorPosts by viewModel.doctorPosts.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
+    val postAuthors = remember { mutableStateMapOf<String, User?>() }
+    var commentText by remember { mutableStateOf("") }
 
-    val doctor = remember { viewModel.getDoctorById(userId) }
-    val doctorPosts = remember { viewModel.getPostsByDoctor(userId) }
+    LaunchedEffect(userId) {
+        viewModel.fetchDoctorPosts(userId)
+    }
+
+    LaunchedEffect(doctorPosts) {
+        doctorPosts.forEach { post ->
+            coroutineScope.launch {
+                postAuthors[post.posterId] = viewModel.getUserById(post.posterId)
+            }
+        }
+    }
 
     if (doctor == null) {
-        Text("Bác sĩ không tồn tại")
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (error != null) {
+                Text(
+                    text = error ?: "Lỗi không xác định",
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            } else {
+                CircularProgressIndicator()
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Đang tải hồ sơ...",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
     } else {
 
         LazyColumn(
@@ -163,9 +210,14 @@ fun ProfileScreen(
 
             when (selectedTab) {
                 0 -> items(doctorPosts) { post ->
-                    val user = viewModel.getUserById(post.posterId) ?: return@items
-                    val commentCount = viewModel.getCommentCount(post.id)
-                    val isLiked = viewModel.isPostLiked(post.id)
+                    val user = postAuthors[post.posterId] ?: return@items
+                    var commentCount by remember { mutableStateOf(0) }
+                    var isLiked by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(post.id) {
+                        commentCount = viewModel.getCommentCount(post.id)
+                        isLiked = viewModel.isPostLiked(post.id, userId)
+                    }
 
                     PostCard(
                         post = post,
@@ -173,11 +225,19 @@ fun ProfileScreen(
                         commentCount = commentCount,
                         isLiked = isLiked,
                         onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = { viewModel.toggleLike(post.id) },
-                        onDeletePost = {}
+                        onToggleLike = { viewModel.toggleLike(post.id, userId) },
+                        onDeletePost = {},
+                        userId = userId,
+                        comments = comments.filter { it.postId == post.id },
+                        commentText = commentText,
+                        onCommentTextChange = { commentText = it },
+                        onLoadComments = { viewModel.loadCommentsForPost(post.id) },
+                        onSubmitComment = {
+                            viewModel.createComment(post.id, userId, commentText)
+                            commentText = ""
+                        }
                     )
                 }
-
                 1 -> item {
                     DoctorAboutSection(biography = doctor.biography)
                 }

@@ -26,6 +26,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +37,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -45,13 +49,25 @@ import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.navigation.ChatDetailRoute
 import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.DiaryDetails
+import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
 fun CustomerCard(
     customer: User,
     onCustomerClick: () -> Unit,
     modifier: Modifier = Modifier,
+    viewModel: AppointmentViewModel = hiltViewModel()
 ) {
+    val appointments by viewModel.appointments.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // Gọi API để lấy lịch hẹn của customer
+    LaunchedEffect(customer) {
+        viewModel.getAppointmentsOfPatient(
+            doctorId = "0e370c47-9a29-4a8e-8f17-4e473d68cadd",
+            patientId = customer.id // String
+        )
+    }
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -61,7 +77,13 @@ fun CustomerCard(
             containerColor = MaterialTheme.colorScheme.primary
         )
     ) {
-        Row(modifier = Modifier.padding(8.dp).fillMaxWidth( ), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(
+            modifier = Modifier
+                .padding(8.dp)
+                .fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
             Row {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
@@ -83,15 +105,24 @@ fun CustomerCard(
                 Spacer(Modifier.width(8.dp))
                 Column {
                     Text(
-                        customer.fullName, color = MaterialTheme.colorScheme.onPrimary
+                        text = customer.fullName,
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                     customer.phone?.let {
                         Text(
-                            text = it
+                            text = it,
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                    customer.email?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
-                        text = customer.email
+                        text = "Lịch hẹn: ${appointments.size}",
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             }

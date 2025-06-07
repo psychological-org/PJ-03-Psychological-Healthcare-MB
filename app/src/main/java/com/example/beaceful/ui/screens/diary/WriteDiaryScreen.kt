@@ -443,7 +443,7 @@ fun WriteDiaryScreen(
                                 content = diaryContent.takeIf { it.isNotBlank() },
                                 imageUrl = savedImagePath,
                                 voiceUrl = recordedVoiceUri?.toString(),
-                                posterId = 1,
+                                posterId = "1",
                                 createAt = selectedDate,
                             )
                             navController.popBackStack("diary", inclusive = false)

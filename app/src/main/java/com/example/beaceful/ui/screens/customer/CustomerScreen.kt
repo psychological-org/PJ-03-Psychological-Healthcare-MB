@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +30,15 @@ fun CustomerScreen(
     navController: NavHostController,
     viewModel: AppointmentViewModel = hiltViewModel()
 ) {
-    val patients = viewModel.getPatients(2)
+//    val patients = viewModel.getPatients(2)
+    val patients by viewModel.patients.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    // Gọi API để lấy danh sách bệnh nhân
+    LaunchedEffect(Unit) {
+        viewModel.getPatients("0e370c47-9a29-4a8e-8f17-4e473d68cadd")
+    }
+
     Column(modifier = Modifier.fillMaxHeight().padding(top = 16.dp)) {
         Row(
             modifier = Modifier
@@ -41,12 +52,13 @@ fun CustomerScreen(
                 style = MaterialTheme.typography.titleLarge
             )
         }
-        CustomSearchBar(
+        CustomSearchBar<String>(
             suggestions = null,
+            placeholder = "Tìm kiếm lịch hẹn...",
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         if (patients.isNotEmpty())
-            CustomerList(customers = patients, navController = navController)
+            CustomerList(customers = patients.values.toList(), navController = navController)
     }
 }
 

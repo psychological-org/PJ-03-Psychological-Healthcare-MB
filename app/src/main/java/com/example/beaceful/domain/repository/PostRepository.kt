@@ -1,51 +1,158 @@
 package com.example.beaceful.domain.repository
 
 import androidx.compose.runtime.mutableStateListOf
+import com.example.beaceful.core.network.comment.CommentApiService
+import com.example.beaceful.core.network.comment.CommentRequest
+import com.example.beaceful.core.network.post.LikePostRequest
+import com.example.beaceful.core.network.post.PostApiService
+import com.example.beaceful.core.network.post.PostRequest
+import com.example.beaceful.core.network.post.PostResponse
 import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Post
+import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class PostRepository @Inject constructor(){
-    fun getAllUsers(): List<User> = DumpDataProvider.listUser
-    fun getUserById(userId: Int): User? =
-        DumpDataProvider.listUser.find { it.id == userId }
+class PostRepository @Inject constructor(
+    private val userRepository: UserRepository,
+    private val postApiService: PostApiService,
+    private val commentApiService: CommentApiService
+) {
+    suspend fun getAllUsers(): List<User> = userRepository.getAllUsers()
 
-    fun getAllPosts(): List<Post> = DumpDataProvider.posts
-    fun getPostById(postId: Int): Post? =
-        DumpDataProvider.posts.find { it.id == postId }
-    fun getPostsByCommunity(communityId: Int): List<Post> =
-        DumpDataProvider.posts.filter { it.communityId == communityId }
-    fun getPostsByUser(userId: Int): List<Post> =
-        DumpDataProvider.posts.filter { it.posterId == userId }
-    fun getAuthorOfPost(post: Post?): User? =
-        post?.posterId?.let { getUserById(it) }
-    fun getAuthorOfPostById(postId: Int): User? =
-        getPostById(postId)?.posterId?.let { getUserById(it) }
+    suspend fun getUserById(userId: String): User? = userRepository.getUserById(userId)
 
-    fun getCommentCountForPost(postId: Int): Int =
-        DumpDataProvider.comments.count { it.postId == postId }
-    fun getCommentsForPost(postId: Int): List<Comment> =
-        DumpDataProvider.comments.filter { it.postId == postId }
-    fun getCommenter(comment: Comment): User? =
-        getUserById(comment.userId)
-    fun createComment(postId: Int, userId: Int, content: String): Comment {
-        return Comment(
-            id = DumpDataProvider.comments.size + 1,
-            postId = postId,
-            userId = userId,
+    suspend fun getAllPosts(page: Int = 0, limit: Int = 10): List<Post> {
+        return postApiService.getAllPosts(page, limit).content.map { it.toPost() }
+    }
+
+    suspend fun getPostById(postId: Int): Post? {
+        return try {
+            postApiService.getPostById(postId).toPost()
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    suspend fun createPost(postRequest: PostRequest): Int {
+        return postApiService.createPost(postRequest)
+    }
+
+    suspend fun getPostsByCommunity(communityId: Int, page: Int = 0, limit: Int = 10): List<Post> {
+        return postApiService.getPostsByCommunityId(
+            communityId,
+            page,
+            limit
+        ).content.map { it.toPost() }
+    }
+
+    suspend fun getPostsByUser(userId: String, page: Int = 0, limit: Int = 10): List<Post> {
+        return postApiService.getPostsByUserId(userId, page, limit).content.map { it.toPost() }
+    }
+
+    suspend fun getAuthorOfPost(post: Post?): User? =
+        post?.posterId?.let { userRepository.getUserById(it) }
+
+    suspend fun getAuthorOfPostById(postId: Int): User? =
+        getPostById(postId)?.posterId?.let { userRepository.getUserById(it) }
+
+    suspend fun getCommentCountForPost(postId: Int): Int {
+        return try {
+            commentApiService.getCommentsByPostId(postId).totalElements.toInt()
+        } catch (e: Exception) {
+            0
+        }
+    }
+
+    suspend fun getCommentsForPost(postId: Int, page: Int = 0, limit: Int = 10): List<Comment> {
+        return try {
+            commentApiService.getCommentsByPostId(
+                postId,
+                page,
+                limit
+            ).content.map { it.toComment() }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    suspend fun getCommenter(comment: Comment): User? =
+        userRepository.getUserById(comment.userId)
+
+    suspend fun createComment(postId: Int, userId: String, content: String): Comment {
+        val request = CommentRequest(
             content = content,
+            userId = userId,
+            postId = postId
+        )
+        val commentId = commentApiService.createComment(request)
+        return Comment(
+            id = commentId,
+            content = content,
+            imageUrl = null,
+            userId = userId,
+            postId = postId,
+            reactCount = 0,
             createdAt = LocalDateTime.now()
         )
     }
 
-    private val likedPosts = mutableSetOf<Int>()
-    fun isPostLiked(postId: Int) = likedPosts.contains(postId)
-    fun toggleLike(postId: Int) {
-        if (!likedPosts.add(postId)) likedPosts.remove(postId)
+    suspend fun isPostLiked(postId: Int, userId: String): Boolean {
+        return try {
+            postApiService.isPostLiked(postId, userId)
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun toggleLike(postId: Int, userId: String): Boolean {
+        return try {
+            val isLiked = postApiService.isPostLiked(postId, userId)
+            println("isPostLiked: $isLiked")
+            if (isLiked) {
+                val likePosts = postApiService.getLikePostByPostId(postId, page = 0, limit = 10)
+                    .content
+                    .filter { it.userId == userId }
+                println("likePosts: $likePosts")
+                if (likePosts.isNotEmpty()) {
+                    postApiService.deleteLikePost(likePosts.first().id)
+                    println("Deleted likePost ID: ${likePosts.first().id}")
+                }
+            } else {
+                val request = LikePostRequest(postId = postId, userId = userId)
+                val likePostId = postApiService.createLikePost(request)
+                println("Created likePost ID: $likePostId")
+            }
+            !isLiked
+        } catch (e: Exception) {
+            println("toggleLike error: ${e.message}")
+            false
+        }
+    }
+}
+
+fun PostResponse.toPost(): Post {
+    return Post(
+        id = id,
+        content = content,
+        posterId = userId,
+        communityId = communityId,
+        visibility = toPostVisibility(visibility),
+        imageUrl = imageUrl,
+        reactCount = reactCount,
+        createdAt = LocalDateTime.now()
+    )
+}
+
+fun toPostVisibility(visibility: String): PostVisibility {
+    return when (visibility.lowercase()) {
+        "public" -> PostVisibility.PUBLIC
+        "private" -> PostVisibility.PRIVATE
+        "friend" -> PostVisibility.FRIEND
+        else -> PostVisibility.PUBLIC
     }
 }

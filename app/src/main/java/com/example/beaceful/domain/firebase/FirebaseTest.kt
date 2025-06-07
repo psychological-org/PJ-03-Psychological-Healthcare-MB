@@ -16,7 +16,7 @@ object FirebaseTest {
                 val uid = auth.currentUser?.uid ?: return@addOnSuccessListener
                 // Lưu user với uid
                 val user = User(
-                    id = uid.toIntOrNull() ?: 2,
+                    id = uid ?: "1",
                     fullName = "quang 2",
                     email = "testuser2@gmail.com",
                     roleId = 1,

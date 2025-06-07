@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.components.cards
 
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -36,6 +37,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -69,7 +72,14 @@ fun AppointmentCard(
     modifier: Modifier = Modifier,
     viewModel: AppointmentViewModel = hiltViewModel(),
 ) {
-    val patient = viewModel.getPatientByAppointment(appointment)
+    val patients by viewModel.patients.collectAsState()
+    val patient = patients[appointment.patientId]
+
+    // Gọi API để lấy thông tin bệnh nhân khi appointment thay đổi
+    LaunchedEffect(appointment) {
+        viewModel.getPatientByAppointment(appointment)
+    }
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -85,10 +95,11 @@ fun AppointmentCard(
             Row(modifier = Modifier.padding(8.dp)) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(patient?.avatarUrl)
+                        .data(patient?.avatarUrl ?: "") // Xử lý khi avatarUrl là null
                         .crossfade(true)
                         .build(),
                     placeholder = painterResource(R.drawable.doctor_placeholder_avatar),
+                    error = painterResource(R.drawable.doctor_placeholder_avatar), // Hình ảnh dự phòng khi lỗi
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -103,18 +114,25 @@ fun AppointmentCard(
                 Spacer(Modifier.width(8.dp))
                 Column {
                     Text(
-                        formatAppointmentDate(appointment.appointmentDate),
+                        text = formatAppointmentDate(appointment.appointmentDate),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                     if (patient != null) {
                         Text(
-                            patient.fullName, color = MaterialTheme.colorScheme.onPrimary
+                            text = patient!!.fullName,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
-                        patient.phone?.let {
+                        patient!!.phone?.let {
                             Text(
-                                text = it
+                                text = it,
+                                color = MaterialTheme.colorScheme.onPrimary
                             )
                         }
+                    } else {
+                        Text(
+                            text = "Đang tải thông tin bệnh nhân...",
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }
@@ -123,24 +141,41 @@ fun AppointmentCard(
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
                 Button(
-                    onClick = { viewModel.onClickReject() },
+                    onClick = { viewModel.onClickReject(appointment.id) },
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiary,
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
-                    )
+                        contentColor = MaterialTheme.colorScheme.onTertiary
+                    ),
+                    enabled = appointment.status == AppointmentStatus.PENDING
                 ) {
-                    Text(stringResource(R.string.cancel))
+                    Text(text = if (appointment.status == AppointmentStatus.CANCELLED) {
+                        "Đã từ chối"
+                    } else {
+                        stringResource(R.string.cancel)
+                    },
+                        style = MaterialTheme.typography.bodySmall)
                 }
                 Button(
-                    onClick = { viewModel.onClickAccept() },
+                    onClick = { viewModel.onClickAccept(appointment.id) },
                     shape = RoundedCornerShape(40.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary,
-                        contentColor = MaterialTheme.colorScheme.primary,
-                    )
+                        containerColor = when (appointment.status) {
+                            AppointmentStatus.CONFIRMED -> MaterialTheme.colorScheme.secondary
+                            else -> MaterialTheme.colorScheme.onPrimary
+                        },
+                        contentColor = when (appointment.status) {
+                            AppointmentStatus.CONFIRMED -> MaterialTheme.colorScheme.onSecondary
+                            else -> MaterialTheme.colorScheme.primary
+                        }
+                    ),
+                    enabled = appointment.status == AppointmentStatus.PENDING
                 ) {
-                    Text(stringResource(R.string.verify))
+                    Text(text = when (appointment.status) {
+                        AppointmentStatus.CONFIRMED -> "Đã xác nhận"
+                        else -> stringResource(R.string.verify)
+                    },
+                        style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
@@ -152,8 +187,27 @@ fun AppointmentCard(
 fun AppointmentList(
     modifier: Modifier = Modifier,
     appointments: List<Appointment>,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: AppointmentViewModel = hiltViewModel()
 ) {
+    val success by viewModel.success.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(success) {
+        success?.let { successMessage ->
+            Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(error) {
+        error?.let { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            viewModel.clearMessages()
+        }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -163,6 +217,7 @@ fun AppointmentList(
             AppointmentCard(
                 appointment,
                 onAppointmentClick = {
+                    navController.navigate("appointment_details/${appointment.id}")
                 },
             )
         }

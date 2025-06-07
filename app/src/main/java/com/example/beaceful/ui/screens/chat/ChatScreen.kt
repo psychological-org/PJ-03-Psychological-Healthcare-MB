@@ -28,7 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun ChatScreen(
     viewModel: ChatViewModel = viewModel(),
-    onUserClick: (Int, String) -> Unit,
+    onUserClick: (String, String) -> Unit,
     onLogout: () -> Unit
 ) {
     val users by viewModel.users
@@ -67,7 +67,7 @@ fun ChatScreen(
                         preview = chatPreviews[user.id],
                         onClick = { onUserClick(user.id, user.fullName) }
                     )
-                }
+            }
             }
         }
     }
