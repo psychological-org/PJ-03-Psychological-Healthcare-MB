@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -34,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +56,7 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.core.util.formatDateWithHour
+import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.Community
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
@@ -67,16 +70,22 @@ fun PostCard(
     isLiked: Boolean,
     onPostClick: () -> Unit,
     onToggleLike: () -> Unit,
-    isEditable: Boolean = false,
     onDeletePost: () -> Unit,
     onEditPost: () -> Unit = {},
     modifier: Modifier = Modifier,
     community: Community? = null,
+    userId: String,
+    comments: List<Comment> = emptyList(),
+    commentText: String = "",
+    onCommentTextChange: (String) -> Unit = {},
+    onLoadComments: () -> Unit = {},
+    onSubmitComment: () -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
     var expandedMenu by remember { mutableStateOf(false) }
     var showDialog by remember { mutableStateOf(false) }
     var selectedPostId by remember { mutableStateOf<Int?>(null) }
+    val isEditable = post.posterId == userId // Kiểm tra quyền chỉnh sửa/xóa
 
     Card(
         modifier = modifier
@@ -110,7 +119,6 @@ fun PostCard(
                         shape = CircleShape
                     )
             )
-            // Nội dung bài viết
             Column(modifier = Modifier.padding(start = 8.dp)) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -119,19 +127,19 @@ fun PostCard(
                 ) {
                     Column {
                         Text(
-                            user.fullName, color = MaterialTheme.colorScheme.primary,
+                            user.fullName,
+                            color = MaterialTheme.colorScheme.primary,
                             style = MaterialTheme.typography.titleMedium
                         )
                         if (community != null) {
                             Text(
                                 text = "đăng trong ${community.name}",
                                 color = MaterialTheme.colorScheme.secondary,
-                                style = MaterialTheme.typography.bodySmall,
+                                style = MaterialTheme.typography.bodySmall
                             )
                         }
                     }
-                    Box(
-                    ) {
+                    Box {
                         IconButton(onClick = { expandedMenu = !expandedMenu }) {
                             Icon(
                                 Icons.Default.MoreHoriz,
@@ -145,21 +153,11 @@ fun PostCard(
                         ) {
                             if (isEditable) {
                                 DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            "Chỉnh sửa",
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    },
+                                    text = { Text("Chỉnh sửa", color = MaterialTheme.colorScheme.primary) },
                                     onClick = onEditPost
                                 )
                                 DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            stringResource(R.string.delete),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    },
+                                    text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
                                         selectedPostId = post.id
                                         showDialog = true
@@ -167,12 +165,7 @@ fun PostCard(
                                 )
                             } else {
                                 DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            stringResource(R.string.hide),
-                                            color = MaterialTheme.colorScheme.primary
-                                        )
-                                    },
+                                    text = { Text(stringResource(R.string.hide), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
                                         selectedPostId = post.id
                                         showDialog = true
@@ -180,12 +173,7 @@ fun PostCard(
                                 )
                             }
                             DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        "Báo cáo",
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                },
+                                text = { Text("Báo cáo", color = MaterialTheme.colorScheme.primary) },
                                 onClick = { }
                             )
                         }
@@ -212,7 +200,6 @@ fun PostCard(
                             .size(16.dp)
                             .align(Alignment.CenterVertically)
                     )
-
                 }
                 Box {
                     val contentModifier = if (expanded) {
@@ -222,7 +209,6 @@ fun PostCard(
                             .fillMaxWidth()
                             .heightIn(max = 120.dp)
                     }
-
                     Text(
                         text = post.content,
                         color = MaterialTheme.colorScheme.primary,
@@ -232,7 +218,6 @@ fun PostCard(
                         modifier = contentModifier
                     )
                 }
-
                 Spacer(Modifier.height(8.dp))
                 if (!expanded && post.content.length > 200) {
                     Text(
@@ -244,6 +229,8 @@ fun PostCard(
                             .clickable { expanded = true }
                     )
                 }
+                Spacer(Modifier.height(8.dp))
+                // Hành động
                 Row(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically,
@@ -262,17 +249,20 @@ fun PostCard(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onLoadComments) {
                         Icon(
                             Icons.Default.ChatBubbleOutline,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.secondary
                         )
                     }
-
-                    Text("$commentCount", color = MaterialTheme.colorScheme.secondary)
+                    Text(
+                        text = commentCount.toString(),
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
                     Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Default.Share,
                             contentDescription = null,
@@ -280,18 +270,52 @@ fun PostCard(
                         )
                     }
                 }
-
-
+                // Bình luận
+                Spacer(Modifier.height(8.dp))
+                comments.forEach { comment ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, top = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = "${comment.userId}: ${comment.content}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
+                TextField(
+                    value = commentText,
+                    onValueChange = onCommentTextChange,
+                    label = { Text("Thêm bình luận") },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
+                Spacer(Modifier.height(8.dp))
+                Button(
+                    onClick = onSubmitComment,
+                    modifier = Modifier
+                        .align(Alignment.End)
+                        .padding(end = 16.dp)
+                ) {
+                    Text("Gửi")
+                }
             }
         }
-
     }
 
     if (showDialog && selectedPostId != null) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
             title = {
-                Text(if (isEditable) stringResource(R.string.delete_title) else stringResource(R.string.hide_title), color = MaterialTheme.colorScheme.primary)
+                Text(
+                    if (isEditable) stringResource(R.string.delete_title) else stringResource(R.string.hide_title),
+                    color = MaterialTheme.colorScheme.primary
+                )
             },
             text = {
                 Text(
@@ -304,7 +328,7 @@ fun PostCard(
                     onClick = {
                         showDialog = false
                         selectedPostId = null
-                        expandedMenu = !expandedMenu
+                        expandedMenu = false
                         onDeletePost()
                     }
                 ) {
@@ -323,5 +347,4 @@ fun PostCard(
             }
         )
     }
-
 }

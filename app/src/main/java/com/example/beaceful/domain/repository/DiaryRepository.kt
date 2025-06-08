@@ -26,7 +26,7 @@ data class DiarySerializable(
     val content: String?,
     val imageUrl: String?,
     val voiceUrl: String?,
-    val posterId: Int,
+    val posterId: String,
     val createdAt: String
 )
 
@@ -161,8 +161,9 @@ class DiaryRepository @Inject constructor(
         file.writeText(jsonString)
         println("Updated diary to ${file.absolutePath}")
     }
-//    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
-//        DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
-    fun getUserById(userId: Int): User? =
+    fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
+        DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
+
+    fun getUserById(userId: String): User? =
         DumpDataProvider.listUser.find { it.id == userId }
 }

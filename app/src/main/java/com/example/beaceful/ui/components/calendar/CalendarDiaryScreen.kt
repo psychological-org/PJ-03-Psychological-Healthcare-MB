@@ -172,7 +172,7 @@ fun CalendarDiaryScreen(
                                 RoundedCornerShape(24.dp)
                             ).fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)
                         ) {
-                            val nextAppointments: List<Appointment> = viewModel.getUpcoming(4)
+                            val nextAppointments: List<Appointment> = viewModel.getUpcoming("4")
                             if (nextAppointments.isEmpty()) {
                                 Text(text = "Trống", textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onTertiary)
                             } else {

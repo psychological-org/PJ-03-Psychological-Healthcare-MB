@@ -26,6 +26,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -45,12 +46,16 @@ import com.example.beaceful.R
 import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.DumpDataProvider
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.viewmodel.PostDetailsViewModel
+import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
 
@@ -60,16 +65,30 @@ fun PostDetailsScreen(
     viewModel: PostDetailsViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val post = viewModel.getPost(postId)
-    val author = viewModel.getAuthor(postId)
-    val initialComments = remember { viewModel.getComments(postId) }
-
+    val userId = UserSession.getCurrentUserId()
+    val post by viewModel.post.collectAsState()
+    val author by viewModel.author.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val error by viewModel.error.collectAsState()
     var commentText by remember { mutableStateOf("") }
+    val coroutineScope = rememberCoroutineScope()
+    val commenters = remember { mutableStateMapOf<String, User?>() }
 
-    LaunchedEffect(Unit) {
-        viewModel.localComments.clear()
-        viewModel.localComments.addAll(initialComments)
+    LaunchedEffect(postId) {
+        viewModel.initPost(postId)
     }
+
+    // Tải thông tin người bình luận
+    LaunchedEffect(comments) {
+        comments.forEach { comment ->
+            if (commenters[comment.userId] == null) {
+                coroutineScope.launch {
+                    commenters[comment.userId] = viewModel.getCommenter(comment)
+                }
+            }
+        }
+    }
+
     if (post == null) {
         Text("Post không tồn tại")
     } else {
@@ -84,7 +103,7 @@ fun PostDetailsScreen(
                     Row {
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
-                                .data(author.avatarUrl)
+                                .data(author?.avatarUrl)
                                 .crossfade(true)
                                 .build(),
                             placeholder = painterResource(R.drawable.doctor_placeholder_avatar),
@@ -101,18 +120,19 @@ fun PostDetailsScreen(
                         )
                         Column(modifier = Modifier.padding(start = 8.dp)) {
                             Text(
-                                author.fullName, color = MaterialTheme.colorScheme.primary,
+                                author?.fullName ?: "Ẩn danh",
+                                color = MaterialTheme.colorScheme.primary,
                                 style = MaterialTheme.typography.titleMedium
                             )
                             Row {
                                 Text(
-                                    formatDateWithHour(post.createdAt),
+                                    formatDateWithHour(post!!.createdAt),
                                     color = MaterialTheme.colorScheme.secondary,
                                     style = MaterialTheme.typography.titleSmall
                                 )
                                 Spacer(Modifier.width(8.dp))
                                 Icon(
-                                    imageVector = when (post.visibility) {
+                                    imageVector = when (post!!.visibility) {
                                         PostVisibility.PUBLIC -> Icons.Default.Public
                                         PostVisibility.PRIVATE -> Icons.Default.Lock
                                         PostVisibility.FRIEND -> Icons.Default.PeopleAlt
@@ -128,7 +148,7 @@ fun PostDetailsScreen(
                     }
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        text = post.content,
+                        text = post!!.content,
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -148,18 +168,26 @@ fun PostDetailsScreen(
                     inputText = commentText,
                     onTextChange = { commentText = it },
                     onSent = {
-                        viewModel.submitComment(post.id, 0, commentText)
-                        commentText = ""
+                        if (userId != null) {
+                            coroutineScope.launch {
+                                viewModel.submitComment(postId, userId, commentText)
+                                commentText = ""
+                            }
+                        } else {
+                            // Hiển thị thông báo yêu cầu đăng nhập (tùy chọn)
+                            // Hiện tại để trống, có thể thêm Snackbar hoặc Toast sau
+                        }
                     }
                 )
             }
-            if (viewModel.localComments.isEmpty()) {
+            if (comments.isEmpty()) {
                 item {
                     Text("Chưa có bình luận", color = MaterialTheme.colorScheme.secondary)
                 }
             } else {
-                items(viewModel.localComments) { comment ->
-                    CommentCard(comment = comment, commenter = viewModel.getCommenter(comment))
+                items(comments) { comment ->
+                    val commenter = commenters[comment.userId] ?: return@items
+                    CommentCard(comment = comment, commenter = commenter)
                 }
             }
         }

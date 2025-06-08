@@ -19,7 +19,20 @@ enum class RoleType { ADMIN, DOCTOR, PATIENT }
 
 enum class FriendStatus { ACCEPTED, DECLINED, BLOCKED, PENDING }
 
-enum class AppointmentStatus { PENDING, CONFIRMED, COMPLETED, CANCELLED  }
+enum class AppointmentStatus {
+    PENDING, CONFIRMED, COMPLETED, CANCELLED;
+    companion object {
+        fun fromString(value: String): AppointmentStatus {
+            return when (value.lowercase()) {
+                "pending" -> PENDING
+                "confirmed" -> CONFIRMED
+                "cancelled" -> CANCELLED
+                "completed" -> COMPLETED
+                else -> PENDING
+            }
+        }
+    }
+}
 
 enum class NotificationType { SYSTEM, FRIEND_REQUEST, APPOINTMENT, OTHER }
 

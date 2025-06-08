@@ -17,13 +17,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,19 +48,25 @@ import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.Community
 import com.example.beaceful.domain.model.SearchItem
+import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.screen.ChatScreen
 import com.example.beaceful.ui.viewmodel.ForumViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun ForumScreen(
     navController: NavController,
     viewModel: ForumViewModel = hiltViewModel(),
-    userId: Int
+    userId: String = "68401da39148fa4dbbb6d25a"
 ) {
+    LaunchedEffect(userId) {
+        viewModel.fetchUserCommunityIds(userId)
+    }
+
     val tabTitles =
         listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
     var selectedTab by remember { mutableIntStateOf(0) }
@@ -77,7 +89,7 @@ fun ForumScreen(
         HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
 
         when (selectedTab) {
-            0 -> NewsScreen(navController = navController, viewModel = viewModel)
+            0 -> NewsScreen(navController = navController, viewModel = viewModel, userId = userId)
             1 -> ChatScreen(
                 onUserClick = { userId, fullName ->
                     navController.navigate("chatDetail/$userId/$fullName")
@@ -91,20 +103,33 @@ fun ForumScreen(
 }
 
 @Composable
-fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
-    val communityIds = viewModel.getUserCommunityIds(4)
-    val communityPosts = viewModel.getUserCommunityPosts(4)
-    val allCommunities = remember {
-        viewModel.getAllCommunities()
-    }
+fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: String) {
+    val communityIds by viewModel.userCommunityIds.collectAsState()
+    val posts by viewModel.allPosts.collectAsState()
+    val comments by viewModel.comments.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val allCommunities by viewModel.allCommunities.collectAsState()
     val nameSuggestions = remember(allCommunities) {
-        allCommunities.map { SearchItem(it.id, it.name) }
+        allCommunities.map { SearchItem<Int>(id = it.id, name = it.name) }
     }
+    val coroutineScope = rememberCoroutineScope()
+    val postAuthors = remember { mutableStateMapOf<String, User?>() }
+    var commentText by remember { mutableStateOf("") }
+
+    LaunchedEffect(posts) {
+        posts.forEach { post ->
+            coroutineScope.launch {
+                postAuthors[post.posterId] = viewModel.getUserById(post.posterId)
+            }
+        }
+    }
+
     Column(modifier = Modifier.fillMaxSize()) {
         CustomSearchBar(
             suggestions = nameSuggestions,
-            onSearch = { selected -> navController.navigate(CommunityRoute.createRoute(selected.id))},
-            modifier = Modifier.padding(horizontal =  16.dp),
+            onSearch = { selected -> navController.navigate(CommunityRoute.createRoute(selected.id, userId)) },
+            modifier = Modifier.padding(horizontal = 16.dp),
         )
 
         Spacer(Modifier.height(16.dp))
@@ -124,18 +149,15 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                 ) {
                     items(communityIds) { communityId ->
-                        val community: Community? = viewModel.getCommunityById(communityId)
-                        if (community != null)
+                        val community = viewModel.getCommunityById(communityId)
+                        if (community != null) {
                             CommunityItem(
                                 community = community,
                                 onClick = {
-                                    navController.navigate(
-                                        CommunityRoute.createRoute(
-                                            communityId
-                                        )
-                                    )
+                                    navController.navigate(CommunityRoute.createRoute(communityId, userId))
                                 }
                             )
+                        }
                     }
                 }
                 Spacer(Modifier.height(16.dp))
@@ -149,10 +171,15 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
                 Spacer(Modifier.height(16.dp))
             }
 
-            items(communityPosts) { post ->
-                val user = viewModel.repository.getUserById(post.posterId) ?: return@items
-                val commentCount = viewModel.repository.getCommentCountForPost(post.id)
-                val isLiked = viewModel.repository.isPostLiked(post.id)
+            items(posts) { post ->
+                val user = postAuthors[post.posterId] ?: return@items
+                var commentCount by remember { mutableStateOf(0) }
+                var isLiked by remember { mutableStateOf(false) }
+
+                LaunchedEffect(post.id) {
+                    commentCount = viewModel.getCommentCountForPost(post.id)
+                    isLiked = viewModel.isPostLiked(post.id, userId)
+                }
 
                 PostCard(
                     post = post,
@@ -160,11 +187,30 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel) {
                     commentCount = commentCount,
                     isLiked = isLiked,
                     onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                    onToggleLike = { viewModel.repository.toggleLike(post.id) },
+                    onToggleLike = { viewModel.toggleLike(post.id, userId) },
+                    onDeletePost = { viewModel.hidePost(post.id) },
                     community = if (post.communityId != null) viewModel.getCommunityById(post.communityId) else null,
-                    onDeletePost = { viewModel.hidePost(post.id) }
+                    comments = comments.filter { it.postId == post.id },
+                    commentText = commentText,
+                    onCommentTextChange = { commentText = it },
+                    onLoadComments = { viewModel.loadCommentsForPost(post.id) },
+                    onSubmitComment = {
+                        viewModel.createComment(post.id, userId, commentText)
+                        commentText = ""
+                    },
+                    userId = userId
                 )
+            }
 
+            item {
+                error?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                }
             }
 
         }
@@ -198,7 +244,7 @@ fun CommunityItem(
                 )
                 .clickable(onClick = onClick)
         )
-        Spacer(Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(text = community.name)
     }
 }

@@ -38,6 +38,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,7 +66,13 @@ fun CalendarAppointmentScreen(
     currentMonth: LocalDateTime,
 ) {
     var selectedAppointments by remember { mutableStateOf<List<Appointment>?>(null) }
-    val nextAppointments: List<Appointment> = viewModel.getUpcoming()
+    val nextAppointments by viewModel.upcoming.collectAsState()
+    val appointments by viewModel.appointments.collectAsState()
+    val patients by viewModel.patients.collectAsState()
+
+    LaunchedEffect(Unit) {
+        viewModel.getUpcoming()
+    }
 
     Box {
         Column {
@@ -138,16 +146,20 @@ fun CalendarAppointmentScreen(
                             CustomCalendar(
                                 currentMonth = currentMonth,
                                 highlightDates = { date ->
-                                    viewModel.getAppointmentsOnDate(date).isNotEmpty()
+                                    appointments.any { it.appointmentDate.toLocalDate() == date.toLocalDate() }
                                 },
                                 getColorsForDate = { date ->
-                                    if (viewModel.getAppointmentsOnDate(date).isNotEmpty()) {
+                                    if (appointments.any { it.appointmentDate.toLocalDate() == date.toLocalDate() }) {
                                         listOf(Color(0xFFB089CA))
                                     } else {
                                         emptyList()
                                     }
                                 },
-                                onClickDate = { }
+                                onClickDate = { date ->
+                                    selectedAppointments = appointments.filter {
+                                        it.appointmentDate.toLocalDate() == date.toLocalDate()
+                                    }
+                                }
                             )
                         }
 
@@ -166,18 +178,6 @@ fun CalendarAppointmentScreen(
 
                         Spacer(Modifier.height(12.dp))
 
-//                    Box(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .height(120.dp)
-//                            .background(
-//                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f),
-//                                RoundedCornerShape(24.dp)
-//                            )
-//                    ) {
-//                        // TODO
-//
-//                    }
                         LazyColumn(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -194,9 +194,7 @@ fun CalendarAppointmentScreen(
                                 item { Text(text = "Trống", textAlign = TextAlign.Center) }
                             } else {
                                 items(nextAppointments) { appointment ->
-
-                                    val patient: User? =
-                                        viewModel.getPatientByAppointment(appointment)
+                                    val patient = patients[appointment.patientId]
                                     if (patient != null) {
                                         Column {
                                             Text(text = formatAppointmentDate(appointment.appointmentDate))
@@ -205,13 +203,14 @@ fun CalendarAppointmentScreen(
                                                 color = MaterialTheme.colorScheme.secondary
                                             )
                                         }
+                                    } else {
+                                        Text(text = "Đang tải thông tin bệnh nhân...")
                                     }
                                 }
                             }
                         }
                     }
                 }
-
             }
         }
         AnimatedVisibility(
@@ -224,7 +223,6 @@ fun CalendarAppointmentScreen(
                     MaterialTheme.colorScheme.background.copy(alpha = 0.95f)
                 )
         ) {
-
             selectedAppointments?.let {
                 Box {
                     AppointmentList(

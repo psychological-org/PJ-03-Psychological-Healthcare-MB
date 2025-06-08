@@ -1,10 +1,12 @@
 package com.example.beaceful.domain.model
 
+import com.google.gson.annotations.SerializedName
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.*
+import java.time.format.DateTimeFormatter
 
 data class User(
-    val id: Int,
+    val id: String,
     val fullName: String,
     val roleId: Int,
     val biography: String? = null,
@@ -27,8 +29,8 @@ data class Role(
 data class Follower(
     val id: Int,
     val status: FriendStatus = FriendStatus.PENDING,
-    val senderId: Int,
-    val receiverId: Int
+    val senderId: String,
+    val receiverId: String
 )
 
 data class Message(
@@ -37,8 +39,8 @@ data class Message(
     val videoUrl: String? = null,
     val imageUrl: String? = null,
     val voiceUrl: String? = null,
-    val senderId: Int,
-    val receiverId: Int,
+    val senderId: String,
+    val receiverId: String,
     val isRead: Boolean = false,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
@@ -52,7 +54,7 @@ data class Notification(
 
 data class UserNotification(
     val id: Int,
-    val receiverId: Int,
+    val receiverId: String,
     val notificationId: Int,
     val isRead: Boolean = false,
     val content: String
@@ -61,13 +63,47 @@ data class UserNotification(
 data class Appointment(
     val id: Int,
     val status: AppointmentStatus = AppointmentStatus.PENDING,
-    val patientId: Int,
-    val doctorId: Int,
+    val patientId: String,
+    val doctorId: String,
     val appointmentDate: LocalDateTime,
     val note: String? = null,
-    val rating: Int? = null,          // 1–5 sao
+    val rating: Int? = null,
     val review: String? = null
-)
+) {
+    companion object {
+        fun fromApiResponse(
+            id: Int,
+            status: String,
+            appointmentDate: String,
+            appointmentTime: String?,
+            patientId: String,
+            doctorId: String,
+            note: String?,
+            rating: Double?,
+            review: String?
+        ): Appointment {
+            // Parse appointmentDate (chuỗi "YYYY-MM-DD")
+            val date = LocalDate.parse(appointmentDate, DateTimeFormatter.ISO_LOCAL_DATE)
+            // Parse appointmentTime (chuỗi "HH:mm:ss" hoặc null)
+            val time = if (appointmentTime != null) {
+                LocalTime.parse(appointmentTime, DateTimeFormatter.ISO_LOCAL_TIME)
+            } else {
+                LocalTime.of(0, 0)
+            }
+            val dateTime = date.atTime(time)
+            return Appointment(
+                id = id,
+                status = AppointmentStatus.valueOf(status.uppercase()),
+                patientId = patientId,
+                doctorId = doctorId,
+                appointmentDate = dateTime,
+                note = note,
+                rating = rating?.toInt(),
+                review = review
+            )
+        }
+    }
+}
 
 data class Diary(
     val id: Int,
@@ -76,12 +112,13 @@ data class Diary(
     val content: String? = null,
     val imageUrl: String? = null,
     val voiceUrl: String? = null,
-    val posterId: Int,
+    val posterId: String,
     val createdAt: LocalDateTime = LocalDateTime.now()
 )
 
 data class Topic(
     val id: Int,
+    val name: String,
     val content: String,
     val avatarUrl: String? = null
 )
@@ -89,34 +126,35 @@ data class Topic(
 data class Collection(
     val id: Int,
     val name: String,
-    val resourceId: String,
+    val resourceUrl: String,
     val topicId: Int,
     val type: CollectionType = CollectionType.MUSIC
 )
 
 data class CollectionSeen(
+    val id: Int,
     val collectionId: Int,
-    val userId: Int
+    val userId: String
 )
 
 data class Community(
     val id: Int,
     val name: String,
     val content: String,
-    val adminId: Int,
+    val adminId: String,
     val imageUrl: String? = null,
     val createdAt: LocalDateTime = LocalDateTime.now(),
 )
 
 data class ParticipantCommunity(
-    val userId: Int,
+    val userId: String,
     val communityId: Int
 )
 
 data class Post(
     val id: Int,
     val content: String,
-    val posterId: Int,
+    val posterId: String,
     val communityId: Int? = null,
     val visibility: PostVisibility = PostVisibility.PUBLIC,
     val imageUrl: String? = null,
@@ -128,7 +166,7 @@ data class Comment(
     val id: Int,
     val content: String,
     val imageUrl: String? = null,
-    val userId: Int,
+    val userId: String,
     val postId: Int,
     val reactCount: Int = 0,
     val createdAt: LocalDateTime = LocalDateTime.now()
@@ -138,7 +176,7 @@ data class DoctorExpertise(
     val id: Int,
     val title: String,
     val content: String,
-    val doctorId: Int
+    val doctorId: String
 )
 
 data class TimeSlot(
@@ -146,14 +184,24 @@ data class TimeSlot(
     val isBooked: Boolean
 )
 
-data class SearchItem(
-    val id: Int,
+data class SearchItem<T>(
+    val id: T,
     val name: String
 )
-
+data class PagedResponse<T>(
+    @SerializedName("content")
+    val content: List<T>,
+    @SerializedName("totalElements")
+    val totalElements: Long,
+    @SerializedName("totalPages")
+    val totalPages: Int,
+    @SerializedName("size")
+    val size: Int,
+    @SerializedName("number")
+    val number: Int
+)
 data class ProfileSelection(
     val title: String,
     val icon: ImageVector,
     val onClick: () -> Unit
 )
-

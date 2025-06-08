@@ -46,7 +46,7 @@ import java.io.File
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun ChatDetailScreen(
-    userId: Int,
+    userId: String,
     userName: String,
     onBack: () -> Unit,
     viewModel: ChatDetailViewModel = viewModel()
@@ -60,7 +60,9 @@ fun ChatDetailScreen(
     val selectedImageUri by viewModel.selectedImageUri
     val isRecording by viewModel.isRecording
     val recordedVoiceUri by viewModel.recordedVoiceUri
+    val error by viewModel.error.collectAsState()
     var messageText by remember { mutableStateOf("") }
+    var isSending by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
     // Quyền đọc ảnh
@@ -277,7 +279,8 @@ fun ChatDetailScreen(
                     )
                     IconButton(
                         onClick = {
-                            if (messageText.isNotBlank() || selectedImageUri != null || recordedVoiceUri != null) {
+                            if (!isSending && (messageText.isNotBlank() || selectedImageUri != null || recordedVoiceUri != null)) {
+                                isSending = true
                                 if (messageText.isNotBlank()) {
                                     viewModel.sendMessage(messageText)
                                     messageText = ""
@@ -288,10 +291,12 @@ fun ChatDetailScreen(
                                 if (recordedVoiceUri != null) {
                                     viewModel.sendVoiceMessage(context)
                                 }
+                                isSending = false
                             }
-                        }
+                        },
+                        enabled = !isSending
                     ) {
-                        Icon(Icons.Default.Send, contentDescription = "Send", tint = Color(0xFF6A1B9A))
+                        Icon(Icons.Default.Send, contentDescription = "Send", tint = if (isSending) Color.Gray else Color(0xFF6A1B9A))
                     }
                 }
             }
@@ -311,7 +316,7 @@ fun ChatDetailScreen(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(messages.reversed()) { message ->
-                    MessageItem(message, viewModel.currentUserId ?: 0)
+                    MessageItem(message, viewModel.currentUserId ?: "")
                 }
             }
         }
@@ -319,7 +324,7 @@ fun ChatDetailScreen(
 }
 
 @Composable
-fun MessageItem(message: Message, currentUserId: Int) {
+fun MessageItem(message: Message, currentUserId: String) {
     val isSentByCurrentUser = message.senderId == currentUserId
     var isPlaying by remember { mutableStateOf(false) }
     val mediaPlayer = remember { MediaPlayer() }

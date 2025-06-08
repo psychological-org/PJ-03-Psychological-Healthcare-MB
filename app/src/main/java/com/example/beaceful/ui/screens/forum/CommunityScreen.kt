@@ -23,9 +23,13 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -44,35 +48,53 @@ import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomInputField
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.components.cards.UserList
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
 import com.example.beaceful.ui.viewmodel.ForumViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun CommunityScreen(
     navController: NavHostController,
     communityId: Int,
+    userId: String,
     viewModel: ForumViewModel = hiltViewModel()
 ) {
+
+    LaunchedEffect(userId) {
+        viewModel.fetchUserCommunityIds(userId)
+    }
+
     val community = viewModel.getCommunityById(communityId)
     val communityAdmin = viewModel.getAdminByCommunity(community)
+    val localPosts by viewModel.postsAsState()
+    val postText by viewModel.postText
+    val isLoading by viewModel.isLoading.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val communityIds by viewModel.userCommunityIds.collectAsState()
 
     LaunchedEffect(communityId) {
         viewModel.initCommunityPosts(communityId)
     }
-    val post = viewModel.postText.value
-    val localPosts = viewModel.localPosts
 
-    val tabTitles =
-        listOf(stringResource(R.string.co5_activity), stringResource(R.string.co6_member))
+    val tabTitles = listOf(stringResource(R.string.co5_activity), stringResource(R.string.co6_member))
     var selectedTab by remember { mutableIntStateOf(0) }
-
-    val communityIds = viewModel.getUserCommunityIds(4)
     val isJoined: Boolean = communityId in communityIds
-    Log.d("log", "communityId: $communityId, communityIds: $communityIds, communityId in communityIds: ${communityId in communityIds} $isJoined")
+    Log.d("log", "communityId: $communityId, communityIds: $communityIds, isJoined: $isJoined")
+    val coroutineScope = rememberCoroutineScope()
+    val postAuthors = remember { mutableStateMapOf<String, User?>() }
+
+    LaunchedEffect(localPosts) {
+        localPosts.forEach { post ->
+            coroutineScope.launch {
+                postAuthors[post.posterId] = viewModel.getUserById(post.posterId)
+            }
+        }
+    }
 
     if (community != null) {
         LazyColumn {
@@ -125,18 +147,23 @@ fun CommunityScreen(
             when (selectedTab) {
                 0 -> item {
                     if (isJoined) {
-                    CustomInputField(
-                        placeholder = R.string.co7_your_thought,
-                        inputText = post,
-                        onTextChange = { viewModel.onPostTextChange(it) },
-                        onSent = {
-                            viewModel.submitPost(communityId)
-                        },
-                        modifier = Modifier.padding(24.dp, 16.dp)
-                    )} else {
-                        Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-
-                            Button(onClick = {viewModel.joinCommunity()}) {
+                        CustomInputField(
+                            placeholder = R.string.co7_your_thought,
+                            inputText = postText,
+                            onTextChange = { viewModel.onPostTextChange(it) },
+                            onSent = {
+                                viewModel.submitPost(communityId, userId)
+                            },
+                            modifier = Modifier.padding(24.dp, 16.dp)
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Button(onClick = { viewModel.joinCommunity(userId, communityId) }) {
                                 Text("Yêu cầu tham gia")
                             }
                         }
@@ -145,19 +172,24 @@ fun CommunityScreen(
             }
             when (selectedTab) {
                 0 -> items(localPosts) { post ->
-                    val user = viewModel.repository.getUserById(post.posterId) ?: return@items
-                    val commentCount = viewModel.repository.getCommentCountForPost(post.id)
-                    val isLiked = viewModel.repository.isPostLiked(post.id)
+                    val user = postAuthors[post.posterId] ?: return@items
+                    var commentCount by remember { mutableStateOf(0) }
+                    var isLiked by remember { mutableStateOf(false) }
+
+                    LaunchedEffect(post.id) {
+                        commentCount = viewModel.getCommentCountForPost(post.id)
+                        isLiked = viewModel.isPostLiked(post.id, userId)
+                    }
+
                     PostCard(
                         post = post,
                         isLiked = isLiked,
-                        onPostClick = {
-                            navController.navigate(PostDetails.createRoute(post.id))
-                        },
-                        onToggleLike = {},
+                        onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
+                        onToggleLike = { viewModel.toggleLike(post.id, userId) },
                         user = user,
                         commentCount = commentCount,
-                        onDeletePost = {}
+                        onDeletePost = {},
+                        userId = userId
                     )
                 }
 

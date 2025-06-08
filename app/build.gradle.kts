@@ -102,6 +102,9 @@ dependencies {
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.ui)
     implementation(libs.accompanist.permissions)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging.interceptor)
 
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.accompanist.permissions.v0360)

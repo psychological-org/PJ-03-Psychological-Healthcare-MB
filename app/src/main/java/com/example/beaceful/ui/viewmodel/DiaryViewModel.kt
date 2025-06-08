@@ -58,17 +58,17 @@ class DiaryViewModel @Inject constructor(
         return Emotions.entries.associateWith { count[it] ?: 0 }
     }
 
-    fun getAppointments(userId: Int): List<Appointment> =
-        DumpDataProvider.appointments.filter { it.patientId == userId }
+//    fun getAppointments(userId: Int): List<Appointment> =
+//        DumpDataProvider.appointments.filter { it.patientId == userId }
 
     fun getDiaryById(id: Int): Diary? {
         return repo.getDiaryById(id)
     }
 
-    fun getAppointmentsOnDate(userId: Int, date: LocalDateTime): List<Appointment> =
+    fun getAppointmentsOnDate(userId: String, date: LocalDateTime): List<Appointment> =
         DumpDataProvider.appointments.filter { it.patientId == userId && it.appointmentDate == date }
 
-    fun getUpcoming(userId: Int): List<Appointment> = getAppointmentsOnDate(
+    fun getUpcoming(userId: String): List<Appointment> = getAppointmentsOnDate(
         userId = userId,
         date = LocalDateTime.now()
     ).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
@@ -79,7 +79,7 @@ class DiaryViewModel @Inject constructor(
         content: String? = null,
         imageUrl: String? = null,
         voiceUrl: String? = null,
-        posterId: Int,
+        posterId: String,
         createAt: LocalDateTime = LocalDateTime.now(ZoneId.of("UTC+7"))
     ) {
         viewModelScope.launch {

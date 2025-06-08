@@ -1,6 +1,7 @@
 package com.example.beaceful.ui.screens.doctor
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -34,6 +35,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,27 +44,51 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.ui.components.calendar.CustomCalendar
 import com.example.beaceful.ui.viewmodel.BookingViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Composable
 fun BookingScreen(
-    doctorId: Int,
+    doctorId: String,
     navController: NavHostController,
     modifier: Modifier = Modifier,
     viewModel: BookingViewModel = hiltViewModel(),
 ) {
+    val patientId = UserSession.getCurrentUserId()
     var selectedDate by remember { mutableStateOf<LocalDate>(LocalDate.now()) }
     val currentMonth by viewModel.currentMonth.collectAsState()
     var selectedAppointmentTime by remember { mutableStateOf<LocalDateTime?>(null) }
+    var bookedSlots by remember { mutableStateOf<List<LocalDateTime>>(emptyList()) }
+    val error by viewModel.error.collectAsState()
+    val success by viewModel.success.collectAsState()
+    val context = LocalContext.current
+
+    // Gọi getBookedTime trong coroutine
+    LaunchedEffect(doctorId, selectedDate) {
+        bookedSlots = viewModel.getBookedTime(doctorId)
+    }
+
+    success?.let { successMessage ->
+        LaunchedEffect(successMessage) {
+            withContext(Dispatchers.Main) {
+                Toast.makeText(context, successMessage, Toast.LENGTH_LONG).show()
+            }
+            viewModel._success.value = null
+            navController.popBackStack()
+        }
+    }
 
     Box {
         Column {
@@ -167,9 +193,6 @@ fun BookingScreen(
                         )
 
                         Spacer(Modifier.height(12.dp))
-                        val bookedSlots: List<LocalDateTime> =
-                            viewModel.getBookedTime(doctorId)
-//                        Pick time
                         Box(
                             modifier = Modifier.background(
                                 MaterialTheme.colorScheme.tertiary,
@@ -188,9 +211,7 @@ fun BookingScreen(
                                     }
                                 }
                             ) { selectedDate ->
-
-                                val timeSlots =
-                                    viewModel.generateTimeSlots(selectedDate, bookedSlots)
+                                val timeSlots = viewModel.generateTimeSlots(selectedDate, bookedSlots)
 
                                 LazyColumn(
                                     modifier = Modifier
@@ -206,28 +227,24 @@ fun BookingScreen(
                                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
                                             rowSlots.forEach { slot ->
-                                                val isSelected =
-                                                    selectedAppointmentTime == slot.time
+                                                val isSelected = selectedAppointmentTime == slot.time
                                                 val isDisabled = slot.isBooked
 
                                                 Button(
                                                     onClick = {
-                                                        if (!isDisabled) selectedAppointmentTime =
-                                                            slot.time
+                                                        if (!isDisabled) selectedAppointmentTime = slot.time
                                                     },
                                                     enabled = !isDisabled,
                                                     shape = RoundedCornerShape(24.dp),
                                                     colors = when {
+                                                        isDisabled -> ButtonDefaults.buttonColors(
+                                                            containerColor = Color.Gray,
+                                                            contentColor = Color.White
+                                                        )
                                                         isSelected -> ButtonDefaults.buttonColors(
                                                             containerColor = MaterialTheme.colorScheme.onPrimary,
                                                             contentColor = MaterialTheme.colorScheme.primary
                                                         )
-
-                                                        isDisabled -> ButtonDefaults.buttonColors(
-                                                            containerColor = Color.LightGray,
-                                                            contentColor = Color.DarkGray
-                                                        )
-
                                                         else -> ButtonDefaults.buttonColors(
                                                             containerColor = MaterialTheme.colorScheme.primary,
                                                             contentColor = MaterialTheme.colorScheme.onPrimary
@@ -236,18 +253,24 @@ fun BookingScreen(
                                                     modifier = Modifier.weight(1f)
                                                 ) {
                                                     Text(
-                                                        text = "${
-                                                            slot.time.hour.toString()
-                                                                .padStart(2, '0')
-                                                        }:00 - ${
-                                                            (slot.time.hour + 1).toString()
-                                                                .padStart(2, '0')
-                                                        }:00",
-                                                        textAlign = TextAlign.Center
+                                                        text = if (isDisabled) {
+                                                            "${
+                                                                slot.time.hour.toString().padStart(2, '0')
+                                                            }:00 - ${
+                                                                (slot.time.hour + 1).toString().padStart(2, '0')
+                                                            }:00 (Đã đặt)"
+                                                        } else {
+                                                            "${
+                                                                slot.time.hour.toString().padStart(2, '0')
+                                                            }:00 - ${
+                                                                (slot.time.hour + 1).toString().padStart(2, '0')
+                                                            }:00"
+                                                        },
+                                                        textAlign = TextAlign.Center,
+                                                        style = MaterialTheme.typography.bodySmall
                                                     )
                                                 }
                                             }
-
                                             if (rowSlots.size == 1) {
                                                 Spacer(modifier = Modifier.weight(1f))
                                             }
@@ -259,7 +282,13 @@ fun BookingScreen(
                         Spacer(Modifier.height(12.dp))
                         Button(
                             onClick = {
-                                Log.d("Booked", selectedAppointmentTime.toString())
+                                selectedAppointmentTime?.let { time ->
+                                    viewModel.bookAppointment(
+                                        doctorId = doctorId,
+                                        patientId = patientId,
+                                        time
+                                    )
+                                }
                             },
                             enabled = selectedAppointmentTime != null,
                             shape = RoundedCornerShape(24.dp),

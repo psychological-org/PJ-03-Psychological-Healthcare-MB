@@ -32,6 +32,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,12 +57,24 @@ import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
 fun CustomerDetailsScreen(
-    customerId: Int,
+    customerId: String,
     navController: NavHostController,
     viewModel: AppointmentViewModel = hiltViewModel(),
     isDoctorView: Boolean = true,
 ) {
-    val patient = viewModel.getPatient(customerId)
+//    val patient = viewModel.getPatient(customerId)
+    val patients by viewModel.patients.collectAsState()
+    val appointments by viewModel.appointments.collectAsState()
+    val patient = patients[customerId]
+
+    // Gọi API để lấy thông tin bệnh nhân và lịch hẹn
+    LaunchedEffect(customerId) {
+        viewModel.getPatient(customerId)
+        viewModel.getAppointmentsOfPatient(
+            doctorId = "0e370c47-9a29-4a8e-8f17-4e473d68cadd",
+            patientId = customerId
+        )
+    }
     if (patient != null) {
         Column(
             modifier = Modifier
@@ -74,6 +88,7 @@ fun CustomerDetailsScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
+//                     text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
                     text = "${stringResource(R.string.cu2)} ${
                         if (isDoctorView) {
                             patient.fullName
@@ -85,12 +100,14 @@ fun CustomerDetailsScreen(
                     style = MaterialTheme.typography.titleLarge
                 )
             }
-            CustomSearchBar(
+            CustomSearchBar<String>(
                 suggestions = null,
+                placeholder = "Tìm kiếm lịch hẹn...",
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
 
             AppointmentAccordion(
+//                 appointments = appointments,
                 appointments = if (isDoctorView) viewModel.getAppointmentsOfPatientByDoctor(
                     2,
                     customerId

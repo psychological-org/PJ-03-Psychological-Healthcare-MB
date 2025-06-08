@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,18 +65,17 @@ fun DoctorScreen(
     viewModel: DoctorViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val allDoctors = remember {
-        viewModel.getAllDoctors()
-    }
+    val doctors by viewModel.doctors.collectAsState()
 
+    val error by viewModel.error.collectAsState()
     var query by remember { mutableStateOf("") }
-    val nameSuggestions = remember(allDoctors) {
-        allDoctors.map { SearchItem(it.id, it.fullName) }
+    val nameSuggestions = remember(doctors) {
+        doctors.map { SearchItem<String>(id = it.id, name = it.fullName) }
     }
 
-    val filteredDoctors = remember(query, allDoctors) {
-        if (query.isBlank()) allDoctors
-        else allDoctors.filter { it.fullName.contains(query, ignoreCase = true) }
+    val filteredDoctors = remember(query, doctors) {
+        if (query.isBlank()) doctors
+        else doctors.filter { it.fullName.contains(query, ignoreCase = true) }
     }
 
     Column(modifier.fillMaxSize()) {
