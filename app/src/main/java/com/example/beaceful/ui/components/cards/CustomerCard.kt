@@ -145,7 +145,7 @@ fun CustomerList(
         items(customers) { customer ->
             CustomerCard(customer,
                 onCustomerClick = {
-                    navController.navigate(CustomerDetails.createRoute(customer.id))
+                    navController.navigate(CustomerDetails.createRoute(customer.id, true))
                 })
         }
     }

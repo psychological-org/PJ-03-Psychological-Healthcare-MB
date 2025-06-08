@@ -1,6 +1,7 @@
 package com.example.beaceful.domain.model
 
 import com.google.gson.annotations.SerializedName
+import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.*
 import java.time.format.DateTimeFormatter
 
@@ -187,7 +188,6 @@ data class SearchItem<T>(
     val id: T,
     val name: String
 )
-
 data class PagedResponse<T>(
     @SerializedName("content")
     val content: List<T>,
@@ -199,4 +199,9 @@ data class PagedResponse<T>(
     val size: Int,
     @SerializedName("number")
     val number: Int
+)
+data class ProfileSelection(
+    val title: String,
+    val icon: ImageVector,
+    val onClick: () -> Unit
 )

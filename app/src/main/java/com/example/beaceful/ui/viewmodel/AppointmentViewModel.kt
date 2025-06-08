@@ -239,7 +239,6 @@ class AppointmentViewModel @Inject constructor(
             }
         }
     }
-
     fun onClickReject(appointmentId: Int) {
         viewModelScope.launch {
             try {
@@ -268,7 +267,16 @@ class AppointmentViewModel @Inject constructor(
                 _error.value = "Lỗi khi hủy lịch hẹn: ${e.message}"
             }
         }
-    }
+//     fun getUpcoming(): List<Appointment> = getAppointmentsOnDate(LocalDateTime.now()).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
+//     fun getAppointments(doctorId: Int): List<Appointment> =
+//         repo.getAppointmentsOfDoctor(doctorId)
+    fun getAppointmentsOfPatientByDoctor(doctorId: Int, customerId: Int) =
+        repo.getAppointmentsOfDoctor(doctorId).filter { it.patientId == customerId }
+//     fun getPatients(doctorId: Int): List<User> {
+//         return getAppointments(doctorId)
+//             .mapNotNull { getPatientByAppointment(it) }
+//             .distinctBy { it.id }
+//     }
 
     fun updateAppointmentStatus(appointmentId: Int, status: AppointmentStatus, note: String? = null) {
         viewModelScope.launch {

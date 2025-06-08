@@ -10,7 +10,6 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -39,36 +38,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.example.beaceful.R
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.AppointmentStatus
-import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.ui.components.CustomSearchBar
-import com.example.beaceful.ui.components.cards.AppointmentList
-import com.example.beaceful.ui.components.cards.CustomerList
 import com.example.beaceful.ui.navigation.AppointmentDetails
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
-import kotlin.math.exp
 
 @Composable
 fun CustomerDetailsScreen(
     customerId: String,
     navController: NavHostController,
     viewModel: AppointmentViewModel = hiltViewModel(),
+    isDoctorView: Boolean = true,
 ) {
 //    val patient = viewModel.getPatient(customerId)
     val patients by viewModel.patients.collectAsState()
@@ -96,7 +88,14 @@ fun CustomerDetailsScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
+//                     text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
+                    text = "${stringResource(R.string.cu2)} ${
+                        if (isDoctorView) {
+                            patient.fullName
+                        } else {
+                            "bạn"
+                        }
+                    }",
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge
                 )
@@ -108,8 +107,13 @@ fun CustomerDetailsScreen(
             )
 
             AppointmentAccordion(
-                appointments = appointments,
+//                 appointments = appointments,
+                appointments = if (isDoctorView) viewModel.getAppointmentsOfPatientByDoctor(
+                    2,
+                    customerId
+                ) else viewModel.repo.getAllAppointmentsOfPatient(customerId),
                 navController = navController,
+                isDoctorView = isDoctorView,
             )
         }
     }
@@ -143,7 +147,8 @@ fun AppointmentItem(
 @Composable
 fun AppointmentAccordionList(
     appointments: List<Appointment>,
-    navController: NavHostController
+    navController: NavHostController,
+    isDoctorView: Boolean = true,
 ) {
     Row(
         modifier = Modifier
@@ -165,7 +170,14 @@ fun AppointmentAccordionList(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             appointments.forEach { appointment ->
-                AppointmentItem(appointment, onAppointmentClick = {navController.navigate(AppointmentDetails.createRoute(appointment.id))})
+                AppointmentItem(
+                    appointment,
+                    onAppointmentClick = {
+                        navController.navigate(
+                            AppointmentDetails.createRoute(appointment.id, isDoctorView)
+                        )
+                    },
+                )
             }
         }
     }
@@ -176,6 +188,7 @@ fun AppointmentAccordionList(
 fun AppointmentAccordion(
     appointments: List<Appointment>,
     navController: NavHostController,
+    isDoctorView: Boolean = true,
 ) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -232,7 +245,8 @@ fun AppointmentAccordion(
                     AppointmentAccordionList(
                         appointments.filter { it.status == status }
                             .sortedByDescending { it.appointmentDate },
-                        navController = navController
+                        navController = navController,
+                        isDoctorView = isDoctorView,
                     )
                 }
             }

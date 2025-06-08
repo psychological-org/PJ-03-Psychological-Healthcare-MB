@@ -2,7 +2,6 @@ package com.example.beaceful.ui.components.calendar
 
 import android.graphics.Color
 import android.graphics.Paint
-import android.util.Log
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
@@ -24,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -39,6 +37,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -78,6 +77,8 @@ fun CalendarDiaryScreen(
     var selectedDiaries by remember { mutableStateOf<List<Diary>?>(null) }
     var selectedIndex by remember { mutableIntStateOf(0) }
     val options = listOf("Mood count", "Lịch sắp tới")
+    val diariesForDate by viewModel.diariesForDate.collectAsState()
+
 
     Box {
         LazyColumn(
@@ -105,13 +106,13 @@ fun CalendarDiaryScreen(
             item {
                 CustomCalendar(
                     currentMonth = currentMonth,
-                    highlightDates = { date -> viewModel.repo.getDiariesOnDate(date).isNotEmpty() },
+                    highlightDates = { date -> viewModel.repo.getDiariesOnDate(date.toLocalDate()).isNotEmpty() },
                     getColorsForDate = { date ->
-                        viewModel.repo.getDiariesOnDate(date)
+                        viewModel.repo.getDiariesOnDate(date.toLocalDate())
                             .take(2)
                             .map { it.emotion.textColor }
                     },
-                    onClickDate = { date -> selectedDiaries = viewModel.repo.getDiariesOnDate(date) }
+                    onClickDate = { date -> selectedDiaries = viewModel.repo.getDiariesOnDate(date.toLocalDate()) }
                 )
                 Spacer(Modifier.height(8.dp))
 
@@ -217,7 +218,8 @@ fun CalendarDiaryScreen(
             Box {
                 DiaryList(
                     diaries = it,
-                    navController = navController
+                    navController = navController,
+                    onDeleteDiary = { diary -> viewModel.deleteDiary(diary.id) }
                 )
                 FloatingActionButton(
                     onClick = { selectedDiaries = null },

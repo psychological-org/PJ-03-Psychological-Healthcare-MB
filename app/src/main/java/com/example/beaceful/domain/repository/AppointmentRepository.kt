@@ -201,6 +201,7 @@ class AppointmentRepository @Inject constructor(
             emptyList()
         }
     }
+    fun getAllAppointmentsOfPatient(patientId: Int) : List<Appointment> = DumpDataProvider.appointments.filter { it.patientId == patientId }
 
     suspend fun getAllPatientsOfDoctorByStatus(doctorId: String, status: AppointmentStatus): List<User> = withContext(Dispatchers.IO) {
         try {

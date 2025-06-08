@@ -216,6 +216,15 @@ object DumpDataProvider {
             rating = 5,
             review = "Good!",
             status = AppointmentStatus.PENDING,
+        ),
+        Appointment(
+            id = 12,
+            patientId = 4,
+            doctorId = 3,
+            appointmentDate = LocalDateTime.of(2025, 6, 26, 7, 0),
+            rating = 5,
+            review = "Good!",
+            status = AppointmentStatus.PENDING,
         )
 
 
@@ -225,15 +234,44 @@ object DumpDataProvider {
     val collections = listOf(
         Collection(
             id = 1,
-            name = "Lo‑fi Chill Mix",
+            name = "Thư giãn",
             resourceUrl = "https://cdn.example.com/audio/lofi.mp3",
             topicId = 1,
             type = CollectionType.MUSIC
         ),
         Collection(
             id = 2,
-            name = "Mindfulness Podcast Ep.1",
-            resourceUrl = "https://cdn.example.com/podcast/ep1.mp3",
+            name = "Tập trung",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/2.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+        ),
+        Collection(
+            id = 3,
+            name = "Yên bình",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/3.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+        ),
+        Collection(
+            id = 4,
+            name = "Giấc ngủ",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/4.mp3",
+            topicId = 1,
+            type = CollectionType.MUSIC
+
+        ),
+        Collection(
+            id = 5,
+            name = "Tâm trạng",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/5.mp3",
+            topicId = 1,
+            type = CollectionType.PODCAST
+        ),
+        Collection(
+            id = 6,
+            name = "Hoài niệm",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/6.mp3",
             topicId = 1,
             type = CollectionType.PODCAST
         )

@@ -3,7 +3,6 @@ package com.example.beaceful.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beaceful.domain.model.Appointment
-import androidx.lifecycle.viewModelScope
 import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.DumpDataProvider
@@ -15,7 +14,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 import java.time.ZoneId
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -121,9 +119,31 @@ class DiaryViewModel @Inject constructor(
         }
     }
 
+    private val _diariesForMonth = MutableStateFlow<List<Diary>>(emptyList())
+    val diariesForMonth: StateFlow<List<Diary>> = _diariesForMonth.asStateFlow()
+
+    fun loadDiariesForMonth(month: LocalDateTime) {
+        viewModelScope.launch {
+            val result = repo.getDiariesInMonth(month)
+            _diariesForMonth.value = result
+        }
+    }
+
+    private val _diariesForDay = MutableStateFlow<List<Diary>>(emptyList())
+    val diariesForDate: StateFlow<List<Diary>> = _diariesForDay.asStateFlow()
+
+    fun loadDiariesForDate(date: LocalDateTime) {
+        viewModelScope.launch {
+            val result = repo.getDiariesOnDate(date.toLocalDate())
+            _diariesForDay.value = result
+        }
+    }
+
     fun deleteDiary(diaryId: Int) {
         viewModelScope.launch {
             repo.deleteDiary(diaryId)
+            loadDiariesForMonth(currentMonth.value)
+            loadDiariesForDate(currentMonth.value)
             loadDiaries()
         }
     }

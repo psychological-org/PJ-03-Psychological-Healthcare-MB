@@ -1,5 +1,7 @@
 package com.example.beaceful.ui.navigation
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -12,10 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
-import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
 import com.example.beaceful.ui.screen.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
+import com.example.beaceful.ui.screens.authen.ForgotPasswordScreen
 import com.example.beaceful.ui.screens.customer.CustomerDetailsScreen
 import com.example.beaceful.ui.screens.customer.CustomerScreen
 import com.example.beaceful.ui.screens.diary.DiaryFullScreen
@@ -29,10 +31,15 @@ import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
 import com.example.beaceful.ui.screens.forum.CommunityScreen
 import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
+import com.example.beaceful.ui.screens.authen.LoginScreen
+import com.example.beaceful.ui.screens.authen.SignUpScreen
+import com.example.beaceful.ui.screens.authen.VerifyScreen
+import com.example.beaceful.ui.screens.profile.EditAccountScreen
 import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
 import java.time.LocalDateTime
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun BeacefulNavHost(
     navController: NavHostController,
@@ -78,7 +85,10 @@ fun BeacefulNavHost(
             )
         }
         composable(route = EditRoute.route) {
-            EditProfileScreen()
+            EditProfileScreen(navController = navController)
+        }
+        composable(route = EditAccountRoute.route) {
+            EditAccountScreen()
         }
         composable(
             route = SingleDoctorProfile.route,
@@ -206,6 +216,23 @@ fun BeacefulNavHost(
             val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
             AppointmentDetailsScreen(appointmentId = appointmentId, navController = navController)
         }
+
+//        composable(
+//            route = CustomerDetails.route,
+//            arguments = listOf(navArgument("customerId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val customerId = backStackEntry.arguments?.getInt("customerId") ?: return@composable
+//            CustomerDetailsScreen(customerId = customerId, navController = navController)
+//        }
+//        composable(
+//            route = AppointmentDetails.route,
+//            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val appointmentId =
+//                backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
+//            AppointmentDetailsScreen(appointmentId = appointmentId)
+//        }
+
         composable(
             route = AppointmentRoute.route
         ) {
@@ -222,17 +249,47 @@ fun BeacefulNavHost(
         }
         composable(
             route = CustomerDetails.route,
-            arguments = listOf(navArgument("customerId") { type = NavType.StringType })
+            arguments = listOf(navArgument("customerId") { type = NavType.StringType },
+                navArgument("isDoctorView") { type = NavType.BoolType })
         ) { backStackEntry ->
             val customerId = backStackEntry.arguments?.getString("customerId") ?: return@composable
-            CustomerDetailsScreen(customerId = customerId, navController = navController)
+            val isDoctorView =
+                backStackEntry.arguments?.getBoolean("isDoctorView") ?: return@composable
+            CustomerDetailsScreen(
+                customerId = customerId,
+                navController = navController,
+                isDoctorView = isDoctorView
+            )
         }
         composable(
             route = AppointmentDetails.route,
-            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
+            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType },
+                navArgument("isDoctorView") { type = NavType.BoolType })
         ) { backStackEntry ->
             val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
-            AppointmentDetailsScreen(appointmentId = appointmentId, navController = navController)
+            val isDoctorView =
+                backStackEntry.arguments?.getBoolean("isDoctorView") ?: return@composable
+            AppointmentDetailsScreen(appointmentId = appointmentId,  isDoctorView = isDoctorView)
+        }
+        composable(
+            route = LoginRoute.route,
+        ) {
+            LoginScreen()
+        }
+        composable(
+            route = SignUpRoute.route,
+        ) {
+            SignUpScreen()
+        }
+        composable(
+            route = ForgotRoute.route,
+        ) {
+            ForgotPasswordScreen()
+        }
+        composable(
+            route = VerifyRoute.route,
+        ) {
+            VerifyScreen()
         }
     }
 }
