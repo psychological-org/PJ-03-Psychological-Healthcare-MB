@@ -47,7 +47,7 @@ fun BeacefulNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Home.route,
+        startDestination = LoginRoute.route,
         modifier = modifier
     ) {
         composable(route = Home.route) {
@@ -60,24 +60,18 @@ fun BeacefulNavHost(
             DoctorScreen(navController = navController)
         }
         composable(route = Forum.route) {
-            ForumScreen(navController = navController, userId = "68401da39148fa4dbbb6d25a")
+            ForumScreen(navController = navController)
         }
 
         composable(
             route = CommunityRoute.route,
-            arguments = listOf(
-                navArgument("communityId") { type = NavType.IntType },
-                navArgument("userId") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("communityId") { type = NavType.IntType })
         ) { backStackEntry ->
             val communityId = backStackEntry.arguments?.getInt("communityId") ?: return@composable
-            val userId = backStackEntry.arguments?.getString("userId") ?: "68401da39148fa4dbbb6d25a"
             CommunityScreen(
                 navController = navController,
-                communityId = communityId,
-                userId = userId
+                communityId = communityId
             )
-
         }
         composable(route = Profile.route) {
             ProfileScreen(
@@ -209,13 +203,13 @@ fun BeacefulNavHost(
             val customerId = backStackEntry.arguments?.getString("customerId") ?: return@composable
             CustomerDetailsScreen(customerId = customerId, navController = navController)
         }
-        composable(
-            route = AppointmentDetails.route,
-            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
-            AppointmentDetailsScreen(appointmentId = appointmentId, navController = navController)
-        }
+//        composable(
+//            route = AppointmentDetails.route,
+//            arguments = listOf(navArgument("appointmentId") { type = NavType.IntType })
+//        ) { backStackEntry ->
+//            val appointmentId = backStackEntry.arguments?.getInt("appointmentId") ?: return@composable
+//            AppointmentDetailsScreen(appointmentId = appointmentId, navController = navController)
+//        }
 
 //        composable(
 //            route = CustomerDetails.route,
@@ -271,24 +265,16 @@ fun BeacefulNavHost(
                 backStackEntry.arguments?.getBoolean("isDoctorView") ?: return@composable
             AppointmentDetailsScreen(appointmentId = appointmentId,  isDoctorView = isDoctorView)
         }
-        composable(
-            route = LoginRoute.route,
-        ) {
-            LoginScreen()
+        composable(route = LoginRoute.route) {
+            LoginScreen(navController = navController)
         }
-        composable(
-            route = SignUpRoute.route,
-        ) {
+        composable(route = SignUpRoute.route) {
             SignUpScreen()
         }
-        composable(
-            route = ForgotRoute.route,
-        ) {
+        composable(route = ForgotRoute.route) {
             ForgotPasswordScreen()
         }
-        composable(
-            route = VerifyRoute.route,
-        ) {
+        composable(route = VerifyRoute.route) {
             VerifyScreen()
         }
     }

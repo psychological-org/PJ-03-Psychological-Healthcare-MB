@@ -31,6 +31,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,17 +46,33 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.navigateSingleTopTo
+import com.example.beaceful.ui.viewmodel.AuthViewModel
 
 @Composable
-fun LoginScreen() {
+fun LoginScreen(
+    navController: NavHostController,
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
     var loginInput by rememberSaveable { mutableStateOf("") }
     var passwordInput by rememberSaveable { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
-    val icon = if (passwordVisibility)
-        Icons.Default.Visibility
-    else
-        Icons.Default.VisibilityOff
+    val isLoading by authViewModel.isLoading.collectAsState()
+    val error by authViewModel.error.collectAsState()
+    val success by authViewModel.success.collectAsState()
+    val icon = if (passwordVisibility) Icons.Default.Visibility else Icons.Default.VisibilityOff
+
+    LaunchedEffect(success) {
+        if (success != null) {
+            navController.navigateSingleTopTo(Home.route)
+            authViewModel.clearMessages()
+        }
+    }
 
     Column(
         Modifier.padding(horizontal = 48.dp),
@@ -150,12 +168,13 @@ fun LoginScreen() {
         )
         Box(Modifier.fillMaxHeight().padding(bottom = 12.dp)) {
             Button(
-                onClick = {},
+                onClick = { authViewModel.login(loginInput, passwordInput) },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
                     contentColor = MaterialTheme.colorScheme.onSecondary
-                )
+                ),
+                enabled = !isLoading
             ) {
                 Text("Đăng nhập")
             }

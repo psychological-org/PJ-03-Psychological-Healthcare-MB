@@ -47,6 +47,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomInputField
@@ -61,10 +62,10 @@ import kotlinx.coroutines.launch
 fun CommunityScreen(
     navController: NavHostController,
     communityId: Int,
-    userId: String,
     viewModel: ForumViewModel = hiltViewModel()
 ) {
 
+    val userId = UserSession.getCurrentUserId()
     LaunchedEffect(userId) {
         viewModel.fetchUserCommunityIds(userId)
     }

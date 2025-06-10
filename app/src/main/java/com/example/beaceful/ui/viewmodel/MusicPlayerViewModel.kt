@@ -36,7 +36,7 @@ class MusicPlayerViewModel @Inject constructor(
 
     fun playCollection(collection: Collection) {
         _currentCollection.value = collection
-        val mediaItem = MediaItem.fromUri(collection.resourceId)
+        val mediaItem = MediaItem.fromUri(collection.resourceUrl)
         player.repeatMode = Player.REPEAT_MODE_ONE
         player.setMediaItem(mediaItem)
         player.prepare()

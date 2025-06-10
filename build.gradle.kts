@@ -17,4 +17,5 @@ extra.apply {
     }
     set("awsAccessKey", localProperties.getProperty("aws_access_key") ?: "")
     set("awsSecretKey", localProperties.getProperty("aws_secret_key") ?: "")
+    set("clientSecret", localProperties.getProperty("client_secret") ?: "")
 }

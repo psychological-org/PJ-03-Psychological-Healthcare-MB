@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.profile
 
+import android.util.Log
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -61,6 +62,7 @@ import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.EditRoute
 import com.example.beaceful.ui.navigation.PostDetails
 import com.example.beaceful.ui.screens.doctor.DoctorAboutSection
+import com.example.beaceful.ui.viewmodel.ProfileViewModel
 import com.example.beaceful.viewmodel.DoctorViewModel
 import kotlinx.coroutines.launch
 
@@ -68,34 +70,30 @@ import kotlinx.coroutines.launch
 fun ProfileScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    viewModel: DoctorViewModel = hiltViewModel(),
+    viewModel: ProfileViewModel = hiltViewModel(),
 ) {
     val userId = UserSession.getCurrentUserId()
     val tabTitles = listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
     var selectedTab by remember { mutableIntStateOf(0) }
-    val doctor = viewModel.getDoctorById(userId)
-    val doctorPosts by viewModel.doctorPosts.collectAsState()
+    val user by viewModel.user.collectAsState()
+    val posts by viewModel.posts.collectAsState()
     val comments by viewModel.comments.collectAsState()
     val error by viewModel.error.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
     var commentText by remember { mutableStateOf("") }
-//     val user = remember { viewModel.getDoctorById(userId) }
-//     val doctorPosts = remember { viewModel.getPostsByDoctor(userId) }
 
-    LaunchedEffect(userId) {
-        viewModel.fetchDoctorPosts(userId)
-    }
-
-    LaunchedEffect(doctorPosts) {
-        doctorPosts.forEach { post ->
+    LaunchedEffect(posts) {
+        posts.forEach { post ->
             coroutineScope.launch {
                 postAuthors[post.posterId] = viewModel.getUserById(post.posterId)
             }
         }
     }
 
-    if (doctor == null) {
+    Log.d("PROFILE","Doctor=$user")
+
+    if (user == null) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -137,7 +135,7 @@ fun ProfileScreen(
                             .height(180.dp)
                     )
                     AsyncImage(
-                        model = user.avatarUrl,
+                        model = user!!.avatarUrl,
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -170,13 +168,13 @@ fun ProfileScreen(
 
                 // Tên
                 Text(
-                    text = user.fullName,
+                    text = user!!.fullName,
                     style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
 
                 Text(
-                    text = user.headline ?: "",
+                    text = user!!.headline ?: "",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.primary.copy(
                             alpha = 0.7f
@@ -207,7 +205,7 @@ fun ProfileScreen(
                         )
                     }
                     Button(
-                        onClick = { navController.navigate(CustomerDetails.createRoute(4, false)) },
+                        onClick = { navController.navigate(CustomerDetails.createRoute(userId, false)) },
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
@@ -256,7 +254,7 @@ fun ProfileScreen(
             }
 
             when (selectedTab) {
-                0 -> items(doctorPosts) { post ->
+                0 -> items(posts) { post ->
                     val user = postAuthors[post.posterId] ?: return@items
                     var commentCount by remember { mutableStateOf(0) }
                     var isLiked by remember { mutableStateOf(false) }
@@ -286,7 +284,7 @@ fun ProfileScreen(
                     )
                 }
                 1 -> item {
-                    DoctorAboutSection(biography = user.biography)
+                    AboutSection(biography = user!!.biography)
                 }
             }
         }

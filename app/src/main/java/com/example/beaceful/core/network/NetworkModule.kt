@@ -1,7 +1,12 @@
 package com.example.beaceful.core.network
 
+import android.content.Context
+import android.util.Log
+import com.example.beaceful.BuildConfig
 import com.example.beaceful.core.network.appointment.AppointmentApiService
 import com.example.beaceful.core.network.appointment.AppointmentDeserializer
+import com.example.beaceful.core.network.auth.AuthApiService
+import com.example.beaceful.core.network.auth.AuthDataStore
 import com.example.beaceful.core.network.collection.CollectionApiService
 import com.example.beaceful.core.network.collection.CollectionSeenApiService
 import com.example.beaceful.core.network.collection.CollectionTypeDeserializer
@@ -13,31 +18,37 @@ import com.example.beaceful.core.network.topic.TopicApiService
 import com.example.beaceful.core.network.user.UserApiService
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.CollectionType
+import com.example.beaceful.domain.repository.AuthRepository
 import com.example.beaceful.domain.repository.CollectionRepository
 import com.example.beaceful.domain.repository.CollectionSeenRepository
 import com.example.beaceful.domain.repository.CommunityRepository
 import com.example.beaceful.domain.repository.PostRepository
 import com.example.beaceful.domain.repository.TopicRepository
 import com.example.beaceful.domain.repository.UserRepository
+import com.example.beaceful.ui.viewmodel.AuthViewModel
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import javax.inject.Named
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    private const val BASE_URL = "http://10.0.2.2:8222/api/v1/"
-    private const val BEARER_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ4YWlxa01lN0E3MDJVRENJcldrV3ZxV21ZZndudGo5RF9xMzFYTUZEdmhJIn0.eyJleHAiOjE3NDkyNzc3MDksImlhdCI6MTc0OTI2NjkwOSwianRpIjoiMWYwM2NkYmItMWMyYS00YTRjLTg4ZmQtYmVkMDNiNzEzODliIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjgwODAvcmVhbG1zL21pY3JvLXNlcnZpY2VzIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImYzOTdjNDgwLTg1ZmYtNDc0Ni1iZjliLTViMGEwODU1OTA3MiIsInR5cCI6IkJlYXJlciIsImF6cCI6ImF1dGhzZXJ2aWNlIiwic2Vzc2lvbl9zdGF0ZSI6IjVkOGExMzhkLThkOWEtNDNlMS1iMThmLWU4NTlkYTcwYzE2ZCIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInBhdGllbnQiLCJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtbWljcm8tc2VydmljZXMiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjVkOGExMzhkLThkOWEtNDNlMS1iMThmLWU4NTlkYTcwYzE2ZCIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiTmd1eeG7hW4gWHXDom4gUXVhbmciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwYXRpZW50MSIsImdpdmVuX25hbWUiOiJOZ3V54buFbiIsImZhbWlseV9uYW1lIjoiWHXDom4gUXVhbmciLCJlbWFpbCI6InBhdGllbnQxQGV4YW1wbGUuY29tIn0.jQHwW9zVEg5mF2VCiwDS3UNxM_h_HDTOi0Gxs2UWwVkcqEmiA8l-k452eVgqYxGypSSQazHnZFDslITNKTceMm5x_n5olgtUFS4_EWvngvuazchaFiam4EP4ecc8Wx5dbTbuNmQKOkCr89sLd6V6_L1TKT4DofsTnLBjvQokHHTECxfom-yl_r7xp025rYo3Hgb6q972DLgCdUV_nWFa4BdQDzZERIJBrapcpuwEP5fjYGPbIbFBcF1r0SlVZnV8wTR1thSvf4N4J84HCe_NnWPRdxKZs7vtXj42hKgmeLOW9GClUTN1uSv8jBNC8jXJS2UYE5_Z-ySGvTEDYRfQEg"
+    private const val GATEWAY_BASE_URL = "http://10.0.2.2:8222/api/v1/"
+    private const val KEYCLOAK_BASE_URL = "http://10.0.2.2:9098/"
+//    private const val BEARER_TOKEN = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJ4YWlxa01lN0E3MDJVRENJcldrV3ZxV21ZZndudGo5RF9xMzFYTUZEdmhJIn0.eyJleHAiOjE3NDk0NDQ5MTksImlhdCI6MTc0OTQzNDExOSwianRpIjoiOTU3YWM2YmYtMTJjZC00YzkwLTg1YzgtNDdmZjdmZThjNWVlIiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjgwODAvcmVhbG1zL21pY3JvLXNlcnZpY2VzIiwiYXVkIjoiYWNjb3VudCIsInN1YiI6ImYzOTdjNDgwLTg1ZmYtNDc0Ni1iZjliLTViMGEwODU1OTA3MiIsInR5cCI6IkJlYXJlciIsImF6cCI6ImF1dGhzZXJ2aWNlIiwic2Vzc2lvbl9zdGF0ZSI6IjNkNDMwYjRhLTVmNWQtNGM2NS1iMDczLTdhODgyZDYwYTYzNyIsImFjciI6IjEiLCJhbGxvd2VkLW9yaWdpbnMiOlsiLyoiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbInBhdGllbnQiLCJvZmZsaW5lX2FjY2VzcyIsImRlZmF1bHQtcm9sZXMtbWljcm8tc2VydmljZXMiLCJ1bWFfYXV0aG9yaXphdGlvbiJdfSwicmVzb3VyY2VfYWNjZXNzIjp7ImFjY291bnQiOnsicm9sZXMiOlsibWFuYWdlLWFjY291bnQiLCJtYW5hZ2UtYWNjb3VudC1saW5rcyIsInZpZXctcHJvZmlsZSJdfX0sInNjb3BlIjoicHJvZmlsZSBlbWFpbCIsInNpZCI6IjNkNDMwYjRhLTVmNWQtNGM2NS1iMDczLTdhODgyZDYwYTYzNyIsImVtYWlsX3ZlcmlmaWVkIjp0cnVlLCJuYW1lIjoiTmd1eeG7hW4gWHXDom4gUXVhbmciLCJwcmVmZXJyZWRfdXNlcm5hbWUiOiJwYXRpZW50MSIsImdpdmVuX25hbWUiOiJOZ3V54buFbiIsImZhbWlseV9uYW1lIjoiWHXDom4gUXVhbmciLCJlbWFpbCI6InBhdGllbnQxQGV4YW1wbGUuY29tIn0.mx_l7sKqePek6U-P_5Upyn1IMdDyX9PA7Y8AZBX2ImZVqRK6x5M0Y5MsJkyRchEPfh-KEhJ3N6k9rdH9bc0Zrlk99FCIyjG0dGMkrFmfV4T0s9e3N_CPx3TX9qZJUtlCbX3xjTz2OHCghmV1rbx2-wZ8IksNT98zzY1KyEp0nX1sSX772yfwN7k6k5IpbQCU2IV_q1lb0VCS_fb8vtlG63tovACK44nog6aZ60sFsl_6yOYyIhrfOHM0ktPZzQN5c11td97JJn-mH3aS09bpOe5lR99Uc_rA0Ipd3jVhx1KkZmO4vbx79zt6YvZ7o_RCQNpOI553VC1vIMUQ0c16Mw"
 
     @Provides
     @Singleton
@@ -50,18 +61,69 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(
+        @ApplicationContext context: Context,
+        authRepository: AuthRepository // Sử dụng AuthRepository thay vì AuthApiService
+    ): OkHttpClient {
         val loggingInterceptor = HttpLoggingInterceptor().apply {
             setLevel(HttpLoggingInterceptor.Level.BODY)
         }
         return OkHttpClient.Builder()
             .addInterceptor(loggingInterceptor)
             .addInterceptor { chain ->
-                val request = chain.request().newBuilder()
-                    .addHeader("Authorization", "Bearer $BEARER_TOKEN")
-                    .build()
-                chain.proceed(request)
+                val token = runBlocking { AuthDataStore.getToken(context) }
+                val requestBuilder = chain.request().newBuilder()
+                if (token != null) {
+                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                }
+                val response = chain.proceed(requestBuilder.build())
+                if (response.code == 401) {
+                    val refreshToken = runBlocking { AuthDataStore.getRefreshToken(context) }
+                    if (refreshToken != null) {
+                        val newResponse = runBlocking {
+                            try {
+                                val refreshResponse = authRepository.refreshToken(
+                                    clientId = "authservice",
+                                    refreshToken = refreshToken,
+                                    clientSecret = BuildConfig.CLIENT_SECRET
+                                )
+                                AuthDataStore.saveTokens(context, refreshResponse.token, refreshResponse.refreshToken)
+                                refreshResponse
+                            } catch (e: Exception) {
+                                Log.e("NetworkModule", "Refresh token failed: ${e.message}", e)
+                                null
+                            }
+                        }
+                        if (newResponse != null) {
+                            val newRequest = chain.request().newBuilder()
+                                .header("Authorization", "Bearer ${newResponse.token}")
+                                .build()
+                            return@addInterceptor chain.proceed(newRequest)
+                        }
+                    }
+                    // Nếu refresh thất bại, trả về response 401
+                    response
+                } else {
+                    response
+                }
             }
+            .build()
+    }
+
+    @Provides
+    @Singleton
+    @Named("KeycloakRetrofit")
+    fun provideKeycloakRetrofit(gson: Gson): Retrofit {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            setLevel(HttpLoggingInterceptor.Level.BODY)
+        }
+        val okHttpClient = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+        return Retrofit.Builder()
+            .baseUrl(KEYCLOAK_BASE_URL)
+            .client(okHttpClient)
+            .addConverterFactory(GsonConverterFactory.create(gson))
             .build()
     }
 
@@ -69,7 +131,7 @@ object NetworkModule {
     @Singleton
     fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit {
         return Retrofit.Builder()
-            .baseUrl(BASE_URL)
+            .baseUrl(GATEWAY_BASE_URL)
             .client(okHttpClient)
             .addConverterFactory(GsonConverterFactory.create(provideGson()))
             .build()
@@ -170,5 +232,17 @@ object NetworkModule {
     @Singleton
     fun provideCollectionSeenRepository(collectionSeenApiService: CollectionSeenApiService): CollectionSeenRepository {
         return CollectionSeenRepository(collectionSeenApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthApiService(@Named("KeycloakRetrofit") retrofit: Retrofit): AuthApiService {
+        return retrofit.create(AuthApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(authApiService: AuthApiService): AuthRepository {
+        return AuthRepository(authApiService)
     }
 }

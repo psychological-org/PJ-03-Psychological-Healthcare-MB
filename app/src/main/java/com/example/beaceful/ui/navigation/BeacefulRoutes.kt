@@ -118,7 +118,7 @@ data object CustomerDetails : BeacefulRoutes {
     override val icon = Icons.Filled.Home
     override val route = "customer_details/{customerId}/{isDoctorView}"
 
-    fun createRoute(customerId: Int, isDoctorView: Boolean): String {
+    fun createRoute(customerId: String, isDoctorView: Boolean): String {
         return "customer_details/$customerId/$isDoctorView"
     }
 }
@@ -158,7 +158,7 @@ data object VerifyRoute : BeacefulRoutes {
     override val route = "login_forgot_verify"
 }
 
-val BeacefulBottomNavPatient = listOf(LoginRoute, SignUpRoute, ForgotRoute, VerifyRoute, Profile)
+//val BeacefulBottomNavPatient = listOf(LoginRoute, SignUpRoute, ForgotRoute, VerifyRoute, Profile)
 
-// val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
+val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
 

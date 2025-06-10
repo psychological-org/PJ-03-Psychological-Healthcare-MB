@@ -108,10 +108,11 @@ fun CustomerDetailsScreen(
 
             AppointmentAccordion(
 //                 appointments = appointments,
-                appointments = if (isDoctorView) viewModel.getAppointmentsOfPatientByDoctor(
-                    2,
-                    customerId
-                ) else viewModel.repo.getAllAppointmentsOfPatient(customerId),
+                appointments = if (isDoctorView) {
+                    appointments.filter { it.patientId == customerId && it.doctorId == "2" }
+                } else {
+                    appointments.filter { it.patientId == customerId }
+                },
                 navController = navController,
                 isDoctorView = isDoctorView,
             )

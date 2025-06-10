@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -22,6 +24,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "AWS_ACCESS_KEY", "\"${rootProject.extra["awsAccessKey"]}\"")
         buildConfigField("String", "AWS_SECRET_KEY", "\"${rootProject.extra["awsSecretKey"]}\"")
+        buildConfigField("String", "CLIENT_SECRET", "\"${rootProject.extra["clientSecret"]}\"")
     }
 
     buildTypes {
@@ -112,4 +115,7 @@ dependencies {
 
     implementation(libs.androidx.media3.exoplayer.v131)
     implementation(libs.androidx.media3.ui.v131)
+
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("com.auth0:java-jwt:4.4.0")
 }
