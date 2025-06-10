@@ -49,11 +49,12 @@ class AuthViewModel @Inject constructor(
             _error.value = null
             _success.value = null
             try {
+                AuthDataStore.clearTokens(context)
                 val authResponse = authRepository.login(
                     clientId = "authservice",
                     username = username,
                     password = password,
-                    clientSecret = BuildConfig.CLIENT_SECRET
+                    clientSecret = "EYP65mYkpu0xmkUY0WZHqKulTQZoNr2W"
                 )
                 // Lấy mongoId từ keycloakId
                 val user = userRepository.getUserByKeycloakId(authResponse.user.id)
