@@ -14,4 +14,7 @@ interface UserApiService {
         @Query("page") page: Int = 0,
         @Query("size") size: Int = 10
     ): PagedResponse<UserResponse>
+
+    @GET("users/{keycloakId}")
+    suspend fun getUserByKeycloakId(@Path("keycloakId") keycloakId: String): UserResponse
 }

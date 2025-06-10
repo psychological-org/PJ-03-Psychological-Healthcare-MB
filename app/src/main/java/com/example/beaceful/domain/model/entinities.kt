@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 data class User(
     val id: String,
     val fullName: String,
-    val roleId: Int,
+    val roleId: Int? = null,
     val biography: String? = null,
     val yearOfBirth: Int? = null,
     val yearOfExperience: Int? = null,
@@ -16,7 +16,7 @@ data class User(
     val backgroundUrl: String? = null,
     val email: String,
     val phone: String? = null,
-    val password: String,
+    val password: String? = null,
     val headline: String? = null,
     val uid: String? = null
 )

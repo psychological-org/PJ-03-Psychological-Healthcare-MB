@@ -34,6 +34,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -50,25 +52,38 @@ import com.example.beaceful.R
 import com.example.beaceful.domain.model.ProfileSelection
 import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.EditAccountRoute
+import com.example.beaceful.ui.navigation.LoginRoute
+import com.example.beaceful.ui.viewmodel.AuthViewModel
+import com.example.beaceful.ui.viewmodel.ProfileViewModel
 import com.example.beaceful.viewmodel.DoctorViewModel
 
 @Composable
 fun EditProfileScreen(
     navController: NavHostController,
-    viewModel: DoctorViewModel = hiltViewModel(),
+    modifier: Modifier = Modifier,
+    profileViewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val user = remember { viewModel.getDoctorById(1) }
+    val user by profileViewModel.user.collectAsState()
+    val error by profileViewModel.error.collectAsState()
     val listSelection = listOf(
         ProfileSelection("Tài khoản", Icons.Default.AccountCircle) {
-            navController.navigate(
-                EditAccountRoute.route
-            )
+            navController.navigate(EditAccountRoute.route)
         },
-        ProfileSelection("Riêng tư & an toàn", Icons.Default.Lock, {}),
-        ProfileSelection("Thông báo", Icons.Default.Notifications, {}),
-        ProfileSelection("Hỗ trợ", Icons.AutoMirrored.Filled.Help, {}),
-        ProfileSelection("Về chúng tôi", Icons.Default.Info, {}),
+        ProfileSelection("Riêng tư & an toàn", Icons.Default.Lock) {
+            // TODO: Implement privacy & security settings
+        },
+        ProfileSelection("Thông báo", Icons.Default.Notifications) {
+            // TODO: Implement notification settings
+        },
+        ProfileSelection("Hỗ trợ", Icons.AutoMirrored.Filled.Help) {
+            // TODO: Implement help/support
+        },
+        ProfileSelection("Về chúng tôi", Icons.Default.Info) {
+            // TODO: Implement about us
+        },
     )
+
     if (user == null) {
         Text("Không tồn tại")
     } else {
@@ -88,7 +103,7 @@ fun EditProfileScreen(
                             .height(180.dp)
                     )
                     AsyncImage(
-                        model = user.avatarUrl,
+                        model = user!!.avatarUrl,
                         contentDescription = null,
                         modifier = Modifier
                             .align(Alignment.BottomStart)
@@ -106,7 +121,7 @@ fun EditProfileScreen(
 
                 // Tên
                 Text(
-                    text = user.fullName,
+                    text = user!!.fullName,
                     style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.padding(horizontal = 24.dp)
                 )
@@ -144,7 +159,14 @@ fun EditProfileScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
-                        onClick = {},
+                        onClick = {
+                            authViewModel.logout()
+                            navController.navigate(LoginRoute.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                }
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                     ) {
                         Icon(

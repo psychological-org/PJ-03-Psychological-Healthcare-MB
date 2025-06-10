@@ -31,4 +31,13 @@ class UserRepository @Inject constructor(
             emptyList()
         }
     }
+
+    suspend fun getUserByKeycloakId(keycloakId: String): User {
+        val response = userApiService.getUserByKeycloakId(keycloakId)
+        return User(
+            id = response.id, // mongoId
+            fullName = response.fullName ?: "",
+            email = response.email ?: ""
+        )
+    }
 }

@@ -53,7 +53,7 @@ import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 fun AppointmentDetailsScreen(
     appointmentId: Int,
     modifier: Modifier = Modifier,
-    navController: NavController,
+//    navController: NavController,
     viewModel: AppointmentViewModel = hiltViewModel(),
     isDoctorView: Boolean = true,
 ) {
@@ -64,7 +64,7 @@ fun AppointmentDetailsScreen(
     var isLoading by remember { mutableStateOf(true) }
 //     val appointment = viewModel.getAppointment(appointmentId)
 //     val patient = appointment?.let { viewModel.repo.getUserById(it.patientId) }
-    val doctor = appointment?.let { viewModel.repo.getUserById(it.doctorId) }
+    val doctor = patients[appointment?.doctorId]
 //     var doctorNote by remember { mutableStateOf(if (appointment?.note != null) appointment.note else "") }
     var showDialog by remember { mutableStateOf(false) }
 
@@ -74,11 +74,14 @@ fun AppointmentDetailsScreen(
     }
 
     LaunchedEffect(appointment) {
-        appointment?.let { viewModel.getPatient(it.patientId) }
+        appointment?.let {
+            viewModel.getPatient(it.patientId)
+            viewModel.getDoctor(it.doctorId)
+        }
     }
 
     if (appointment != null && patients[appointment!!.patientId] != null) {
-        val patient = patients[appointment!!.patientId]
+        val patient = patients[appointment!!.patientId]!!
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -90,7 +93,7 @@ fun AppointmentDetailsScreen(
 //                text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
                 text = "${stringResource(R.string.cu2)} ${
                     if (isDoctorView) {
-                        patient.fullName
+                        patient?.fullName ?: "Đang tải..."
                     } else {
                         "bạn"
                     }
@@ -159,7 +162,7 @@ fun AppointmentDetailsScreen(
                                     appointment!!.status,
                                     doctorNote
                                 )
-                                navController.popBackStack()
+//                                navController.popBackStack()
                             },
                             shape = RoundedCornerShape(24.dp),
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
@@ -167,7 +170,7 @@ fun AppointmentDetailsScreen(
                             Text("Xác nhận", color = MaterialTheme.colorScheme.primary)
                         }
                         Spacer(Modifier.width(16.dp))
-                        if (appointment.status == AppointmentStatus.PENDING){
+                        if (appointment!!.status == AppointmentStatus.PENDING){
                             OutlinedButton (
                                 onClick = { showDialog = true},
                                 shape = RoundedCornerShape(24.dp),

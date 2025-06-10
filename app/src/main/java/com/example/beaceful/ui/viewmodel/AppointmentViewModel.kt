@@ -19,47 +19,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AppointmentViewModel @Inject constructor(
-    private val repo: AppointmentRepository,
+    val repo: AppointmentRepository,
     private val userRepository: UserRepository
 ):ViewModel() {
-//    private val _currentMonth = MutableStateFlow(LocalDateTime.now().withDayOfMonth(1))
-//    val currentMonth: StateFlow<LocalDateTime> = _currentMonth
-//    fun goToPreviousMonth() {
-//        _currentMonth.update { it.minusMonths(1).withDayOfMonth(1) }
-//    }
-//
-//    fun goToNextMonth() {
-//        _currentMonth.update { it.plusMonths(1).withDayOfMonth(1) }
-//    }
-//
-//    fun setMonth(month: LocalDateTime) {
-//        _currentMonth.value = month.withDayOfMonth(1)
-//    }
-//
-//    fun getPatient(patientId: Int) = repo.getUserById(patientId)
-//    fun getAppointment(appointmentId: Int) = repo.getAppointmentById(appointmentId)
-//
-//    fun getAppointmentsOnDate(date: LocalDateTime): List<Appointment> =
-//        repo.getAppointmentsOnDate(date)
-//    fun getPatientByAppointment(appointment: Appointment): User? =
-//        repo.getPatientByAppointment(appointment)
-//
-//    fun getUpcoming(): List<Appointment> = getAppointmentsOnDate(LocalDateTime.now()).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
-//    fun getAppointments(doctorId: Int): List<Appointment> =
-//        repo.getAppointmentsOfDoctor(doctorId)
-//    fun getAppointmentsOfPatient(doctorId: Int, customerId: Int) =
-//        repo.getAppointmentsOfDoctor(doctorId).filter { it.patientId == customerId }
-//    fun getPatients(doctorId: Int): List<User> {
-//        return getAppointments(doctorId)
-//            .mapNotNull { getPatientByAppointment(it) }
-//            .distinctBy { it.id }
-//    }
-//    fun onClickAccept() {
-//
-//    }
-//    fun onClickReject() {
-//
-//    }
     private val _currentMonth = MutableStateFlow(LocalDateTime.now().withDayOfMonth(1))
     val currentMonth: StateFlow<LocalDateTime> = _currentMonth
 
@@ -113,6 +75,21 @@ class AppointmentViewModel @Inject constructor(
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải thông tin bệnh nhân: ${e.message}"
                 Log.e(TAG, "Error loading patient: ${e.message}", e)
+            }
+        }
+    }
+
+    fun getDoctor(doctorId: String) {
+        viewModelScope.launch {
+            try {
+                val doctor = repo.getUserById(doctorId)
+                if (doctor != null) {
+                    _patients.update { it + (doctorId to doctor) }
+                    Log.d(TAG, "Loaded doctor: $doctor")
+                }
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi tải thông tin bác sĩ: ${e.message}"
+                Log.e(TAG, "Error loading doctor: ${e.message}", e)
             }
         }
     }
@@ -267,16 +244,18 @@ class AppointmentViewModel @Inject constructor(
                 _error.value = "Lỗi khi hủy lịch hẹn: ${e.message}"
             }
         }
+    }
 //     fun getUpcoming(): List<Appointment> = getAppointmentsOnDate(LocalDateTime.now()).filter { it.status == AppointmentStatus.CONFIRMED }.sortedBy { it.appointmentDate }
 //     fun getAppointments(doctorId: Int): List<Appointment> =
 //         repo.getAppointmentsOfDoctor(doctorId)
-    fun getAppointmentsOfPatientByDoctor(doctorId: Int, customerId: Int) =
+    suspend fun getAppointmentsOfPatientByDoctor(doctorId: String, customerId: String) =
         repo.getAppointmentsOfDoctor(doctorId).filter { it.patientId == customerId }
 //     fun getPatients(doctorId: Int): List<User> {
 //         return getAppointments(doctorId)
 //             .mapNotNull { getPatientByAppointment(it) }
 //             .distinctBy { it.id }
 //     }
+
 
     fun updateAppointmentStatus(appointmentId: Int, status: AppointmentStatus, note: String? = null) {
         viewModelScope.launch {
