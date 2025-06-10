@@ -72,6 +72,7 @@ object NetworkModule {
             .addInterceptor(loggingInterceptor)
             .addInterceptor { chain ->
                 val token = runBlocking { AuthDataStore.getToken(context) }
+                Log.d("NetworkModule", "Using access token: $token")
                 val requestBuilder = chain.request().newBuilder()
                 if (token != null) {
                     requestBuilder.addHeader("Authorization", "Bearer $token")
@@ -91,6 +92,8 @@ object NetworkModule {
                                 refreshResponse
                             } catch (e: Exception) {
                                 Log.e("NetworkModule", "Refresh token failed: ${e.message}", e)
+                                // Xóa token nếu làm mới thất bại
+                                runBlocking { AuthDataStore.clearTokens(context) }
                                 null
                             }
                         }
@@ -101,7 +104,7 @@ object NetworkModule {
                             return@addInterceptor chain.proceed(newRequest)
                         }
                     }
-                    // Nếu refresh thất bại, trả về response 401
+                    // Nếu không thể làm mới, trả về response 401
                     response
                 } else {
                     response

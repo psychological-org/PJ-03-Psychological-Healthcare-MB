@@ -54,6 +54,7 @@ class AuthRepository @Inject constructor(
 
     suspend fun refreshToken(clientId: String, refreshToken: String, clientSecret: String): LoginResponse {
         try {
+            Log.d(TAG, "Attempting to refresh with token: $refreshToken")
             val response = authApiService.refreshToken(
                 clientId = clientId,
                 clientSecret = clientSecret,
@@ -61,7 +62,6 @@ class AuthRepository @Inject constructor(
             )
             Log.d(TAG, "Refresh token response: $response")
 
-            // Giải mã access_token
             val decodedJWT = JWT.decode(response.accessToken)
             val keycloakId = decodedJWT.getClaim("sub").asString()
                 ?: throw IllegalStateException("No user ID found in access token")
@@ -81,6 +81,9 @@ class AuthRepository @Inject constructor(
             )
         } catch (e: Exception) {
             Log.e(TAG, "Refresh token failed: ${e.message}", e)
+            if (e is retrofit2.HttpException && e.code() == 400) {
+                throw IllegalStateException("Refresh token is invalid. Please login again.")
+            }
             throw e
         }
     }

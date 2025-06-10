@@ -49,6 +49,7 @@ class AuthViewModel @Inject constructor(
             _error.value = null
             _success.value = null
             try {
+                AuthDataStore.clearTokens(context)
                 val authResponse = authRepository.login(
                     clientId = "authservice",
                     username = username,
