@@ -51,6 +51,8 @@ import androidx.navigation.NavHostController
 import com.example.beaceful.R
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.LoginRoute
+import com.example.beaceful.ui.navigation.SignUpRoute
 import com.example.beaceful.ui.navigation.navigateSingleTopTo
 import com.example.beaceful.ui.viewmodel.AuthViewModel
 
@@ -124,7 +126,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = loginInput,
             onValueChange = { loginInput = it },
-            placeholder = { Text("Số di động hoặc email",style = MaterialTheme.typography.bodyMedium) },
+            placeholder = { Text("Tên người dùng",style = MaterialTheme.typography.bodyMedium) },
             shape = RoundedCornerShape(60.dp),
             singleLine = true,
             colors = TextFieldDefaults.colors(
@@ -190,7 +192,7 @@ fun LoginScreen(
                     .align(Alignment.BottomCenter)
             ) {
                 Text("Chưa có tài khoản?", style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = {}) {
+                TextButton(onClick = { navController.navigateSingleTopTo(SignUpRoute.route) }) {
                     Text("Đăng ký", color = MaterialTheme.colorScheme.secondary)
                 }
             }

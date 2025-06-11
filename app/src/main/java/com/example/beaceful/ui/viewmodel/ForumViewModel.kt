@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.beaceful.core.network.post.PostRequest
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.Community
 import com.example.beaceful.domain.model.DumpDataProvider
@@ -58,6 +59,12 @@ class ForumViewModel @Inject constructor(
     private val _hiddenPostIds = mutableStateListOf<Int>()
     val hiddenPostIds: List<Int> get() = _hiddenPostIds
 
+    private val _communityMembers = MutableStateFlow<List<User>>(emptyList())
+    val communityMembers: StateFlow<List<User>> = _communityMembers.asStateFlow()
+
+    private val _likedPosts = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
+    val likedPosts: StateFlow<Map<Int, Boolean>> = _likedPosts.asStateFlow()
+
     init {
         fetchUsers()
         fetchPosts()
@@ -72,22 +79,26 @@ class ForumViewModel @Inject constructor(
                 _allUsers.value = users
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải người dùng: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching users: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
         }
     }
 
-    private fun fetchPosts(page: Int = 0, limit: Int = 10) {
+    private fun fetchPosts(page: Int = 0, limit: Int = 100) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 val posts = postRepository.getAllPosts(page, limit)
                 _allPosts.value = posts.filterNot { it.id in _hiddenPostIds }
+                    .sortedByDescending { it.createdAt }
+                val userId = UserSession.getCurrentUserId()
+                val likedMap = posts.associate { post ->
+                    post.id to postRepository.isPostLiked(post.id, userId)
+                }
+                _likedPosts.value = likedMap
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải bài viết: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching posts: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -102,7 +113,6 @@ class ForumViewModel @Inject constructor(
                 _allCommunities.value = communities
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải cộng đồng: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching communities: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -117,7 +127,6 @@ class ForumViewModel @Inject constructor(
                 _userCommunityIds.value = communityIds
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải cộng đồng của người dùng: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching user communities: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -128,11 +137,9 @@ class ForumViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val comments = postRepository.getCommentsForPost(postId, page, limit)
-                Log.d("ForumViewModel", "Fetched comments for post $postId: $comments")
                 _comments.value = comments
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải bình luận: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching comments: ${e.message}", e)
             }
         }
     }
@@ -141,11 +148,9 @@ class ForumViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val comment = postRepository.createComment(postId, userId, content)
-                Log.d("ForumViewModel", "Created comment for post $postId: $comment")
                 _comments.value = _comments.value + comment
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tạo bình luận: ${e.message}"
-                Log.e("ForumViewModel", "Error creating comment: ${e.message}", e)
             }
         }
     }
@@ -175,12 +180,19 @@ class ForumViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val filteredPosts = postRepository.getPostsByCommunity(communityId)
+                val communityPosts = postRepository.getPostsByCommunity(communityId)
+                _allPosts.value = (_allPosts.value + communityPosts)
+                    .distinctBy { it.id }
                     .filterNot { it.id in _hiddenPostIds }
-                _allPosts.value = filteredPosts
+                    .sortedByDescending { it.createdAt }
+                // Cập nhật likedPosts cho bài viết mới
+                val userId = UserSession.getCurrentUserId()
+                val likedMap = communityPosts.associate { post ->
+                    post.id to postRepository.isPostLiked(post.id, userId)
+                }
+                _likedPosts.value = _likedPosts.value + likedMap
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải bài viết cộng đồng: ${e.message}"
-                Log.e("ForumViewModel", "Error fetching community posts: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -205,8 +217,14 @@ class ForumViewModel @Inject constructor(
                     userId = userId
                 )
                 val postId = postRepository.createPost(postRequest)
-                // Reload posts for the community
-                initCommunityPosts(communityId)
+                val newPost = postRepository.getPostById(postId)
+                if (newPost != null) {
+                    _allPosts.value = (_allPosts.value + newPost)
+                        .filterNot { it.id in _hiddenPostIds }
+                        .sortedByDescending { it.createdAt }
+                    _likedPosts.value = _likedPosts.value + (newPost.id to false)
+                    Log.d("ForumViewModel", "Added new post $postId to _allPosts")
+                }
                 _postText.value = ""
                 _error.value = null
             } catch (e: Exception) {
@@ -226,11 +244,23 @@ class ForumViewModel @Inject constructor(
         return _allUsers.value.find { it.id == community?.adminId }
     }
 
-    suspend fun getCommunityMembers(communityId: Int): List<User> {
-        val memberIds = communityRepository.getCommunityMembers(communityId)
-        return memberIds.mapNotNull { userId ->
-            _allUsers.value.find { it.id == userId }
+    fun fetchCommunityMembers(communityId: Int) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            try {
+                val members = communityRepository.getCommunityMembers(communityId)
+                _communityMembers.value = members
+                _error.value = null
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Error loading community members"
+            } finally {
+                _isLoading.value = false
+            }
         }
+    }
+
+    suspend fun getCommunityMembers(communityId: Int): List<User> {
+        return communityRepository.getCommunityMembers(communityId)
     }
 
     suspend fun getUserById(userId: String): User? = postRepository.getUserById(userId)
@@ -244,7 +274,6 @@ class ForumViewModel @Inject constructor(
                 _error.value = null
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tham gia cộng đồng: ${e.message}"
-                Log.e("ForumViewModel", "Error joining community: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -262,13 +291,82 @@ class ForumViewModel @Inject constructor(
     fun toggleLike(postId: Int, userId: String) {
         viewModelScope.launch {
             try {
-                val isLiked = postRepository.toggleLike(postId, userId)
-                Log.d("ForumViewModel", "Toggled like for post $postId: $isLiked")
-                // Reload posts to update reactCount
-                fetchPosts()
+                val (newIsLiked, newReactCount) = postRepository.toggleLike(postId, userId)
+                if (newReactCount != -1) {
+                    _allPosts.value = _allPosts.value.map { post ->
+                        if (post.id == postId) {
+                            post.copy(reactCount = newReactCount)
+                        } else {
+                            post
+                        }
+                    }
+                    _likedPosts.value = _likedPosts.value + (postId to newIsLiked)
+                    Log.d("ForumViewModel", "Toggled like for post $postId: $newIsLiked, reactCount: $newReactCount")
+                } else {
+                    _error.value = "Lỗi khi cập nhật lượt thích"
+                }
             } catch (e: Exception) {
                 _error.value = "Lỗi khi thích bài viết: ${e.message}"
                 Log.e("ForumViewModel", "Error toggling like: ${e.message}", e)
+            }
+        }
+    }
+
+    fun deletePost(postId: Int, userId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val post = postRepository.getPostById(postId)
+                if (post != null && post.posterId == userId) {
+                    postRepository.deletePost(postId)
+                    _allPosts.value = _allPosts.value.filterNot { it.id == postId }
+                    _likedPosts.value -= postId
+                    _error.value = null
+                    Log.d("ForumViewModel", "Deleted post $postId")
+                } else {
+                    _error.value = "Không có quyền xóa bài viết này"
+                }
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi xóa bài viết: ${e.message}"
+                Log.e("ForumViewModel", "Error deleting post: ${e.message}", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updatePost(postId: Int, userId: String, content: String, visibility: PostVisibility) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val post = postRepository.getPostById(postId)
+                if (post != null && post.posterId == userId) {
+                    val postRequest = PostRequest(
+                        id = postId,
+                        content = content,
+                        imageUrl = post.imageUrl,
+                        visibility = visibility.toString(),
+                        reactCount = post.reactCount,
+                        communityId = post.communityId,
+                        userId = userId
+                    )
+                    postRepository.updatePost(postId, postRequest)
+                    val updatedPost = postRepository.getPostById(postId)
+                    if (updatedPost != null) {
+                        _allPosts.value = _allPosts.value.map { p ->
+                            if (p.id == postId) updatedPost else p
+                        }
+                        _error.value = null
+                        Log.d("ForumViewModel", "Updated post $postId")
+                    }
+                } else {
+                    _error.value = "Không có quyền chỉnh sửa bài viết này"
+                }
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi chỉnh sửa bài viết: ${e.message}"
+                Log.e("ForumViewModel", "Error updating post: ${e.message}", e)
+            } finally {
+                _isLoading.value = false
             }
         }
     }

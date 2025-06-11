@@ -1,6 +1,7 @@
 package com.example.beaceful.core.network.auth
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -21,6 +22,7 @@ object AuthDataStore {
             if (refreshToken != null) {
                 prefs[REFRESH_TOKEN_KEY] = refreshToken
             }
+            Log.d("AuthDataStore", "Saved tokens: accessToken=$accessToken, refreshToken=$refreshToken")
         }
     }
 

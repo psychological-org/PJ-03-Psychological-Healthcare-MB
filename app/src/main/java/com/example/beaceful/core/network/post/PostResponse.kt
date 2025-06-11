@@ -7,5 +7,6 @@ data class PostResponse(
     val visibility: String,
     val reactCount: Int,
     val communityId: Int?,
-    val userId: String
+    val userId: String,
+    val createdAt: String
 )

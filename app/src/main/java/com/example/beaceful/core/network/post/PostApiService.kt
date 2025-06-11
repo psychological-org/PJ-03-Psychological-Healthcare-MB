@@ -6,6 +6,7 @@ import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -21,6 +22,15 @@ interface PostApiService {
 
     @POST("posts")
     suspend fun createPost(@Body postRequest: PostRequest): Int
+
+    @PUT("posts/{post-id}")
+    suspend fun updatePost(
+        @Path("post-id") postId: Int,
+        @Body postRequest: PostRequest
+    ): Unit
+
+    @DELETE("posts/{post-id}")
+    suspend fun deletePost(@Path("post-id") postId: Int): Unit
 
     @GET("posts/exists/{post-id}")
     suspend fun existsById(@Path("post-id") postId: Int): Boolean
