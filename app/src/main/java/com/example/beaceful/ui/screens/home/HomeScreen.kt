@@ -36,6 +36,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -50,12 +51,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.domain.model.CollectionType
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.cards.MiniMusicPlayer
 import com.example.beaceful.ui.components.cards.MusicListScreen
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
+import com.example.beaceful.ui.viewmodel.CollectionViewModel
 import com.example.beaceful.ui.viewmodel.MusicPlayerViewModel
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -66,10 +69,16 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel()
+    val collectionViewModel: CollectionViewModel = hiltViewModel()
+    val collectionsState by collectionViewModel.collections.collectAsState()
     val current by musicPlayerViewModel.currentCollection.collectAsState()
     val isPlaying by musicPlayerViewModel.isPlaying.collectAsState()
     val currentPosition by musicPlayerViewModel.currentPosition.collectAsState()
     val duration by musicPlayerViewModel.duration.collectAsState()
+
+    LaunchedEffect(Unit) {
+        collectionViewModel.getAllCollections()
+    }
 
     Box() {
         Image(
@@ -104,11 +113,27 @@ fun HomeScreen(
                 title = R.string.ho5_music_for_u,
                 onClickSeeMore = {}
             ) {
-                val collection = DumpDataProvider.collections
-//            ForYouRow(list = musicList) { item ->
-//                MusicItem(background = item.drawable, title = item.text)
-//            }
-                MusicListScreen(collection)
+                collectionsState?.let { result ->
+                    when {
+                        result.isSuccess -> {
+                            val collections = result.getOrNull()?.content.orEmpty()
+                            val musicCollections = collections.filter { it.type == CollectionType.MUSIC }
+                            MusicListScreen(musicCollections)
+                        }
+                        result.isFailure -> {
+                            Text(
+                                text = "Error loading collections: ${result.exceptionOrNull()?.message}",
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                } ?: run {
+                    Text(
+                        text = "Loading collections...",
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
 
 //        Book
@@ -116,8 +141,29 @@ fun HomeScreen(
                 title = R.string.ho6_book_for_u,
                 onClickSeeMore = {}
             ) {
-                ForYouRow(list = bookList) { item ->
-                    BookItem(background = item.drawable, title = item.text)
+//                ForYouRow(list = bookList) { item ->
+//                    BookItem(background = item.drawable, title = item.text)
+//                }
+                collectionsState?.let { result ->
+                    when {
+                        result.isSuccess -> {
+                            val collections = result.getOrNull()?.content.orEmpty()
+                            val musicCollections = collections.filter { it.type == CollectionType.OTHER }
+                            MusicListScreen(musicCollections)
+                        }
+                        result.isFailure -> {
+                            Text(
+                                text = "Error loading collections: ${result.exceptionOrNull()?.message}",
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                } ?: run {
+                    Text(
+                        text = "Loading collections...",
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
             }
 
@@ -126,8 +172,29 @@ fun HomeScreen(
                 title = R.string.ho7_podcast_for_u,
                 onClickSeeMore = {}
             ) {
-                ForYouRow(list = podcastList) { item ->
-                    PodcastItem(background = item.drawable, title = item.text)
+//                ForYouRow(list = podcastList) { item ->
+//                    PodcastItem(background = item.drawable, title = item.text)
+//                }
+                collectionsState?.let { result ->
+                    when {
+                        result.isSuccess -> {
+                            val collections = result.getOrNull()?.content.orEmpty()
+                            val musicCollections = collections.filter { it.type == CollectionType.PODCAST }
+                            MusicListScreen(musicCollections)
+                        }
+                        result.isFailure -> {
+                            Text(
+                                text = "Error loading collections: ${result.exceptionOrNull()?.message}",
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                } ?: run {
+                    Text(
+                        text = "Loading collections...",
+                        modifier = Modifier.padding(16.dp)
+                    )
                 }
             }
             if (current != null) {
@@ -233,7 +300,7 @@ fun MusicItem(
 fun BookItem(
     onClick: () -> Unit = {},
     @DrawableRes background: Int,
-    @StringRes title: Int,
+    title: String,
 ) {
     Column {
         Card(
@@ -280,7 +347,7 @@ fun BookItem(
             }
         }
         Text(
-            text = stringResource(title),
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
             modifier = Modifier
@@ -294,7 +361,7 @@ fun BookItem(
 fun PodcastItem(
     onClick: () -> Unit = {},
     @DrawableRes background: Int,
-    @StringRes title: Int,
+    title: String
 ) {
     Column {
         Card(
@@ -341,7 +408,7 @@ fun PodcastItem(
             }
         }
         Text(
-            text = stringResource(title),
+            text = title,
             style = MaterialTheme.typography.titleMedium,
             color = Color.White,
             modifier = Modifier
