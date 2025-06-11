@@ -8,6 +8,10 @@
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\FPT\.android\avd\Pixel_7_Pro_API_34_1.avd" />
+<!--         <DropdownSelection timestamp="2025-06-10T04:08:31.831884100Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\DELL\.android\avd\Medium_Phone.avd" /> -->
             </handle>
           </Target>
         </DropdownSelection>
