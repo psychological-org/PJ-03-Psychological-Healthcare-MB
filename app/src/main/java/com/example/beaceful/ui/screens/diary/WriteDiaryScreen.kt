@@ -34,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.calendar.TimePickerDialog
 import com.example.beaceful.ui.navigation.WriteDiary
@@ -63,6 +64,7 @@ fun WriteDiaryScreen(
     modifier: Modifier = Modifier,
     viewModel: DiaryViewModel = hiltViewModel(),
 ) {
+    val userId = UserSession.getCurrentUserId()
     val diaryContentFromFullScreen = navController
         .currentBackStackEntry
         ?.savedStateHandle
@@ -442,7 +444,7 @@ fun WriteDiaryScreen(
                                 content = diaryContent.takeIf { it.isNotBlank() },
                                 imageUrl = savedImagePath,
                                 voiceUrl = recordedVoiceUri?.toString(),
-                                posterId = "1",
+                                posterId = userId,
                                 createAt = selectedDate,
                             )
                             navController.popBackStack("diary", inclusive = false)
