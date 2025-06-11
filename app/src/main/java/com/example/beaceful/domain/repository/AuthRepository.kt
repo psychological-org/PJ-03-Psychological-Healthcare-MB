@@ -19,6 +19,10 @@ class AuthRepository @Inject constructor(
     private val TAG = "AuthRepository"
 
     suspend fun login(clientId: String, username: String, password: String, clientSecret: String): LoginResponse {
+        Log.d(TAG, "clientSecret = $clientSecret")
+        Log.d(TAG, "clientId = $clientId")
+        Log.d(TAG, "username = $username")
+        Log.d(TAG, "password = $password")
         try {
             val response = authApiService.login(
                 clientId = clientId,
