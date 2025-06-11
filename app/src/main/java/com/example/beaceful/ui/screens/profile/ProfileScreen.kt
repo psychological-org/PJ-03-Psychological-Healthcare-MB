@@ -83,6 +83,10 @@ fun ProfileScreen(
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
     var commentText by remember { mutableStateOf("") }
 
+    LaunchedEffect(Unit) {
+        viewModel.fetchUserProfile()
+    }
+
     LaunchedEffect(posts) {
         posts.forEach { post ->
             coroutineScope.launch {

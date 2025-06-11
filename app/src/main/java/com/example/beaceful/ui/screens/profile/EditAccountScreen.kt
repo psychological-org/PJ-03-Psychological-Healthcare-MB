@@ -1,5 +1,9 @@
 package com.example.beaceful.ui.screens.profile
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowForwardIos
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -25,11 +30,14 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,17 +46,70 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.ui.viewmodel.AuthViewModel
+import com.example.beaceful.ui.viewmodel.ProfileViewModel
 
 const val MAX_TEXT_FIELD_SIZE = 200
 
 @Composable
-fun EditAccountScreen() {
+fun EditAccountScreen(
+    navController: NavController,
+) {
+    val profileViewModel: ProfileViewModel = hiltViewModel()
+    val authViewModel: AuthViewModel = hiltViewModel()
+    val context = LocalContext.current
+    val user by profileViewModel.user.collectAsState()
+    val error by profileViewModel.error.collectAsState()
+    val success by profileViewModel.success.collectAsState()
     val nameField = remember { mutableStateOf("") }
     val dobField = remember { mutableStateOf("") }
     val headlineField = remember { mutableStateOf("") }
     val biographyField = remember { mutableStateOf("") }
+    var avatarUri by remember { mutableStateOf<Uri?>(null) }
+    var backgroundUri by remember { mutableStateOf<Uri?>(null) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    val avatarPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        avatarUri = uri
+    }
+    val backgroundPicker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        backgroundUri = uri
+    }
+
+    LaunchedEffect(success) {
+        success?.let { successMessage ->
+            Toast.makeText(context, successMessage, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(error) {
+        error?.let { errorMessage ->
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+            profileViewModel.clearMessages()
+        }
+    }
+
+    LaunchedEffect(user) {
+        user?.let {
+            nameField.value = it.fullName ?: ""
+            dobField.value = it.yearOfBirth?.toString() ?: ""
+            headlineField.value = it.headline ?: ""
+            biographyField.value = it.biography ?: ""
+        }
+        if (UserSession.getCurrentUserId() == null) {
+            errorMessage = "Lỗi: Người dùng chưa đăng nhập"
+        }
+    }
+
 
     LazyColumn(
         contentPadding = PaddingValues(16.dp),
@@ -65,7 +126,17 @@ fun EditAccountScreen() {
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
                 )
-                OutlinedButton(onClick = {}) {
+                OutlinedButton(onClick = {
+                    profileViewModel.updateUserProfile(
+                        context = context,
+                        fullName = nameField.value,
+                        yearOfBirth = dobField.value,
+                        headline = headlineField.value,
+                        biography = biographyField.value,
+                        avatarUri = avatarUri,
+                        backgroundUri = backgroundUri
+                    )
+                }) {
                     Text("Lưu")
                 }
             }
@@ -73,7 +144,7 @@ fun EditAccountScreen() {
         item {
             Text("Ảnh")
             Button(
-                onClick = {},
+                onClick = {avatarPicker.launch("image/*")},
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -100,7 +171,7 @@ fun EditAccountScreen() {
 
             }
             Button(
-                onClick = {},
+                onClick = {backgroundPicker.launch("image/*")},
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -178,7 +249,9 @@ fun EditAccountScreen() {
                 }
             }
             Button(
-                onClick = {},
+                onClick = {
+                    showDeleteDialog = true
+                },
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -205,6 +278,38 @@ fun EditAccountScreen() {
                 }
             }
         }
+    }
+    // Hộp thoại xác nhận xóa tài khoản
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Xác nhận xóa tài khoản") },
+            text = { Text("Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        profileViewModel.deleteUser()
+                        authViewModel.logout()
+                        navController.navigate("login") {
+                            popUpTo(navController.graph.startDestinationId) {
+                                inclusive = true
+                            }
+                        }
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Xác nhận")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Hủy")
+                }
+            }
+        )
     }
 }
 

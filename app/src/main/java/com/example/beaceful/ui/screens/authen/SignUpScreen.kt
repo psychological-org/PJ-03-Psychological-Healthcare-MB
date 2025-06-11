@@ -27,13 +27,17 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -44,14 +48,48 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.ui.navigation.Home
+import com.example.beaceful.ui.navigation.LoginRoute
+import com.example.beaceful.ui.navigation.navigateSingleTopTo
+import com.example.beaceful.ui.viewmodel.AuthViewModel
+import kotlinx.coroutines.launch
 
 @Composable
-fun SignUpScreen() {
+fun SignUpScreen(navController: NavHostController) {
+    val authViewModel: AuthViewModel = hiltViewModel()
     var usernameInput by rememberSaveable { mutableStateOf("") }
-    var signUpInput by rememberSaveable { mutableStateOf("") }
+    var emailInput by rememberSaveable { mutableStateOf("") }
     var passwordInput by rememberSaveable { mutableStateOf("") }
+    var firstNameInput by rememberSaveable { mutableStateOf("") }
+    var lastNameInput by rememberSaveable { mutableStateOf("") }
     var passwordVisibility by remember { mutableStateOf(false) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Observe ViewModel states
+    val isLoading by authViewModel.isLoading.collectAsState()
+    val error by authViewModel.error.collectAsState()
+    val success by authViewModel.success.collectAsState()
+
+    // Handle success and error messages
+    LaunchedEffect(success, error) {
+        success?.let {
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+                authViewModel.clearMessages()
+                navController.navigateSingleTopTo(Home.route)
+            }
+        }
+        error?.let {
+            scope.launch {
+                snackbarHostState.showSnackbar(it)
+                authViewModel.clearMessages()
+            }
+        }
+    }
     val icon = if (passwordVisibility)
         Icons.Default.Visibility
     else
@@ -121,11 +159,12 @@ fun SignUpScreen() {
             )
         )
         OutlinedTextField(
-            value = signUpInput,
-            onValueChange = { signUpInput = it },
-            placeholder = { Text("Số di động hoặc email",style = MaterialTheme.typography.bodyMedium) },
+            value = emailInput,
+            onValueChange = { emailInput = it },
+            placeholder = { Text("Email", style = MaterialTheme.typography.bodyMedium) },
             shape = RoundedCornerShape(60.dp),
             singleLine = true,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
             colors = TextFieldDefaults.colors(
                 focusedTextColor = MaterialTheme.colorScheme.primary,
                 unfocusedTextColor = MaterialTheme.colorScheme.primary,
@@ -133,7 +172,7 @@ fun SignUpScreen() {
                 unfocusedPlaceholderColor = MaterialTheme.colorScheme.primary,
                 focusedContainerColor = MaterialTheme.colorScheme.background,
                 unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                unfocusedIndicatorColor = MaterialTheme.colorScheme.secondary,
+                unfocusedIndicatorColor = MaterialTheme.colorScheme.secondary
             )
         )
         OutlinedTextField(
@@ -167,7 +206,15 @@ fun SignUpScreen() {
         )
         Box(Modifier.fillMaxHeight().padding(bottom = 12.dp)) {
             Button(
-                onClick = {},
+                onClick = {
+                    authViewModel.signUp(
+                        username = usernameInput,
+                        email = emailInput,
+                        password = passwordInput,
+                        firstName = firstNameInput.takeIf { it.isNotBlank() },
+                        lastName = lastNameInput.takeIf { it.isNotBlank() }
+                    )
+                },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.secondary,
@@ -181,7 +228,7 @@ fun SignUpScreen() {
                     .align(Alignment.BottomCenter)
             ) {
                 Text("Đã có tài khoản?", style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = {}) {
+                TextButton(onClick = { navController.navigateSingleTopTo(LoginRoute.route) }) {
                     Text("Đăng nhập", color = MaterialTheme.colorScheme.secondary)
                 }
             }

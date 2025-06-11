@@ -154,8 +154,8 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideUserRepository(userApiService: UserApiService): UserRepository {
-        return UserRepository(userApiService)
+    fun provideUserRepository(userApiService: UserApiService, authApiService: AuthApiService): UserRepository {
+        return UserRepository(userApiService, authApiService)
     }
 
     @Provides

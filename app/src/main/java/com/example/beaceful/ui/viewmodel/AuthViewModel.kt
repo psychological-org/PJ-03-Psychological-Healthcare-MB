@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.beaceful.core.network.auth.AuthDataStore
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.BuildConfig
+import com.example.beaceful.core.network.user.UserRequest
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.repository.AuthRepository
 import com.example.beaceful.domain.repository.UserRepository
@@ -50,22 +51,69 @@ class AuthViewModel @Inject constructor(
             _success.value = null
             try {
                 AuthDataStore.clearTokens(context)
-                val authResponse = authRepository.login(
+                val loginResponse = authRepository.login(
                     clientId = "authservice",
                     username = username,
                     password = password,
                     clientSecret = BuildConfig.CLIENT_SECRET
                 )
                 // Lấy mongoId từ keycloakId
-                val user = userRepository.getUserByKeycloakId(authResponse.user.id)
-                _token.value = authResponse.token
+                val user = userRepository.getUserByKeycloakId(loginResponse.user.id)
+                _token.value = loginResponse.token
                 _currentUser.value = user
                 UserSession.setCurrentUserId(user.id) // Lưu mongoId
-                AuthDataStore.saveTokens(context, authResponse.token, authResponse.refreshToken)
+                AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
                 _success.value = "Đăng nhập thành công"
             } catch (e: Exception) {
                 _error.value = "Đăng nhập thất bại: ${e.message}"
                 Log.e(TAG, "Login failed: ${e.message}", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun signUp(username: String, email: String, password: String, firstName: String?, lastName: String?) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            _error.value = null
+            _success.value = null
+            try {
+                val request = UserRequest(
+                    id = null,
+                    username = username,
+                    password = password,
+                    email = email,
+                    firstName = firstName,
+                    lastName = lastName,
+                    role = "patient", // Cố định role là patient
+                    biography = null,
+                    yearOfBirth = null,
+                    yearOfExperience = null,
+                    avatarUrl = null,
+                    backgroundUrl = null,
+                    phone = null,
+                    content = null
+                )
+                val mongoId = userRepository.createUser(request)
+                Log.d(TAG, "Created user with mongoId: $mongoId")
+
+                // Đăng nhập tự động
+                val loginResponse = authRepository.login(
+                    clientId = "authservice",
+                    username = username,
+                    password = password,
+                    clientSecret = BuildConfig.CLIENT_SECRET
+                )
+                val user = userRepository.getUserByKeycloakId(loginResponse.user.id)
+                _token.value = loginResponse.token
+                _currentUser.value = user
+                UserSession.setCurrentUserId(user.id) // Lưu mongoId
+                AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
+                _success.value = "Đăng ký thành công"
+            } catch (e: Exception) {
+                _error.value = "Đăng ký thất bại: ${e.message}"
+                Log.e(TAG, "Sign up failed: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
