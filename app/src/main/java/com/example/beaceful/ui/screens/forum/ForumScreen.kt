@@ -107,6 +107,7 @@ fun ForumScreen(
 fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: String) {
     val communityIds by viewModel.userCommunityIds.collectAsState()
     val posts by viewModel.allPosts.collectAsState()
+    val likedPosts by viewModel.likedPosts.collectAsState()
     val comments by viewModel.comments.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
@@ -129,14 +130,15 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
     Column(modifier = Modifier.fillMaxSize()) {
         CustomSearchBar(
             suggestions = nameSuggestions,
-            onSearch = { selected -> navController.navigate(CommunityRoute.createRoute(selected.id, userId)) },
-            modifier = Modifier.padding(horizontal = 16.dp),
+            onSearch = { selected ->
+                navController.navigate(CommunityRoute.createRoute(selected.id, userId))
+            },
+            modifier = Modifier.padding(horizontal = 16.dp)
         )
 
         Spacer(Modifier.height(16.dp))
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
+            modifier = Modifier.fillMaxSize()
         ) {
             item {
                 Text(
@@ -147,7 +149,7 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     items(communityIds) { communityId ->
                         val community = viewModel.getCommunityById(communityId)
@@ -175,21 +177,28 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
             items(posts) { post ->
                 val user = postAuthors[post.posterId] ?: return@items
                 var commentCount by remember { mutableStateOf(0) }
-                var isLiked by remember { mutableStateOf(false) }
 
                 LaunchedEffect(post.id) {
                     commentCount = viewModel.getCommentCountForPost(post.id)
-                    isLiked = viewModel.isPostLiked(post.id, userId)
                 }
 
                 PostCard(
                     post = post,
                     user = user,
                     commentCount = commentCount,
-                    isLiked = isLiked,
+                    isLiked = likedPosts[post.id] ?: false,
                     onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
                     onToggleLike = { viewModel.toggleLike(post.id, userId) },
-                    onDeletePost = { viewModel.hidePost(post.id) },
+                    onDeletePost = {
+                        if (post.posterId == userId) {
+                            viewModel.deletePost(post.id, userId)
+                        } else {
+                            viewModel.hidePost(post.id)
+                        }
+                    },
+                    onEditPost = { content, visibility ->
+                        viewModel.updatePost(post.id, userId, content, visibility)
+                    },
                     community = if (post.communityId != null) viewModel.getCommunityById(post.communityId) else null,
                     comments = comments.filter { it.postId == post.id },
                     commentText = commentText,
@@ -213,7 +222,6 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
                     )
                 }
             }
-
         }
     }
 }

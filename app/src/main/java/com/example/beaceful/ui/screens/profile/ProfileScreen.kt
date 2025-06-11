@@ -284,6 +284,9 @@ fun ProfileScreen(
                         onSubmitComment = {
                             viewModel.createComment(post.id, userId, commentText)
                             commentText = ""
+                        },
+                        onEditPost = { content, visibility ->
+//                            viewModel.updatePost(post.id, userId, content, visibility)
                         }
                     )
                 }

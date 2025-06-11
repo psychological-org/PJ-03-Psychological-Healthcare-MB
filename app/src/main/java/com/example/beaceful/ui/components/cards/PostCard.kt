@@ -33,6 +33,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -49,6 +51,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role.Companion.RadioButton
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -71,7 +74,7 @@ fun PostCard(
     onPostClick: () -> Unit,
     onToggleLike: () -> Unit,
     onDeletePost: () -> Unit,
-    onEditPost: () -> Unit = {},
+    onEditPost: (String, PostVisibility) -> Unit,
     modifier: Modifier = Modifier,
     community: Community? = null,
     userId: String,
@@ -83,8 +86,11 @@ fun PostCard(
 ) {
     var expanded by remember { mutableStateOf(false) }
     var expandedMenu by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var selectedPostId by remember { mutableStateOf<Int?>(null) }
+    var editContent by remember { mutableStateOf(post.content) }
+    var editVisibility by remember { mutableStateOf(post.visibility) }
     val isEditable = post.posterId == userId // Kiểm tra quyền chỉnh sửa/xóa
 
     Card(
@@ -154,21 +160,27 @@ fun PostCard(
                             if (isEditable) {
                                 DropdownMenuItem(
                                     text = { Text("Chỉnh sửa", color = MaterialTheme.colorScheme.primary) },
-                                    onClick = onEditPost
+                                    onClick = {
+                                        expandedMenu = false
+                                        showEditDialog = true
+                                        selectedPostId = post.id
+                                    }
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
+                                        expandedMenu = false
+                                        showDeleteDialog = true
                                         selectedPostId = post.id
-                                        showDialog = true
                                     }
                                 )
                             } else {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.hide), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
+                                        expandedMenu = false
+                                        showDeleteDialog = true
                                         selectedPostId = post.id
-                                        showDialog = true
                                     }
                                 )
                             }
@@ -308,9 +320,9 @@ fun PostCard(
         }
     }
 
-    if (showDialog && selectedPostId != null) {
+    if (showDeleteDialog && selectedPostId != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showDeleteDialog = false },
             title = {
                 Text(
                     if (isEditable) stringResource(R.string.delete_title) else stringResource(R.string.hide_title),
@@ -326,9 +338,8 @@ fun PostCard(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDialog = false
+                        showDeleteDialog = false
                         selectedPostId = null
-                        expandedMenu = false
                         onDeletePost()
                     }
                 ) {
@@ -338,8 +349,73 @@ fun PostCard(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDialog = false
+                        showDeleteDialog = false
                         selectedPostId = null
+                    }
+                ) {
+                    Text("Huỷ")
+                }
+            }
+        )
+    }
+
+    // Dialog chỉnh sửa
+    if (showEditDialog && selectedPostId != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Chỉnh sửa bài viết", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = editContent,
+                        onValueChange = { editContent = it },
+                        label = { Text("Nội dung") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text("Chế độ hiển thị", style = MaterialTheme.typography.bodyMedium)
+                    PostVisibility.entries.forEach { visibility ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { editVisibility = visibility }
+                        ) {
+                            RadioButton(
+                                selected = editVisibility == visibility,
+                                onClick = { editVisibility = visibility }
+                            )
+                            Text(
+                                text = when (visibility) {
+                                    PostVisibility.PUBLIC -> "Công khai"
+                                    PostVisibility.PRIVATE -> "Riêng tư"
+                                    PostVisibility.FRIEND -> "Bạn bè"
+                                },
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showEditDialog = false
+                        selectedPostId = null
+                        onEditPost(editContent, editVisibility)
+                    },
+                    enabled = editContent.isNotBlank()
+                ) {
+                    Text("Lưu")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showEditDialog = false
+                        selectedPostId = null
+                        editContent = post.content
+                        editVisibility = post.visibility
                     }
                 ) {
                     Text("Huỷ")

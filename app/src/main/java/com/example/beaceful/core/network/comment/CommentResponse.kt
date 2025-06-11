@@ -2,6 +2,7 @@ package com.example.beaceful.core.network.comment
 
 import com.example.beaceful.domain.model.Comment
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 data class CommentResponse(
     val id: Int,
@@ -9,7 +10,8 @@ data class CommentResponse(
     val imageUrl: String?,
     val userId: String,
     val postId: Int,
-    val reactCount: Int
+    val reactCount: Int,
+    val createdAt: String
 ) {
     fun toComment(): Comment {
         return Comment(
@@ -19,7 +21,7 @@ data class CommentResponse(
             userId = userId,
             postId = postId,
             reactCount = reactCount,
-            createdAt = LocalDateTime.now() // Backend không trả createdAt, dùng tạm
+            createdAt = LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
         )
     }
 }
