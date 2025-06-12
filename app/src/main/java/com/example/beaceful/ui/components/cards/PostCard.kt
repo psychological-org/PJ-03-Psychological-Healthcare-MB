@@ -39,9 +39,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +57,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role.Companion.RadioButton
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -64,6 +68,8 @@ import com.example.beaceful.domain.model.Community
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
+import com.example.beaceful.ui.viewmodel.ForumViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun PostCard(
@@ -79,10 +85,8 @@ fun PostCard(
     community: Community? = null,
     userId: String,
     comments: List<Comment> = emptyList(),
-    commentText: String = "",
-    onCommentTextChange: (String) -> Unit = {},
     onLoadComments: () -> Unit = {},
-    onSubmitComment: () -> Unit = {}
+    viewModel: ForumViewModel = hiltViewModel()
 ) {
     var expanded by remember { mutableStateOf(false) }
     var expandedMenu by remember { mutableStateOf(false) }
@@ -92,6 +96,16 @@ fun PostCard(
     var editContent by remember { mutableStateOf(post.content) }
     var editVisibility by remember { mutableStateOf(post.visibility) }
     val isEditable = post.posterId == userId // Kiểm tra quyền chỉnh sửa/xóa
+    val commentAuthors = remember { mutableStateMapOf<String, User?>() }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(comments) {
+        comments.forEach { comment ->
+            coroutineScope.launch {
+                commentAuthors[comment.userId] = viewModel.getUserById(comment.userId)
+            }
+        }
+    }
 
     Card(
         modifier = modifier
@@ -261,7 +275,10 @@ fun PostCard(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(onClick = onLoadComments) {
+                    IconButton(onClick = {
+                        onLoadComments()
+                        onPostClick()
+                    }) {
                         Icon(
                             Icons.Default.ChatBubbleOutline,
                             contentDescription = null,
@@ -284,7 +301,8 @@ fun PostCard(
                 }
                 // Bình luận
                 Spacer(Modifier.height(8.dp))
-                comments.forEach { comment ->
+                comments.take(2).forEach { comment ->
+                    val commentAuthor = commentAuthors[comment.userId]
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -292,29 +310,21 @@ fun PostCard(
                         verticalAlignment = Alignment.Top
                     ) {
                         Text(
-                            text = "${comment.userId}: ${comment.content}",
+                            text = "${commentAuthor?.fullName ?: "Unknown"}: ${comment.content}",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
-                Spacer(Modifier.height(8.dp))
-                TextField(
-                    value = commentText,
-                    onValueChange = onCommentTextChange,
-                    label = { Text("Thêm bình luận") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = onSubmitComment,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 16.dp)
-                ) {
-                    Text("Gửi")
+                if (comments.size > 2) {
+                    Text(
+                        text = "Xem thêm bình luận...",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 4.dp)
+                            .clickable { onPostClick() }
+                    )
                 }
             }
         }

@@ -33,7 +33,7 @@ class PostRepository @Inject constructor(
     }
 
     suspend fun updatePost(postId: Int, postRequest: PostRequest) {
-        postApiService.updatePost(postId, postRequest)
+        postApiService.updatePost(postRequest)
     }
 
     suspend fun deletePost(postId: Int) {
@@ -140,6 +140,14 @@ class PostRepository @Inject constructor(
         } catch (e: Exception) {
             Log.e("PostRepository", "Error toggling like: ${e.message}", e)
             Pair(false, -1)
+        }
+    }
+
+    suspend fun existsById(postId: Int): Boolean {
+        return try {
+            postApiService.existsById(postId)
+        } catch (e: Exception) {
+            false
         }
     }
 }

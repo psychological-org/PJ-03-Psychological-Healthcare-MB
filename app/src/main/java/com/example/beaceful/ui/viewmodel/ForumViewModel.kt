@@ -85,12 +85,14 @@ class ForumViewModel @Inject constructor(
         }
     }
 
-    private fun fetchPosts(page: Int = 0, limit: Int = 100) {
+    fun fetchPosts(page: Int = 0, limit: Int = 100) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
                 val posts = postRepository.getAllPosts(page, limit)
-                _allPosts.value = posts.filterNot { it.id in _hiddenPostIds }
+                    .filter { postRepository.existsById(it.id) }
+                _allPosts.value = posts
+                    .filterNot { it.id in _hiddenPostIds }
                     .sortedByDescending { it.createdAt }
                 val userId = UserSession.getCurrentUserId()
                 val likedMap = posts.associate { post ->
@@ -180,17 +182,17 @@ class ForumViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val communityPosts = postRepository.getPostsByCommunity(communityId)
-                _allPosts.value = (_allPosts.value + communityPosts)
-                    .distinctBy { it.id }
+                // Fetch tất cả bài post từ API để đảm bảo dữ liệu mới nhất
+                val allPosts = postRepository.getAllPosts(page = 0, limit = 100)
+                _allPosts.value = allPosts
                     .filterNot { it.id in _hiddenPostIds }
                     .sortedByDescending { it.createdAt }
-                // Cập nhật likedPosts cho bài viết mới
+                // Cập nhật likedPosts
                 val userId = UserSession.getCurrentUserId()
-                val likedMap = communityPosts.associate { post ->
+                val likedMap = allPosts.associate { post ->
                     post.id to postRepository.isPostLiked(post.id, userId)
                 }
-                _likedPosts.value = _likedPosts.value + likedMap
+                _likedPosts.value = likedMap
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải bài viết cộng đồng: ${e.message}"
             } finally {
@@ -351,20 +353,21 @@ class ForumViewModel @Inject constructor(
                         userId = userId
                     )
                     postRepository.updatePost(postId, postRequest)
-                    val updatedPost = postRepository.getPostById(postId)
-                    if (updatedPost != null) {
-                        _allPosts.value = _allPosts.value.map { p ->
-                            if (p.id == postId) updatedPost else p
-                        }
-                        _error.value = null
-                        Log.d("ForumViewModel", "Updated post $postId")
-                    }
+                    // Làm mới _allPosts sau khi cập nhật
+                    val allPosts = postRepository.getAllPosts(page = 0, limit = 100)
+                        .filter { postRepository.existsById(it.id) }
+                    _allPosts.value = allPosts
+                        .filterNot { it.id in _hiddenPostIds }
+                        .sortedByDescending { it.createdAt }
+                    _error.value = null
+                    Log.d("ForumViewModel", "Updated post $postId successfully")
                 } else {
                     _error.value = "Không có quyền chỉnh sửa bài viết này"
+                    Log.e("ForumViewModel", "Permission denied: postId=$postId, userId=$userId")
                 }
             } catch (e: Exception) {
                 _error.value = "Lỗi khi chỉnh sửa bài viết: ${e.message}"
-                Log.e("ForumViewModel", "Error updating post: ${e.message}", e)
+                Log.e("ForumViewModel", "Error updating post $postId: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }

@@ -23,9 +23,8 @@ interface PostApiService {
     @POST("posts")
     suspend fun createPost(@Body postRequest: PostRequest): Int
 
-    @PUT("posts/{post-id}")
+    @PUT("posts")
     suspend fun updatePost(
-        @Path("post-id") postId: Int,
         @Body postRequest: PostRequest
     ): Unit
 

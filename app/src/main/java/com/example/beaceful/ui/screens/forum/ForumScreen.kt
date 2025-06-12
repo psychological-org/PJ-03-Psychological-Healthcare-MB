@@ -119,6 +119,11 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
     var commentText by remember { mutableStateOf("") }
 
+    // Làm mới dữ liệu khi quay lại NewsScreen
+    LaunchedEffect(navController.currentBackStackEntry) {
+        viewModel.fetchPosts()
+    }
+
     LaunchedEffect(posts) {
         posts.forEach { post ->
             coroutineScope.launch {
@@ -201,13 +206,7 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
                     },
                     community = if (post.communityId != null) viewModel.getCommunityById(post.communityId) else null,
                     comments = comments.filter { it.postId == post.id },
-                    commentText = commentText,
-                    onCommentTextChange = { commentText = it },
                     onLoadComments = { viewModel.loadCommentsForPost(post.id) },
-                    onSubmitComment = {
-                        viewModel.createComment(post.id, userId, commentText)
-                        commentText = ""
-                    },
                     userId = userId
                 )
             }

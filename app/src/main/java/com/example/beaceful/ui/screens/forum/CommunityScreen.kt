@@ -191,7 +191,13 @@ fun CommunityScreen(
                         },
                         user = user,
                         commentCount = commentCount,
-                        onDeletePost = {},
+                        onDeletePost = {
+                            if (post.posterId == userId) {
+                                viewModel.deletePost(post.id, userId)
+                            } else {
+                                viewModel.hidePost(post.id)
+                            }
+                        },
                         userId = userId,
                         onEditPost = { content, visibility ->
                             viewModel.updatePost(post.id, userId, content, visibility)
