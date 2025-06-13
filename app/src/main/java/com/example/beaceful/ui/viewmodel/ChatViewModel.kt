@@ -42,6 +42,7 @@ class ChatViewModel @Inject constructor(
     private var currentUserId: String? = null
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
+    private var messagesListener: ValueEventListener? = null
 
     init {
         loadCurrentUserId()
@@ -52,8 +53,13 @@ class ChatViewModel @Inject constructor(
             try {
                 currentUserId = UserSession.getCurrentUserId()
                 println("Current user ID (mongoId): $currentUserId")
-                ensureUserExistsInFirebase(currentUserId!!)
-                loadUsers()
+                if (currentUserId != null) {
+                    ensureUserExistsInFirebase(currentUserId!!)
+                    loadUsers()
+                } else {
+                    _error.value = "Người dùng chưa đăng nhập"
+                    println("Load current user ID error: User not logged in")
+                }
             } catch (e: IllegalStateException) {
                 _error.value = "Người dùng chưa đăng nhập"
                 println("Load current user ID error: ${e.message}")
@@ -161,7 +167,12 @@ class ChatViewModel @Inject constructor(
                     return@launch
                 }
                 println("Loading chat previews for currentUserId: $currentUserId")
-                database.reference.child("messages").addValueEventListener(object : ValueEventListener {
+                // Gỡ listener cũ nếu có
+                messagesListener?.let {
+                    database.reference.child("messages").removeEventListener(it)
+                    println("Removed previous messages listener")
+                }
+                messagesListener = object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         viewModelScope.launch {
                             println("Messages snapshot: ${snapshot.childrenCount} messages found")
@@ -234,11 +245,43 @@ class ChatViewModel @Inject constructor(
                         _error.value = "Lỗi tải tin nhắn: ${error.message}"
                         println("Load messages error: ${error.message}")
                     }
-                })
+                }
+                database.reference.child("messages").addValueEventListener(messagesListener!!)
             } catch (e: Exception) {
                 _error.value = "Lỗi tải tin nhắn: ${e.message}"
                 println("Load chat previews error: ${e.message}")
             }
+        }
+    }
+
+    fun clearDataOnLogout() {
+        viewModelScope.launch {
+            println("Clearing ChatViewModel data on logout")
+            currentUserId = null
+            users.value = emptyList()
+            chatPreviews.value = emptyMap()
+            _error.value = null
+            messagesListener?.let {
+                database.reference.child("messages").removeEventListener(it)
+                println("Removed messages listener on logout")
+            }
+            messagesListener = null
+        }
+    }
+
+    fun refreshData() {
+        viewModelScope.launch {
+            println("Refreshing ChatViewModel data")
+            clearDataOnLogout()
+            loadCurrentUserId()
+        }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        messagesListener?.let {
+            database.reference.child("messages").removeEventListener(it)
+            println("Removed messages listener on ViewModel cleared")
         }
     }
 }

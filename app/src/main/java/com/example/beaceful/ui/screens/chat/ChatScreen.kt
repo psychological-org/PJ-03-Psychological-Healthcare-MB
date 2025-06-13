@@ -12,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -43,6 +44,10 @@ fun ChatScreen(
     val error by viewModel.error.collectAsState()
     val nameSuggestions = remember(users) {
         users.map { SearchItem<String>(id = it.id, name = it.fullName) }
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshData()
     }
 
     println("ChatScreen: users.size=${users.size}, chatPreviews.size=${chatPreviews.size}, error=$error")

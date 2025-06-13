@@ -55,6 +55,7 @@ import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.EditAccountRoute
 import com.example.beaceful.ui.navigation.LoginRoute
 import com.example.beaceful.ui.viewmodel.AuthViewModel
+import com.example.beaceful.ui.viewmodel.ChatViewModel
 import com.example.beaceful.ui.viewmodel.ProfileViewModel
 import com.example.beaceful.viewmodel.DoctorViewModel
 
@@ -64,6 +65,7 @@ fun EditProfileScreen(
     modifier: Modifier = Modifier,
     profileViewModel: ProfileViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel(),
+    chatViewModel: ChatViewModel = hiltViewModel(),
 ) {
     val user by profileViewModel.user.collectAsState()
     val error by profileViewModel.error.collectAsState()
@@ -165,6 +167,7 @@ fun EditProfileScreen(
                 ) {
                     Button(
                         onClick = {
+                            chatViewModel.clearDataOnLogout()
                             authViewModel.logout()
                             navController.navigate(LoginRoute.route) {
                                 popUpTo(navController.graph.startDestinationId) {
