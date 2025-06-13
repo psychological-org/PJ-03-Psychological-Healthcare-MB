@@ -14,7 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
-import com.example.beaceful.ui.screen.ChatDetailScreen
+import com.example.beaceful.ui.screens.chat.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentScreen
 import com.example.beaceful.ui.screens.authen.ForgotPasswordScreen
@@ -34,6 +34,7 @@ import com.example.beaceful.ui.screens.home.HomeScreen
 import com.example.beaceful.ui.screens.authen.LoginScreen
 import com.example.beaceful.ui.screens.authen.SignUpScreen
 import com.example.beaceful.ui.screens.authen.VerifyScreen
+import com.example.beaceful.ui.screens.chat.ChatScreen
 import com.example.beaceful.ui.screens.profile.EditAccountScreen
 import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
@@ -59,8 +60,15 @@ fun BeacefulNavHost(
         composable(route = Doctor.route) {
             DoctorScreen(navController = navController)
         }
-        composable(route = Forum.route) {
-            ForumScreen(navController = navController)
+        composable(
+            route = "forum?selectedTab={selectedTab}",
+            arguments = listOf(navArgument("selectedTab") {
+                type = NavType.IntType
+                defaultValue = 0
+            })
+        ) { backStackEntry ->
+            val selectedTabIndex = backStackEntry.arguments?.getInt("selectedTab") ?: 0
+            ForumScreen(navController = navController, initialTab = selectedTabIndex)
         }
 
         composable(
@@ -178,8 +186,7 @@ fun BeacefulNavHost(
             ChatDetailScreen(
                 userId = userId,
                 userName = userName,
-                onBack = { navController.popBackStack() },
-                viewModel = viewModel()
+                onBack = { navController.navigate("forum?selectedTab=1") }
             )
         }
         composable(

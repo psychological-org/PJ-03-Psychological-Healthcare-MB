@@ -6,17 +6,22 @@ import android.net.Uri
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.amazon.S3Manager
 import com.example.beaceful.domain.firebase.FirebaseMessage
+import com.example.beaceful.domain.firebase.FirebaseUser
 import com.example.beaceful.domain.firebase.toMessage
 import com.example.beaceful.domain.model.Message
 import com.example.beaceful.domain.firebase.toFirebaseMessage
 import com.example.beaceful.domain.firebase.toUser
-import com.google.firebase.auth.FirebaseAuth
+import com.example.beaceful.domain.model.User
+import com.example.beaceful.domain.repository.UserRepository
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -25,9 +30,12 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.io.File
 import java.util.UUID
+import javax.inject.Inject
 
-class ChatDetailViewModel : ViewModel() {
-    private val auth = FirebaseAuth.getInstance()
+@HiltViewModel
+class ChatDetailViewModel @Inject constructor(
+    private val userRepository: UserRepository
+) : ViewModel() {
     private val database = FirebaseDatabase.getInstance("https://chatapplication-a7712-default-rtdb.asia-southeast1.firebasedatabase.app")
     val messages = mutableStateOf<List<Message>>(emptyList())
     val selectedImageUri = mutableStateOf<Uri?>(null)
@@ -49,22 +57,81 @@ class ChatDetailViewModel : ViewModel() {
     }
 
     private suspend fun loadCurrentUserId() {
-        val currentUserUid = auth.currentUser?.uid ?: run {
-            _error.value = "Người dùng chưa đăng nhập"
-            return
-        }
         try {
-            val snapshot = database.reference.child("users").child(currentUserUid).get().await()
-            println("loadCurrentUserId snapshot: $snapshot")
-            val firebaseUser = snapshot.getValue(com.example.beaceful.domain.firebase.FirebaseUser::class.java)
-            currentUserId = firebaseUser?.toUser()?.id // uid
-            println("Loaded currentUserId: $currentUserId")
-            if (currentUserId == null) {
-                _error.value = "Không tìm thấy thông tin người dùng"
-            }
+            currentUserId = UserSession.getCurrentUserId()
+            println("Loaded currentUserId (mongoId): $currentUserId")
+            ensureUserExistsInFirebase(currentUserId!!)
+        } catch (e: IllegalStateException) {
+            _error.value = "Người dùng chưa đăng nhập"
+            println("Load current user ID error: ${e.message}")
         } catch (e: Exception) {
             _error.value = "Lỗi tải thông tin người dùng: ${e.message}"
             println("Load current user ID error: ${e.message}")
+        }
+    }
+
+    private suspend fun ensureUserExistsInFirebase(userId: String) {
+        try {
+            val snapshot = database.reference.child("users").child(userId).get().await()
+            if (snapshot.exists()) {
+                println("User $userId already exists in Firebase")
+                return
+            }
+
+            // Retry logic cho API call
+            var currentUser: User? = null
+            repeat(3) { attempt ->
+                try {
+                    currentUser = userRepository.getUserById(userId)
+                    if (currentUser != null) return@repeat
+                } catch (e: Exception) {
+                    println("Attempt ${attempt + 1} failed to fetch user $userId: ${e.message}")
+                    if (attempt == 2) throw e // Ném lỗi nếu thất bại sau 3 lần
+                    delay(1000) // Chờ 1 giây trước khi thử lại
+                }
+            }
+
+            if (currentUser == null) {
+                _error.value = "Không tìm thấy thông tin người dùng"
+                println("No user data found for $userId")
+                return
+            }
+
+            val firebaseUser = FirebaseUser(
+                uid = currentUser!!.id,
+                fullName = currentUser!!.fullName,
+                roleId = currentUser!!.roleId,
+                biography = currentUser!!.biography,
+                yearOfBirth = currentUser!!.yearOfBirth,
+                yearOfExperience = currentUser!!.yearOfExperience,
+                avatarUrl = currentUser!!.avatarUrl,
+                backgroundUrl = currentUser!!.backgroundUrl,
+                email = currentUser!!.email,
+                phone = currentUser!!.phone,
+                password = null, // Không lưu password trong Firebase
+                headline = currentUser!!.headline
+            )
+
+            // Retry logic cho Firebase write
+            repeat(3) { attempt ->
+                try {
+                    database.reference.child("users").child(userId)
+                        .setValue(firebaseUser)
+                        .await() // Sử dụng await để đảm bảo hoàn thành
+                    println("Created user in Firebase for mongoId: $userId")
+                    return
+                } catch (e: Exception) {
+                    println("Attempt ${attempt + 1} failed to create user $userId in Firebase: ${e.message}")
+                    if (attempt == 2) {
+                        _error.value = "Lỗi tạo user trong Firebase: ${e.message}"
+                        println("Failed to create user after 3 attempts: ${e.message}")
+                    }
+                    delay(100) // Chờ ngắn trước khi thử lại
+                }
+            }
+        } catch (e: Exception) {
+            _error.value = "Lỗi đảm bảo user tồn tại: ${e.message}"
+            println("Ensure user error: ${e.message}")
         }
     }
 

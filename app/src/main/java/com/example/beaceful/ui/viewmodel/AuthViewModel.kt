@@ -11,6 +11,7 @@ import com.example.beaceful.domain.model.User
 import com.example.beaceful.BuildConfig
 import com.example.beaceful.core.network.user.UserRequest
 import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.domain.firebase.FirebaseTest
 import com.example.beaceful.domain.repository.AuthRepository
 import com.example.beaceful.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -65,6 +66,7 @@ class AuthViewModel @Inject constructor(
                 UserSession.setCurrentUserId(user.id) // Lưu mongoId
                 AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
                 _success.value = "Đăng nhập thành công"
+                FirebaseTest.checkAuthStatus()
             } catch (e: Exception) {
                 _error.value = "Đăng nhập thất bại: ${e.message}"
                 Log.e(TAG, "Login failed: ${e.message}", e)

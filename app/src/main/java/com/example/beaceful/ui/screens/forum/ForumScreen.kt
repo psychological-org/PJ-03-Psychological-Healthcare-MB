@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -54,13 +53,14 @@ import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CommunityRoute
 import com.example.beaceful.ui.navigation.PostDetails
-import com.example.beaceful.ui.screen.ChatScreen
+import com.example.beaceful.ui.screens.chat.ChatScreen
 import com.example.beaceful.ui.viewmodel.ForumViewModel
 import kotlinx.coroutines.launch
 
 @Composable
 fun ForumScreen(
     navController: NavController,
+    initialTab: Int = 0,
     viewModel: ForumViewModel = hiltViewModel(),
 ) {
     val userId = UserSession.getCurrentUserId()
@@ -68,11 +68,12 @@ fun ForumScreen(
         viewModel.fetchUserCommunityIds(userId)
     }
 
-    val tabTitles =
-        listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
-    var selectedTab by remember { mutableIntStateOf(0) }
+    val tabTitles = listOf(stringResource(R.string.co1_news), stringResource(R.string.co2_chat))
+    var selectedTab by remember { mutableIntStateOf(initialTab) }
     // Tabs
-    Column {
+    Column(
+        modifier = Modifier.fillMaxSize()
+    ) {
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = Color.Transparent,
@@ -83,20 +84,16 @@ fun ForumScreen(
                 Tab(
                     selected = selectedTab == index,
                     onClick = { selectedTab = index },
-                    text = { Text(title) },
+                    text = { Text(title) }
                 )
             }
         }
         HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-
         when (selectedTab) {
             0 -> NewsScreen(navController = navController, viewModel = viewModel, userId = userId)
             1 -> ChatScreen(
                 onUserClick = { userId, fullName ->
                     navController.navigate("chatDetail/$userId/$fullName")
-                },
-                onLogout = {
-                    // TODO: Thêm logic đăng xuất (ví dụ: quay về màn hình login)
                 }
             )
         }

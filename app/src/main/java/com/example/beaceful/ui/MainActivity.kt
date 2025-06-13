@@ -32,6 +32,7 @@ import com.example.beaceful.ui.navigation.Doctor
 import com.example.beaceful.ui.navigation.EditAccountRoute
 import com.example.beaceful.ui.navigation.EditRoute
 import com.example.beaceful.ui.navigation.Forum
+import com.example.beaceful.ui.navigation.ForumTab
 import com.example.beaceful.ui.navigation.Home
 import com.example.beaceful.ui.navigation.Profile
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
@@ -46,7 +47,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         S3Manager.initialize(this)
-        FirebaseTest.testConnection()
         setContent {
             BeacefulApp()
         }
@@ -85,7 +85,8 @@ fun BeacefulApp() {
             CustomerRoute.route,
             EditAccountRoute.route,
             EditRoute.route,
-            AppointmentDetails.route
+            AppointmentDetails.route,
+            ForumTab.route
             )
 
         val currentScreen = resolveTab(currentDestination?.route)

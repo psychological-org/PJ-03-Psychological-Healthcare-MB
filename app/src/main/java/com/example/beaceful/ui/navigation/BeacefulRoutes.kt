@@ -139,6 +139,11 @@ data object Booking : BeacefulRoutes {
     fun createRoute(doctorId: String) = "doctorProfile/$doctorId/booking"
 }
 
+data object ForumTab : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "forum?selectedTab={selectedTab}"
+}
+
 data object LoginRoute : BeacefulRoutes {
     override val icon = Icons.Default.TagFaces
     override val route = "login"
