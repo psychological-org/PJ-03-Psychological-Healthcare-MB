@@ -166,4 +166,5 @@ data object VerifyRoute : BeacefulRoutes {
 //val BeacefulBottomNavPatient = listOf(LoginRoute, SignUpRoute, ForgotRoute, VerifyRoute, Profile)
 
 val BeacefulBottomNavPatient = listOf(DiaryRoute, CustomerRoute, Doctor, Forum, Profile)
+val BeacefulBottomNavDoctor = listOf(DiaryRoute, CustomerRoute, AppointmentRoute, Forum, Profile)
 

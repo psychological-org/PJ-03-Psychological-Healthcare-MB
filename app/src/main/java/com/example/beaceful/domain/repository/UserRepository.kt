@@ -59,7 +59,20 @@ class UserRepository @Inject constructor(
         return User(
             id = response.id, // mongoId
             fullName = response.fullName ?: "",
-            email = response.email ?: ""
+            email = response.email ?: "",
+            roleId = when (response.role?.lowercase()) {
+                "admin" -> 1
+                "doctor" -> 2
+                "patient" -> 3
+                else -> 3
+            },
+            biography = response.biography,
+            yearOfBirth = response.yearOfBirth?.toIntOrNull(),
+            yearOfExperience = response.yearOfExperience?.toIntOrNull(),
+            avatarUrl = response.avatarUrl,
+            backgroundUrl = response.backgroundUrl,
+            phone = response.phone,
+            headline = response.content,
         )
     }
 
