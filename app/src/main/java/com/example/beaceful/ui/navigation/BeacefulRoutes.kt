@@ -163,7 +163,6 @@ data object VerifyRoute : BeacefulRoutes {
     override val route = "login_forgot_verify"
 }
 
-//val BeacefulBottomNavPatient = listOf(LoginRoute, SignUpRoute, ForgotRoute, VerifyRoute, Profile)
 
 val BeacefulBottomNavPatient = listOf(DiaryRoute, Doctor, Forum, Profile)
 val BeacefulBottomNavDoctor = listOf(DiaryRoute, CustomerRoute, AppointmentRoute, Forum, Profile)
