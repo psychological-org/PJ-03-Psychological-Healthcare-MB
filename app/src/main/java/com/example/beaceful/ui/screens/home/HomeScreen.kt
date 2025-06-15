@@ -87,6 +87,7 @@ fun HomeScreen(
         in 14..17 -> 3 //chieu
         in 18..21 -> 4 // toi
         else -> 0 //dem
+    }
 
     LaunchedEffect(Unit) {
         collectionViewModel.getAllCollections()

@@ -24,9 +24,9 @@ import com.example.beaceful.ui.components.BottomNavRow
 import com.example.beaceful.ui.navigation.AppointmentDetails
 import com.example.beaceful.ui.navigation.AppointmentRoute
 import com.example.beaceful.ui.navigation.BeacefulBottomNavDoctor
+import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
-import com.example.beaceful.ui.navigation.BeacefulBottomNav
 import com.example.beaceful.ui.navigation.Booking
 import com.example.beaceful.ui.navigation.CustomerRoute
 import com.example.beaceful.ui.navigation.DiaryCalendar
