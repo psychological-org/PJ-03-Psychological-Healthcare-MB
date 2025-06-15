@@ -45,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.ViewMode
 import com.example.beaceful.ui.components.calendar.CalendarAppointmentScreen
 import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
@@ -62,9 +63,14 @@ fun AppointmentScreen(
     val appointments by viewModel.appointments.collectAsState()
     val currentMonth by viewModel.currentMonth.collectAsState()
     val error by viewModel.error.collectAsState()
+    val doctorId = try { UserSession.getCurrentUserId() } catch (e: IllegalStateException) { "" }
 
-    LaunchedEffect(2) {
-        viewModel.getAppointments("68400bdcfcf44b6d4980cba2")
+    LaunchedEffect(doctorId) {
+        if (doctorId.isNotEmpty()) {
+            viewModel.getAppointments(doctorId)
+        } else {
+            navController.navigate("login")
+        }
     }
 
     Box {

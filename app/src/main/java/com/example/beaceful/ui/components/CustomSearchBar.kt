@@ -85,16 +85,21 @@ fun <T> CustomSearchBar(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp)
+            .heightIn(max = 300.dp),
     ) {
-        if (filtered != null) {
-            if (filtered.isEmpty()) {
-                Text(
-                    "Không tìm thấy kết quả",
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(16.dp)
-                )
-            } else {
-                filtered.forEach { item ->
+        if (filtered.isNullOrEmpty()) {
+            Text(
+                "Không tìm thấy kết quả",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(max = 200.dp) // Giới hạn chiều cao danh sách gợi ý
+            ) {
+                items(filtered) { item ->
                     ListItem(
                         headlineContent = { Text(item.name) },
                         modifier = Modifier
@@ -103,7 +108,8 @@ fun <T> CustomSearchBar(
                                 query = item.name
                                 onSearch(item)
                                 active = false
-                            },
+                            }
+                            .padding(8.dp),
                         colors = ListItemDefaults.colors(
                             containerColor = MaterialTheme.colorScheme.tertiary,
                             headlineColor = MaterialTheme.colorScheme.onTertiary

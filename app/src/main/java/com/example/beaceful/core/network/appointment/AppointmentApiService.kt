@@ -18,7 +18,7 @@ interface AppointmentApiService {
     ): PagedResponse<AppointmentRequest>
 
     @GET("appointments/{appointment-id}")
-    suspend fun getAppointmentById(@Path("appointment-id") id: Int): Appointment
+    suspend fun getAppointmentById(@Path("appointment-id") id: Int): AppointmentRequest
 
     @POST("appointments")
     suspend fun createAppointment(@Body appointmentRequest: AppointmentRequest): Int

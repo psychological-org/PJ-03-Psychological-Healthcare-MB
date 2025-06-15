@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.components.cards
 
+import android.util.Log
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -43,6 +44,7 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.User
@@ -59,12 +61,16 @@ fun CustomerCard(
     viewModel: AppointmentViewModel = hiltViewModel()
 ) {
     val appointments by viewModel.appointments.collectAsState()
+    val appointmentCounts by viewModel.patientAppointmentCounts.collectAsState()
     val error by viewModel.error.collectAsState()
+    val doctorId = UserSession.getCurrentUserId()
+
+    Log.d("Customer Card", "Appointments: ${appointments}")
 
     // Gọi API để lấy lịch hẹn của customer
     LaunchedEffect(customer) {
         viewModel.getAppointmentsOfPatient(
-            doctorId = "0e370c47-9a29-4a8e-8f17-4e473d68cadd",
+            doctorId = doctorId,
             patientId = customer.id // String
         )
     }
@@ -121,7 +127,7 @@ fun CustomerCard(
                         )
                     }
                     Text(
-                        text = "Lịch hẹn: ${appointments.size}",
+                        text = "Lịch hẹn: ${appointmentCounts[customer.id] ?: 0}",
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -145,7 +151,7 @@ fun CustomerList(
         items(customers) { customer ->
             CustomerCard(customer,
                 onCustomerClick = {
-                    navController.navigate(CustomerDetails.createRoute(customer.id, true))
+                    navController.navigate(CustomerDetails.createRoute(customer.id, false))
                 })
         }
     }

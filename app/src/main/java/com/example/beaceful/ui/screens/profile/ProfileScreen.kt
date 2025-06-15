@@ -75,6 +75,7 @@ fun ProfileScreen(
     forumViewModel: ForumViewModel = hiltViewModel()
 ) {
     val userId = UserSession.getCurrentUserId()
+    val userRole = UserSession.getCurrentUserRole()
     val tabTitles = listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
     var selectedTab by remember { mutableIntStateOf(0) }
     val user by viewModel.user.collectAsState()
@@ -95,8 +96,6 @@ fun ProfileScreen(
             }
         }
     }
-
-    Log.d("PROFILE","Doctor=$user")
 
     if (user == null) {
         Column(
@@ -210,7 +209,10 @@ fun ProfileScreen(
                         )
                     }
                     Button(
-                        onClick = { navController.navigate(CustomerDetails.createRoute(userId, false)) },
+                        onClick = {
+                            val isDoctorView = userRole == "doctor"
+                            navController.navigate(CustomerDetails.createRoute(userId, isDoctorView))
+                        },
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),

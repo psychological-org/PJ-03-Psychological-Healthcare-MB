@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.appointment
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,7 @@ import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +29,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,6 +48,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
@@ -53,35 +57,58 @@ import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 fun AppointmentDetailsScreen(
     appointmentId: Int,
     modifier: Modifier = Modifier,
-//    navController: NavController,
+    navController: NavController,
     viewModel: AppointmentViewModel = hiltViewModel(),
     isDoctorView: Boolean = true,
 ) {
     val appointment by viewModel.appointment.collectAsState()
     val patients by viewModel.patients.collectAsState()
     val error by viewModel.error.collectAsState()
+    val success by viewModel.success.collectAsState()
+    val userRole = try { UserSession.getCurrentUserRole() } catch (e: IllegalStateException) { "" }
+    val userId = try { UserSession.getCurrentUserId() } catch (e: IllegalStateException) { "" }
     var doctorNote by remember { mutableStateOf(appointment?.note ?: "") }
-    var isLoading by remember { mutableStateOf(true) }
-//     val appointment = viewModel.getAppointment(appointmentId)
-//     val patient = appointment?.let { viewModel.repo.getUserById(it.patientId) }
-    val doctor = patients[appointment?.doctorId]
-//     var doctorNote by remember { mutableStateOf(if (appointment?.note != null) appointment.note else "") }
     var showDialog by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(true) }
 
-    LaunchedEffect(appointmentId) {
-        viewModel.getAppointment(appointmentId)
-        isLoading = false
+    LaunchedEffect(appointment, patients) {
+        Log.d("AppointmentDetailsScreen", "Appointment: $appointment")
+        Log.d("AppointmentDetailsScreen", "Patients: $patients")
+        Log.d("AppointmentDetailsScreen", "Error: $error")
+        Log.d("AppointmentViewModel", "Loaded appointment: $appointment")
     }
 
+    // Cập nhật doctorNote khi appointment thay đổi
     LaunchedEffect(appointment) {
         appointment?.let {
+            doctorNote = it.note ?: ""
             viewModel.getPatient(it.patientId)
             viewModel.getDoctor(it.doctorId)
         }
+        isLoading = false
     }
 
-    if (appointment != null && patients[appointment!!.patientId] != null) {
+    // Gọi API lấy chi tiết lịch hẹn
+    LaunchedEffect(appointmentId) {
+        if (userId.isNotEmpty()) {
+            viewModel.getAppointment(appointmentId)
+        } else {
+            navController.navigate("login")
+        }
+    }
+
+    if (isLoading) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+        }
+    } else if (error != null) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(text = "Lỗi: $error", color = MaterialTheme.colorScheme.error)
+        }
+    } else if (appointment != null && patients[appointment!!.patientId] != null) {
         val patient = patients[appointment!!.patientId]!!
+        val doctor = patients[appointment!!.doctorId]
+        val isEditable = isDoctorView && userRole == "doctor" && appointment!!.status != AppointmentStatus.CANCELLED
         Column(
             modifier = Modifier
                 .fillMaxHeight()
@@ -113,21 +140,19 @@ fun AppointmentDetailsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 item {
-                    if (doctor != null) {
+                    if (doctor != null && !isDoctorView) {
                         Text(
-                            text = "${stringResource(R.string.cu7)} ${
-                                if (isDoctorView) {
-                                    ""
-                                } else {
-                                    doctor.fullName
-                                }
-                            }",
+                            text = "${stringResource(R.string.cu7)} ${doctor.fullName}",
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                     Text(
                         text = formatAppointmentDate(appointment!!.appointmentDate),
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Text(
+                        text = "Trạng thái: ${appointment!!.status}",
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -139,43 +164,68 @@ fun AppointmentDetailsScreen(
                     ) {
                         TextField(
                             value = doctorNote,
-                            onValueChange = { doctorNote = it },
-                            placeholder = { Text(if (isDoctorView) "Nhập ghi chép..." else "Chưa có ghi chép nào", color = Color.Gray) },
+                            onValueChange = { if (isEditable) doctorNote = it },
+                            placeholder = {
+                                Text(
+                                    text = if (isEditable) "Nhập ghi chép..." else "Chưa có ghi chép nào",
+                                    color = Color.Gray
+                                )
+                            },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(500.dp)
+                                .height(200.dp)
                                 .background(
                                     MaterialTheme.colorScheme.secondary,
                                     RoundedCornerShape(24.dp)
                                 ),
-                            readOnly = !isDoctorView,
+                            readOnly = !isEditable,
+                            colors = TextFieldDefaults.colors(
+                                focusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSecondary,
+                                disabledTextColor = MaterialTheme.colorScheme.onSecondary,
+                                focusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                disabledContainerColor = MaterialTheme.colorScheme.secondary
+                            )
                         )
                     }
                 }
-                item {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                        Button(
-//                             onClick = { },
-                            onClick = {
-                                viewModel.updateAppointmentStatus(
-                                    appointmentId,
-                                    appointment!!.status,
-                                    doctorNote
-                                )
-//                                navController.popBackStack()
-                            },
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                if (isEditable || appointment!!.status == AppointmentStatus.PENDING) {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
                         ) {
-                            Text("Xác nhận", color = MaterialTheme.colorScheme.primary)
-                        }
-                        Spacer(Modifier.width(16.dp))
-                        if (appointment!!.status == AppointmentStatus.PENDING){
-                            OutlinedButton (
-                                onClick = { showDialog = true},
-                                shape = RoundedCornerShape(24.dp),
-                            ) {
-                                Text("Hủy lịch hẹn", color = MaterialTheme.colorScheme.onPrimary)
+                            if (isEditable) {
+                                Button(
+                                    onClick = {
+                                        viewModel.updateAppointmentStatus(
+                                            appointmentId = appointmentId,
+                                            status = appointment!!.status,
+                                            note = doctorNote
+                                        )
+                                        navController.popBackStack()
+                                    },
+                                    shape = RoundedCornerShape(24.dp),
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.secondary
+                                    ),
+                                    enabled = doctorNote.isNotBlank()
+                                ) {
+                                    Text("Lưu ghi chú", color = MaterialTheme.colorScheme.primary)
+                                }
+                                Spacer(Modifier.width(16.dp))
+                            }
+                            if (appointment!!.status == AppointmentStatus.PENDING) {
+                                OutlinedButton(
+                                    onClick = { showDialog = true },
+                                    shape = RoundedCornerShape(24.dp)
+                                ) {
+                                    Text(
+                                        "Hủy lịch hẹn",
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
                             }
                         }
                     }
@@ -186,9 +236,7 @@ fun AppointmentDetailsScreen(
     if (showDialog) {
         AlertDialog(
             onDismissRequest = { showDialog = false },
-            title = {
-                Text("Hủy lịch hẹn?", color = MaterialTheme.colorScheme.primary)
-            },
+            title = { Text("Hủy lịch hẹn?", color = MaterialTheme.colorScheme.primary) },
             text = {
                 Text(
                     "Bạn có chắc chắn muốn hủy lịch hẹn này không?",
@@ -198,19 +246,23 @@ fun AppointmentDetailsScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        viewModel.updateAppointmentStatus(
+                            appointmentId = appointmentId,
+                            status = AppointmentStatus.CANCELLED,
+                            note = doctorNote
+                        )
                         showDialog = false
+                        navController.popBackStack()
                     }
                 ) {
-                    Text("Hủy lịch hẹn")
+                    Text("Hủy lịch hẹn", color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
                 TextButton(
-                    onClick = {
-                        showDialog = false
-                    }
+                    onClick = { showDialog = false }
                 ) {
-                    Text("Quay lại")
+                    Text("Quay lại", color = MaterialTheme.colorScheme.primary)
                 }
             }
         )

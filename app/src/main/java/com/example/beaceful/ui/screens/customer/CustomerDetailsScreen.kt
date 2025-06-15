@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.customer
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.VisibilityThreshold
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
@@ -48,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.AppointmentStatus
@@ -65,16 +70,42 @@ fun CustomerDetailsScreen(
 //    val patient = viewModel.getPatient(customerId)
     val patients by viewModel.patients.collectAsState()
     val appointments by viewModel.appointments.collectAsState()
-    val patient = patients[customerId]
+    val error by viewModel.error.collectAsState()
+    val currentUserId = try { UserSession.getCurrentUserId() } catch (e: IllegalStateException) { "" }
+    val userRole = try { UserSession.getCurrentUserRole() } catch (e: IllegalStateException) { "" }
 
-    // Gọi API để lấy thông tin bệnh nhân và lịch hẹn
-    LaunchedEffect(customerId) {
-        viewModel.getPatient(customerId)
-        viewModel.getAppointmentsOfPatient(
-            doctorId = "0e370c47-9a29-4a8e-8f17-4e473d68cadd",
-            patientId = customerId
-        )
+    Log.d("CustomerDetailsScreen", "isDoctorView: ${isDoctorView}")
+
+    // Xác định ID để tải dữ liệu
+    val targetId = if (userRole == "doctor" && isDoctorView) {
+        currentUserId // Bác sĩ xem lịch hẹn của mình trong tab "Profile"
+    } else {
+        customerId // Bác sĩ xem lịch hẹn của bệnh nhân trong tab "Khách hàng", hoặc bệnh nhân xem lịch hẹn của mình
     }
+
+    // Gọi API để tải dữ liệu
+    LaunchedEffect(targetId, currentUserId) {
+        if (currentUserId.isNotEmpty()) {
+            viewModel.getPatient(targetId)
+            when {
+                userRole == "doctor" && isDoctorView -> {
+                    viewModel.getAppointments(currentUserId) // Tải lịch hẹn của bác sĩ
+                }
+                userRole == "patient" -> {
+                    viewModel.getAllAppointmentsOfPatient(targetId) // Tải tất cả lịch hẹn của bệnh nhân
+                }
+                else -> {
+                    viewModel.getAppointmentsOfPatient(currentUserId, targetId) // Bác sĩ xem lịch hẹn của bệnh nhân
+                }
+            }
+            Log.d("CustomerDetailsScreen", "Appointments loaded: $appointments")
+        } else {
+            navController.navigate("login")
+        }
+    }
+
+    val patient = patients[targetId]
+
     if (patient != null) {
         Column(
             modifier = Modifier
@@ -88,12 +119,13 @@ fun CustomerDetailsScreen(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-//                     text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
                     text = "${stringResource(R.string.cu2)} ${
-                        if (isDoctorView) {
-                            patient.fullName
+                        if (userRole == "doctor" && isDoctorView) {
+                            "bạn" // Bác sĩ xem lịch hẹn của mình
+                        } else if (userRole == "patient" && targetId == currentUserId) {
+                            "bạn" // Bệnh nhân xem lịch hẹn của mình
                         } else {
-                            "bạn"
+                            patient.fullName // Bác sĩ xem lịch hẹn của bệnh nhân
                         }
                     }",
                     textAlign = TextAlign.Center,
@@ -107,15 +139,26 @@ fun CustomerDetailsScreen(
             )
 
             AppointmentAccordion(
-//                 appointments = appointments,
-                appointments = if (isDoctorView) {
-                    appointments.filter { it.patientId == customerId && it.doctorId == "2" }
+                appointments = if (userRole == "doctor" && isDoctorView) {
+                    appointments.filter { it.doctorId == currentUserId } // Lịch hẹn của bác sĩ
                 } else {
-                    appointments.filter { it.patientId == customerId }
+                    appointments.filter { it.patientId == targetId } // Lịch hẹn của bệnh nhân
                 },
                 navController = navController,
                 isDoctorView = isDoctorView,
             )
+        }
+    } else {
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (error != null) {
+                Text("Lỗi: $error", color = MaterialTheme.colorScheme.error)
+            } else {
+                CircularProgressIndicator()
+            }
         }
     }
 }

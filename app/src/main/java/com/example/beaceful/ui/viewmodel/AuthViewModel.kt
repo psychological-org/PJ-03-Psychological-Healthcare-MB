@@ -11,6 +11,7 @@ import com.example.beaceful.domain.model.User
 import com.example.beaceful.BuildConfig
 import com.example.beaceful.core.network.user.UserRequest
 import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.domain.firebase.FirebaseTest
 import com.example.beaceful.domain.repository.AuthRepository
 import com.example.beaceful.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -44,6 +45,17 @@ class AuthViewModel @Inject constructor(
 
     private val TAG = "AuthViewModel"
 
+    private fun mapRoleIdToRole(roleId: Int?): String {
+        val role = when (roleId) {
+            1 -> "admin"
+            2 -> "doctor"
+            3 -> "patient"
+            else -> "patient"
+        }
+        Log.d("AuthViewModel", "Mapped roleId $roleId to role: $role")
+        return role
+    }
+
     fun login(username: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -52,22 +64,27 @@ class AuthViewModel @Inject constructor(
             try {
                 AuthDataStore.clearTokens(context)
                 val loginResponse = authRepository.login(
-//                 val authResponse = authRepository.login(
                     clientId = "authservice",
                     username = username,
                     password = password,
                     clientSecret = BuildConfig.CLIENT_SECRET
                 )
-                // Lấy mongoId từ keycloakId
+                Log.d("AuthViewModel", "Login response: keycloakId=${loginResponse.user.id}")
                 val user = userRepository.getUserByKeycloakId(loginResponse.user.id)
+                Log.d("AuthViewModel", "User: ${user}")
+                Log.d("AuthViewModel", "User fetched: id=${user.id}, roleId=${user.roleId}")
                 _token.value = loginResponse.token
                 _currentUser.value = user
-                UserSession.setCurrentUserId(user.id) // Lưu mongoId
+                UserSession.setCurrentUserId(user.id)
+                val role = mapRoleIdToRole(user.roleId)
+                UserSession.setCurrentUserRole(role)
+                Log.d("AuthViewModel", "UserSession role set to: ${UserSession.getCurrentUserRole()}")
                 AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
                 _success.value = "Đăng nhập thành công"
+                FirebaseTest.checkAuthStatus()
             } catch (e: Exception) {
                 _error.value = "Đăng nhập thất bại: ${e.message}"
-                Log.e(TAG, "Login failed: ${e.message}", e)
+                Log.e("AuthViewModel", "Login failed: ${e.message}", e)
             } finally {
                 _isLoading.value = false
             }
@@ -110,6 +127,7 @@ class AuthViewModel @Inject constructor(
                 _token.value = loginResponse.token
                 _currentUser.value = user
                 UserSession.setCurrentUserId(user.id) // Lưu mongoId
+                UserSession.setCurrentUserRole(mapRoleIdToRole(user.roleId))
                 AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
                 _success.value = "Đăng ký thành công"
             } catch (e: Exception) {

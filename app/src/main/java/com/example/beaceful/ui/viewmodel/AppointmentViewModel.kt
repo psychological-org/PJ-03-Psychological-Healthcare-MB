@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.User
@@ -42,6 +43,9 @@ class AppointmentViewModel @Inject constructor(
 
     private val _success = MutableStateFlow<String?>(null)
     val success: StateFlow<String?> = _success
+
+    private val _patientAppointmentCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
+    val patientAppointmentCounts: StateFlow<Map<String, Int>> = _patientAppointmentCounts
 
     private val TAG = "AppointmentViewModel"
 
@@ -113,13 +117,14 @@ class AppointmentViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 val date = _currentMonth.value
-                // Tạm lấy tất cả lịch hẹn của doctor để debug
-                _appointments.value = repo.getAppointmentsOfDoctor("0e370c47-9a29-4a8e-8f17-4e473d68cadd") // Doctor ID từ JSON
-                // _appointments.value = repo.getAppointmentsOnDate(date) // Bật lại sau khi debug
-                Log.d(TAG, "Fetched appointments for date ${date.toLocalDate()}: ${_appointments.value}")
-                // Tải tất cả bệnh nhân
+                val doctorId = UserSession.getCurrentUserId()
+                _appointments.value = repo.getAppointmentsOfDoctor(doctorId)
+                Log.d(TAG, "Fetched appointments for doctor $doctorId on date ${date.toLocalDate()}: ${_appointments.value}")
                 val patientIds = _appointments.value.map { it.patientId }.toSet()
                 patientIds.forEach { getPatient(it) }
+            } catch (e: IllegalStateException) {
+                _error.value = "Người dùng chưa đăng nhập"
+                Log.e(TAG, "User not logged in", e)
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải lịch hẹn: ${e.message}"
                 Log.e(TAG, "Error loading appointments: ${e.message}", e)
@@ -149,9 +154,12 @@ class AppointmentViewModel @Inject constructor(
     fun getAppointments(doctorId: String) {
         viewModelScope.launch {
             try {
-                _appointments.value = repo.getAppointmentsOfDoctor(doctorId)
-                Log.d(TAG, "Loaded appointments for doctor $doctorId: ${_appointments.value}")
-                val patientIds = _appointments.value.map { it.patientId }.toSet()
+                val appointments = repo.getAppointmentsOfDoctor(doctorId)
+                _appointments.value = appointments
+                val counts = appointments.groupBy { it.patientId }.mapValues { it.value.size }
+                _patientAppointmentCounts.value = counts
+                Log.d(TAG, "Loaded appointments for doctor $doctorId: $appointments")
+                val patientIds = appointments.map { it.patientId }.toSet()
                 patientIds.forEach { getPatient(it) }
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải lịch hẹn của bác sĩ: ${e.message}"
@@ -163,10 +171,11 @@ class AppointmentViewModel @Inject constructor(
     fun getAppointmentsOfPatient(doctorId: String, patientId: String) {
         viewModelScope.launch {
             try {
-                _appointments.value = repo.getAppointmentsOfDoctor(doctorId)
+                val appointments = repo.getAppointmentsOfDoctor(doctorId)
                     .filter { it.patientId == patientId }
-                val patientIds = _appointments.value.map { it.patientId }.toSet()
-                patientIds.forEach { getPatient(it) }
+                _patientAppointmentCounts.update { it + (patientId to appointments.size) }
+                Log.d(TAG, "Loaded appointments for patient $patientId: $appointments")
+                getPatient(patientId)
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải lịch hẹn của bệnh nhân: ${e.message}"
                 Log.e(TAG, "Error loading patient appointments: ${e.message}", e)
@@ -292,5 +301,21 @@ class AppointmentViewModel @Inject constructor(
     fun clearMessages() {
         _success.value = null
         _error.value = null
+    }
+
+
+    fun getAllAppointmentsOfPatient(patientId: String) {
+        viewModelScope.launch {
+            try {
+                val appointments = repo.getAllAppointmentsOfPatient(patientId)
+                _appointments.value = appointments
+                _patientAppointmentCounts.update { it + (patientId to appointments.size) }
+                Log.d(TAG, "Loaded all appointments for patient $patientId: $appointments")
+                getPatient(patientId)
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi tải lịch hẹn của bệnh nhân: ${e.message}"
+                Log.e(TAG, "Error loading all patient appointments: ${e.message}", e)
+            }
+        }
     }
 }
