@@ -14,6 +14,7 @@ import com.example.beaceful.core.network.comment.CommentApiService
 import com.example.beaceful.core.network.community.CommunityApiService
 import com.example.beaceful.core.network.participant_community.ParticipantCommunityApiService
 import com.example.beaceful.core.network.post.PostApiService
+import com.example.beaceful.core.network.recommended.RecommendationApiService
 import com.example.beaceful.core.network.topic.TopicApiService
 import com.example.beaceful.core.network.user.UserApiService
 import com.example.beaceful.domain.model.Appointment
@@ -244,5 +245,11 @@ object NetworkModule {
     @Singleton
     fun provideAuthRepository(authApiService: AuthApiService): AuthRepository {
         return AuthRepository(authApiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRecommendationApiService(retrofit: Retrofit): RecommendationApiService {
+        return retrofit.create(RecommendationApiService::class.java)
     }
 }

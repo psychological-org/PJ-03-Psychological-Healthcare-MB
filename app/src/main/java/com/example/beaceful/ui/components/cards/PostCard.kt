@@ -271,39 +271,39 @@ fun PostCard(
                     }
                 }
                 // Bình luận
-                Spacer(Modifier.height(8.dp))
-                comments.forEach { comment ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(start = 16.dp, top = 4.dp),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        Text(
-                            text = "${comment.userId}: ${comment.content}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                Spacer(Modifier.height(8.dp))
-                TextField(
-                    value = commentText,
-                    onValueChange = onCommentTextChange,
-                    label = { Text("Thêm bình luận") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = onSubmitComment,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end = 16.dp)
-                ) {
-                    Text("Gửi")
-                }
+//                Spacer(Modifier.height(8.dp))
+//                comments.forEach { comment ->
+//                    Row(
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .padding(start = 16.dp, top = 4.dp),
+//                        verticalAlignment = Alignment.Top
+//                    ) {
+//                        Text(
+//                            text = "${comment.userId}: ${comment.content}",
+//                            style = MaterialTheme.typography.bodySmall,
+//                            color = MaterialTheme.colorScheme.primary
+//                        )
+//                    }
+//                }
+//                Spacer(Modifier.height(8.dp))
+//                TextField(
+//                    value = commentText,
+//                    onValueChange = onCommentTextChange,
+//                    label = { Text("Thêm bình luận") },
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 16.dp)
+//                )
+//                Spacer(Modifier.height(8.dp))
+//                Button(
+//                    onClick = onSubmitComment,
+//                    modifier = Modifier
+//                        .align(Alignment.End)
+//                        .padding(end = 16.dp)
+//                ) {
+//                    Text("Gửi")
+//                }
             }
         }
     }

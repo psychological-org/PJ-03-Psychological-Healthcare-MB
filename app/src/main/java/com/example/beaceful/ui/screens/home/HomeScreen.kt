@@ -38,6 +38,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,7 +46,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -58,7 +60,9 @@ import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
 import com.example.beaceful.ui.viewmodel.MusicPlayerViewModel
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
+
 
 @Composable
 fun HomeScreen(
@@ -71,30 +75,55 @@ fun HomeScreen(
     val currentPosition by musicPlayerViewModel.currentPosition.collectAsState()
     val duration by musicPlayerViewModel.duration.collectAsState()
 
+    val currentHour = remember { LocalTime.now().hour }
+    val timePhase = when (currentHour) {
+        in 5..10 -> 1  //sang
+        in 11..13 -> 2 //trua
+        in 14..17 -> 3 //chieu
+        in 18..21 -> 4 // toi
+        else -> 0 //dem
+    }
+
     Box() {
         Image(
-            painter = painterResource(R.drawable.home_background_night),
+            painter = when (timePhase) {
+                1 -> painterResource(R.drawable.home_background_sunrise)
+                2 -> painterResource(R.drawable.home_background_afternoon)
+                3 -> painterResource(R.drawable.home_background_sunset)
+                4 -> painterResource(R.drawable.home_background_night)
+                else -> painterResource(R.drawable.home_background_night)
+            },
             contentDescription = null
         )
         Column(
             modifier.verticalScroll(rememberScrollState()),
         ) {
-            Spacer(Modifier.height(256.dp))
+            Spacer(Modifier.height(120.dp))
 //        Greeting block
-            Text(
-                text = stringResource(R.string.ho1_greeting),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
+            OutlinedTextByTime(
+                text = when (timePhase) {
+                    1 -> "Chào buổi sáng,"
+                    2 -> "Chào buổi trưa,"
+                    3 -> "Chào buổi chiều,"
+                    4 -> "Chào buổi tối,"
+                    else -> "Xin chào,"
+                },
+                modifier = Modifier.padding(horizontal = 24.dp),
+                timePhase = timePhase,
             )
+            OutlinedTextByTime(
+                text = stringResource(R.string.ho1_greeting),
+                modifier = Modifier.padding(horizontal = 24.dp), timePhase = timePhase
+            )
+            Spacer(Modifier.height(16.dp))
+
             HomeScreenEmotionsRow(
                 navController = navController
             )
+            Spacer(Modifier.height(60.dp))
 
 //        Diary block
-            HomeSection(
-                title = R.string.ho2_share_thought,
-                onClickSeeMore = {}
-            ) {
+            Column() {
                 HomeDiaryBlock(onClick = {
                     navController.navigate(SelectEmotionDiary.route)
                 })
@@ -105,9 +134,6 @@ fun HomeScreen(
                 onClickSeeMore = {}
             ) {
                 val collection = DumpDataProvider.collections
-//            ForYouRow(list = musicList) { item ->
-//                MusicItem(background = item.drawable, title = item.text)
-//            }
                 MusicListScreen(collection)
             }
 
@@ -149,7 +175,7 @@ fun HomeScreen(
                 onClick = { musicPlayerViewModel.stopAndClear() },
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .offset(x= (-16).dp, y = (-56).dp)
+                    .offset(x = (-16).dp, y = (-56).dp)
                     .size(28.dp),
                 colors = IconButtonDefaults.iconButtonColors(
                     containerColor = MaterialTheme.colorScheme.tertiary
@@ -160,70 +186,6 @@ fun HomeScreen(
                     contentDescription = "",
                     tint = MaterialTheme.colorScheme.onPrimary,
                 )
-            }
-        }
-    }
-}
-
-@Composable
-fun MusicItem(
-    onClick: () -> Unit = {},
-    @DrawableRes background: Int = R.drawable.home_music_1,
-    @StringRes title: Int = R.string.relax,
-) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .size(150.dp)
-            .clip(RoundedCornerShape(24.dp))
-    ) {
-        Box {
-            Image(
-                painter = painterResource(background),
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.White.copy(alpha = 0.20f))
-            )
-            {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(50.dp)
-                        .background(Color.Black.copy(alpha = 0.5f))
-                        .align(Alignment.BottomCenter)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .align(Alignment.BottomStart)
-                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(title),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = Color.White
-                        )
-                        Icon(
-                            imageVector = Icons.Default.PlayArrow,
-                            contentDescription = "",
-                            tint = Color.Black,
-                            modifier = Modifier
-                                .size(32.dp)
-                                .clip(CircleShape)
-                                .background(Color.White)
-                                .padding(4.dp)
-                        )
-                    }
-                }
-
             }
         }
     }
@@ -500,38 +462,10 @@ fun HomeScreenEmotionsRow(
     }
 }
 
-//@Preview(widthDp = 360, heightDp = 640, backgroundColor = 0xFFFFFFFF, showBackground = true)
-//@Composable
-//fun SectionPreview() {
-//    Column {
-//        EmotionRow(selectedEmotion = R.string.confused)
-//    HomeSection(title = R.string.ho2_share_thought, onClickSeeMore = {})
-//    { ForYouRow(musicList) }
-//    }
-//    HomeDiaryBlock(onClick = {})
-//}
-
 data class DrawableStringPair(
     @DrawableRes val drawable: Int,
     @StringRes val text: Int
 )
-
-private val emotionList = listOf(
-    R.drawable.diary_mood_angry to R.string.angry,
-    R.drawable.diary_mood_worried to R.string.worried,
-    R.drawable.diary_mood_confused to R.string.confused,
-    R.drawable.diary_mood_grateful to R.string.grateful,
-    R.drawable.diary_mood_inlove to R.string.in_love,
-).map { DrawableStringPair(it.first, it.second) }
-
-private val musicList = listOf(
-    R.drawable.home_music_1 to R.string.relax,
-    R.drawable.home_music_2 to R.string.focus,
-    R.drawable.home_music_3 to R.string.peace,
-    R.drawable.home_music_4 to R.string.sleep,
-    R.drawable.home_music_5 to R.string.mood,
-    R.drawable.home_music_6 to R.string.nostalgia,
-).map { DrawableStringPair(it.first, it.second) }
 
 private val bookList = listOf(
     R.drawable.home_book_1 to R.string.relax,
@@ -546,3 +480,42 @@ private val podcastList = listOf(
     R.drawable.home_podcast_3 to R.string.peace,
     R.drawable.home_podcast_4 to R.string.sleep,
 ).map { DrawableStringPair(it.first, it.second) }
+
+@Composable
+fun OutlinedTextByTime(
+    timePhase: Int,
+    text: String,
+    outlineColor: Color = if (timePhase == 1 || timePhase == 3) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
+    textColor: Color = if (timePhase == 1 || timePhase == 3) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+    strokeWidth: Int = 1,
+    modifier: Modifier = Modifier,
+    style: TextStyle = MaterialTheme.typography.headlineLarge,
+    fontWeight: FontWeight = FontWeight.Medium,
+) {
+    Box {
+        if (outlineColor == MaterialTheme.colorScheme.onPrimary){
+            for (dx in -strokeWidth..strokeWidth) {
+                for (dy in -strokeWidth..strokeWidth) {
+                    if (dx != 0 || dy != 0) {
+                        Text(
+                            text = text,
+                            style = style,
+                            color = outlineColor,
+                            modifier = modifier.offset(x = dx.dp, y = dy.dp),
+                            fontWeight = fontWeight
+                        )
+                    }
+                }
+            }
+        }
+
+        Text(
+            text = text,
+            modifier = modifier,
+            color = textColor,
+            style = style,
+            fontWeight = fontWeight,
+        )
+
+    }
+}
