@@ -73,19 +73,22 @@ fun CommunityScreen(
     val community = viewModel.getCommunityById(communityId)
     val communityAdmin = viewModel.getAdminByCommunity(community)
     val localPosts by viewModel.postsAsState()
+    val likedPosts by viewModel.likedPosts.collectAsState()
     val postText by viewModel.postText
     val isLoading by viewModel.isLoading.collectAsState()
     val error by viewModel.error.collectAsState()
     val communityIds by viewModel.userCommunityIds.collectAsState()
+    val communityMembers by viewModel.communityMembers.collectAsState()
 
     LaunchedEffect(communityId) {
         viewModel.initCommunityPosts(communityId)
+        viewModel.fetchCommunityMembers(communityId)
     }
 
     val tabTitles = listOf(stringResource(R.string.co5_activity), stringResource(R.string.co6_member))
     var selectedTab by remember { mutableIntStateOf(0) }
-    val isJoined: Boolean = communityId in communityIds
-    Log.d("log", "communityId: $communityId, communityIds: $communityIds, isJoined: $isJoined")
+    val isJoined = communityId in communityIds
+    Log.d("CommunityScreen", "communityId: $communityId, communityIds: $communityIds, isJoined: $isJoined")
     val coroutineScope = rememberCoroutineScope()
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
 
@@ -138,13 +141,13 @@ fun CommunityScreen(
                         Tab(
                             selected = selectedTab == index,
                             onClick = { selectedTab = index },
-                            text = { Text(title) },
+                            text = { Text(title) }
                         )
                     }
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-
             }
+
             when (selectedTab) {
                 0 -> item {
                     if (isJoined) {
@@ -152,9 +155,7 @@ fun CommunityScreen(
                             placeholder = R.string.co7_your_thought,
                             inputText = postText,
                             onTextChange = { viewModel.onPostTextChange(it) },
-                            onSent = {
-                                viewModel.submitPost(communityId, userId)
-                            },
+                            onSent = { viewModel.submitPost(communityId, userId) },
                             modifier = Modifier.padding(24.dp, 16.dp)
                         )
                     } else {
@@ -171,26 +172,36 @@ fun CommunityScreen(
                     }
                 }
             }
+
             when (selectedTab) {
-                0 -> items(localPosts) { post ->
+                0 -> items(localPosts.filter { it.communityId == communityId }) { post ->
                     val user = postAuthors[post.posterId] ?: return@items
                     var commentCount by remember { mutableStateOf(0) }
-                    var isLiked by remember { mutableStateOf(false) }
 
                     LaunchedEffect(post.id) {
                         commentCount = viewModel.getCommentCountForPost(post.id)
-                        isLiked = viewModel.isPostLiked(post.id, userId)
                     }
 
                     PostCard(
                         post = post,
-                        isLiked = isLiked,
+                        isLiked = likedPosts[post.id] ?: false,
                         onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = { viewModel.toggleLike(post.id, userId) },
+                        onToggleLike = {
+                            viewModel.toggleLike(post.id, userId)
+                        },
                         user = user,
                         commentCount = commentCount,
-                        onDeletePost = {},
-                        userId = userId
+                        onDeletePost = {
+                            if (post.posterId == userId) {
+                                viewModel.deletePost(post.id, userId)
+                            } else {
+                                viewModel.hidePost(post.id)
+                            }
+                        },
+                        userId = userId,
+                        onEditPost = { content, visibility ->
+                            viewModel.updatePost(post.id, userId, content, visibility)
+                        }
                     )
                 }
 
@@ -205,11 +216,9 @@ fun CommunityScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp)
-                                .clickable(onClick = {
-                                    navController.navigate(
-                                        SingleDoctorProfile.createRoute(communityAdmin.id)
-                                    )
-                                })
+                                .clickable {
+                                    navController.navigate(SingleDoctorProfile.createRoute(communityAdmin.id))
+                                }
                         ) {
                             AsyncImage(
                                 model = ImageRequest.Builder(LocalContext.current)
@@ -227,7 +236,6 @@ fun CommunityScreen(
                                         color = MaterialTheme.colorScheme.primary,
                                         shape = CircleShape
                                     )
-
                             )
                             Spacer(Modifier.width(8.dp))
                             Text(communityAdmin.fullName)
@@ -238,13 +246,19 @@ fun CommunityScreen(
                         stringResource(R.string.co6_member),
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
-                    UserList(
-                        users = remember { DumpDataProvider.listUser },
-                        navController = navController
-                    )
+                    if (communityMembers.isEmpty()) {
+                        Text(
+                            text = "No members found",
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    } else {
+                        UserList(
+                            users = communityMembers,
+                            navController = navController
+                        )
+                    }
                 }
             }
-
         }
     }
 }

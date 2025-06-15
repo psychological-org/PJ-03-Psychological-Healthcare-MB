@@ -5,6 +5,7 @@ import com.example.beaceful.core.network.community.CommunityResponse
 import com.example.beaceful.core.network.participant_community.ParticipantCommunityApiService
 import com.example.beaceful.core.network.participant_community.ParticipantCommunityRequest
 import com.example.beaceful.domain.model.Community
+import com.example.beaceful.domain.model.User
 import javax.inject.Inject
 
 class CommunityRepository @Inject constructor(
@@ -33,11 +34,11 @@ class CommunityRepository @Inject constructor(
         }
     }
 
-    suspend fun getCommunityMembers(communityId: Int): List<String> {
+    suspend fun getCommunityMembers(communityId: Int): List<User> {
         return try {
             participantCommunityApiService.getParticipantsByCommunityId(communityId)
                 .content
-                .map { it.userId }
+                .mapNotNull { it.user }
         } catch (e: Exception) {
             emptyList()
         }

@@ -13,10 +13,7 @@ interface CollectionApiService {
     suspend fun updateCollection(@Body request: CollectionRequest): Response<Unit>
 
     @GET("collections")
-    suspend fun getAllCollections(
-        @Query("page") page: Int,
-        @Query("limit") limit: Int
-    ): Response<PagedResponse<Collection>>
+    suspend fun getAllCollections(): Response<PagedResponse<Collection>>
 
     @GET("collections/exists/{collection-id}")
     suspend fun existsById(@Path("collection-id") collectionId: Int): Response<Boolean>

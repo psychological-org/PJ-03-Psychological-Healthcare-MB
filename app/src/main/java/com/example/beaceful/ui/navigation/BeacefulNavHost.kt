@@ -82,7 +82,7 @@ fun BeacefulNavHost(
             EditProfileScreen(navController = navController)
         }
         composable(route = EditAccountRoute.route) {
-            EditAccountScreen()
+            EditAccountScreen(navController = navController)
         }
         composable(
             route = SingleDoctorProfile.route,
@@ -269,7 +269,7 @@ fun BeacefulNavHost(
             LoginScreen(navController = navController)
         }
         composable(route = SignUpRoute.route) {
-            SignUpScreen()
+            SignUpScreen(navController = navController)
         }
         composable(route = ForgotRoute.route) {
             ForgotPasswordScreen()

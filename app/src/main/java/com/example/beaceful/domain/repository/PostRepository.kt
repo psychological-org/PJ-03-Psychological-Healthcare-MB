@@ -1,5 +1,6 @@
 package com.example.beaceful.domain.repository
 
+import android.util.Log
 import androidx.compose.runtime.mutableStateListOf
 import com.example.beaceful.core.network.comment.CommentApiService
 import com.example.beaceful.core.network.comment.CommentRequest
@@ -13,6 +14,7 @@ import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -28,6 +30,14 @@ class PostRepository @Inject constructor(
 
     suspend fun getAllPosts(page: Int = 0, limit: Int = 10): List<Post> {
         return postApiService.getAllPosts(page, limit).content.map { it.toPost() }
+    }
+
+    suspend fun updatePost(postId: Int, postRequest: PostRequest) {
+        postApiService.updatePost(postRequest)
+    }
+
+    suspend fun deletePost(postId: Int) {
+        postApiService.deletePost(postId)
     }
 
     suspend fun getPostById(postId: Int): Post? {
@@ -109,27 +119,34 @@ class PostRepository @Inject constructor(
         }
     }
 
-    suspend fun toggleLike(postId: Int, userId: String): Boolean {
+    suspend fun toggleLike(postId: Int, userId: String): Pair<Boolean, Int> {
         return try {
             val isLiked = postApiService.isPostLiked(postId, userId)
-            println("isPostLiked: $isLiked")
             if (isLiked) {
-                val likePosts = postApiService.getLikePostByPostId(postId, page = 0, limit = 10)
-                    .content
+                val likePosts = postApiService.getLikePostByPostId(postId).content
                     .filter { it.userId == userId }
-                println("likePosts: $likePosts")
                 if (likePosts.isNotEmpty()) {
                     postApiService.deleteLikePost(likePosts.first().id)
-                    println("Deleted likePost ID: ${likePosts.first().id}")
+                    Log.d("PostRepository", "Unliked post $postId")
                 }
             } else {
                 val request = LikePostRequest(postId = postId, userId = userId)
-                val likePostId = postApiService.createLikePost(request)
-                println("Created likePost ID: $likePostId")
+                postApiService.createLikePost(request)
+                Log.d("PostRepository", "Liked post $postId")
             }
-            !isLiked
+            val newReactCount = postApiService.getPostById(postId).reactCount
+            Log.d("PostRepository", "Post $postId new reactCount: $newReactCount")
+            Pair(!isLiked, newReactCount)
         } catch (e: Exception) {
-            println("toggleLike error: ${e.message}")
+            Log.e("PostRepository", "Error toggling like: ${e.message}", e)
+            Pair(false, -1)
+        }
+    }
+
+    suspend fun existsById(postId: Int): Boolean {
+        return try {
+            postApiService.existsById(postId)
+        } catch (e: Exception) {
             false
         }
     }
@@ -144,7 +161,7 @@ fun PostResponse.toPost(): Post {
         visibility = toPostVisibility(visibility),
         imageUrl = imageUrl,
         reactCount = reactCount,
-        createdAt = LocalDateTime.now()
+        createdAt = LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
     )
 }
 

@@ -33,13 +33,18 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,8 +54,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role.Companion.RadioButton
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
@@ -61,6 +68,8 @@ import com.example.beaceful.domain.model.Community
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
+import com.example.beaceful.ui.viewmodel.ForumViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun PostCard(
@@ -71,21 +80,32 @@ fun PostCard(
     onPostClick: () -> Unit,
     onToggleLike: () -> Unit,
     onDeletePost: () -> Unit,
-    onEditPost: () -> Unit = {},
+    onEditPost: (String, PostVisibility) -> Unit,
     modifier: Modifier = Modifier,
     community: Community? = null,
     userId: String,
     comments: List<Comment> = emptyList(),
-    commentText: String = "",
-    onCommentTextChange: (String) -> Unit = {},
     onLoadComments: () -> Unit = {},
-    onSubmitComment: () -> Unit = {}
+    viewModel: ForumViewModel = hiltViewModel()
 ) {
     var expanded by remember { mutableStateOf(false) }
     var expandedMenu by remember { mutableStateOf(false) }
-    var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     var selectedPostId by remember { mutableStateOf<Int?>(null) }
+    var editContent by remember { mutableStateOf(post.content) }
+    var editVisibility by remember { mutableStateOf(post.visibility) }
     val isEditable = post.posterId == userId // Kiểm tra quyền chỉnh sửa/xóa
+    val commentAuthors = remember { mutableStateMapOf<String, User?>() }
+    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(comments) {
+        comments.forEach { comment ->
+            coroutineScope.launch {
+                commentAuthors[comment.userId] = viewModel.getUserById(comment.userId)
+            }
+        }
+    }
 
     Card(
         modifier = modifier
@@ -154,21 +174,27 @@ fun PostCard(
                             if (isEditable) {
                                 DropdownMenuItem(
                                     text = { Text("Chỉnh sửa", color = MaterialTheme.colorScheme.primary) },
-                                    onClick = onEditPost
+                                    onClick = {
+                                        expandedMenu = false
+                                        showEditDialog = true
+                                        selectedPostId = post.id
+                                    }
                                 )
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
+                                        expandedMenu = false
+                                        showDeleteDialog = true
                                         selectedPostId = post.id
-                                        showDialog = true
                                     }
                                 )
                             } else {
                                 DropdownMenuItem(
                                     text = { Text(stringResource(R.string.hide), color = MaterialTheme.colorScheme.primary) },
                                     onClick = {
+                                        expandedMenu = false
+                                        showDeleteDialog = true
                                         selectedPostId = post.id
-                                        showDialog = true
                                     }
                                 )
                             }
@@ -249,7 +275,10 @@ fun PostCard(
                         style = MaterialTheme.typography.bodySmall
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    IconButton(onClick = onLoadComments) {
+                    IconButton(onClick = {
+                        onLoadComments()
+                        onPostClick()
+                    }) {
                         Icon(
                             Icons.Default.ChatBubbleOutline,
                             contentDescription = null,
@@ -271,46 +300,39 @@ fun PostCard(
                     }
                 }
                 // Bình luận
-//                Spacer(Modifier.height(8.dp))
-//                comments.forEach { comment ->
-//                    Row(
-//                        modifier = Modifier
-//                            .fillMaxWidth()
-//                            .padding(start = 16.dp, top = 4.dp),
-//                        verticalAlignment = Alignment.Top
-//                    ) {
-//                        Text(
-//                            text = "${comment.userId}: ${comment.content}",
-//                            style = MaterialTheme.typography.bodySmall,
-//                            color = MaterialTheme.colorScheme.primary
-//                        )
-//                    }
-//                }
-//                Spacer(Modifier.height(8.dp))
-//                TextField(
-//                    value = commentText,
-//                    onValueChange = onCommentTextChange,
-//                    label = { Text("Thêm bình luận") },
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .padding(horizontal = 16.dp)
-//                )
-//                Spacer(Modifier.height(8.dp))
-//                Button(
-//                    onClick = onSubmitComment,
-//                    modifier = Modifier
-//                        .align(Alignment.End)
-//                        .padding(end = 16.dp)
-//                ) {
-//                    Text("Gửi")
-//                }
+                Spacer(Modifier.height(8.dp))
+                comments.take(2).forEach { comment ->
+                    val commentAuthor = commentAuthors[comment.userId]
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 16.dp, top = 4.dp),
+                        verticalAlignment = Alignment.Top
+                    ) {
+                        Text(
+                            text = "${commentAuthor?.fullName ?: "Unknown"}: ${comment.content}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                if (comments.size > 2) {
+                    Text(
+                        text = "Xem thêm bình luận...",
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier
+                            .padding(start = 16.dp, top = 4.dp)
+                            .clickable { onPostClick() }
+                    )
+                }
             }
         }
     }
 
-    if (showDialog && selectedPostId != null) {
+    if (showDeleteDialog && selectedPostId != null) {
         AlertDialog(
-            onDismissRequest = { showDialog = false },
+            onDismissRequest = { showDeleteDialog = false },
             title = {
                 Text(
                     if (isEditable) stringResource(R.string.delete_title) else stringResource(R.string.hide_title),
@@ -326,9 +348,8 @@ fun PostCard(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        showDialog = false
+                        showDeleteDialog = false
                         selectedPostId = null
-                        expandedMenu = false
                         onDeletePost()
                     }
                 ) {
@@ -338,8 +359,73 @@ fun PostCard(
             dismissButton = {
                 TextButton(
                     onClick = {
-                        showDialog = false
+                        showDeleteDialog = false
                         selectedPostId = null
+                    }
+                ) {
+                    Text("Huỷ")
+                }
+            }
+        )
+    }
+
+    // Dialog chỉnh sửa
+    if (showEditDialog && selectedPostId != null) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Chỉnh sửa bài viết", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = editContent,
+                        onValueChange = { editContent = it },
+                        label = { Text("Nội dung") },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text("Chế độ hiển thị", style = MaterialTheme.typography.bodyMedium)
+                    PostVisibility.entries.forEach { visibility ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { editVisibility = visibility }
+                        ) {
+                            RadioButton(
+                                selected = editVisibility == visibility,
+                                onClick = { editVisibility = visibility }
+                            )
+                            Text(
+                                text = when (visibility) {
+                                    PostVisibility.PUBLIC -> "Công khai"
+                                    PostVisibility.PRIVATE -> "Riêng tư"
+                                    PostVisibility.FRIEND -> "Bạn bè"
+                                },
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showEditDialog = false
+                        selectedPostId = null
+                        onEditPost(editContent, editVisibility)
+                    },
+                    enabled = editContent.isNotBlank()
+                ) {
+                    Text("Lưu")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showEditDialog = false
+                        selectedPostId = null
+                        editContent = post.content
+                        editVisibility = post.visibility
                     }
                 ) {
                     Text("Huỷ")

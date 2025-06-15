@@ -36,9 +36,9 @@ class CollectionRepository @Inject constructor(
         }
     }
 
-    suspend fun getAllCollections(page: Int, limit: Int): Result<PagedResponse<Collection>> {
+    suspend fun getAllCollections(): Result<PagedResponse<Collection>> {
         return try {
-            val response = collectionApiService.getAllCollections(page, limit)
+            val response = collectionApiService.getAllCollections()
             if (response.isSuccessful) {
                 response.body()?.let { Result.success(it) } ?: Result.failure(Exception("No data returned"))
             } else {

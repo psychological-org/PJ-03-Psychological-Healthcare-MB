@@ -26,6 +26,12 @@ class CollectionViewModel @Inject constructor(
     private val _collections = MutableStateFlow<Result<PagedResponse<Collection>>?>(null)
     val collections: StateFlow<Result<PagedResponse<Collection>>?> = _collections.asStateFlow()
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _error = MutableStateFlow<String?>(null)
+    val error: StateFlow<String?> = _error.asStateFlow()
+
     private val _collection = MutableStateFlow<Result<Collection>?>(null)
     val collection: StateFlow<Result<Collection>?> = _collection.asStateFlow()
 
@@ -65,9 +71,9 @@ class CollectionViewModel @Inject constructor(
     private val _existsCollectionSeenResult = MutableStateFlow<Result<Boolean>?>(null)
     val existsCollectionSeenResult: StateFlow<Result<Boolean>?> = _existsCollectionSeenResult.asStateFlow()
 
-    fun getAllCollections(page: Int, limit: Int) {
+    fun getAllCollections() {
         viewModelScope.launch {
-            _collections.value = collectionRepository.getAllCollections(page, limit)
+            _collections.value = collectionRepository.getAllCollections()
         }
     }
 

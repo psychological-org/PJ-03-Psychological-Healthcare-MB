@@ -59,6 +59,7 @@ import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.Booking
 import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.viewmodel.ForumViewModel
 import com.example.beaceful.viewmodel.DoctorViewModel
 import kotlinx.coroutines.launch
 
@@ -68,6 +69,7 @@ fun SingleDoctorProfileScreen(
     doctorId: String,
     modifier: Modifier = Modifier,
     viewModel: DoctorViewModel = hiltViewModel(),
+    forumViewModel: ForumViewModel = hiltViewModel()
 ) {
     val userId = UserSession.getCurrentUserId()
     val tabTitles = listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
@@ -78,7 +80,6 @@ fun SingleDoctorProfileScreen(
     val error by viewModel.error.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
-    var commentText by remember { mutableStateOf("") }
 
     LaunchedEffect(doctorId) {
         viewModel.fetchDoctorPosts(doctorId)
@@ -208,17 +209,21 @@ fun SingleDoctorProfileScreen(
                         commentCount = commentCount,
                         isLiked = isLiked,
                         onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = { viewModel.toggleLike(post.id, userId) },
-                        onDeletePost = {},
-                        userId = userId,
+                        onToggleLike = { forumViewModel.toggleLike(post.id, userId) },
+                        onDeletePost = {
+                            if (post.posterId == userId) {
+                                forumViewModel.deletePost(post.id, userId)
+                            } else {
+                                forumViewModel.hidePost(post.id)
+                            }
+                        },
+                        onEditPost = { content, visibility ->
+                            forumViewModel.updatePost(post.id, userId, content, visibility)
+                        },
                         comments = comments.filter { it.postId == post.id },
-                        commentText = commentText,
-                        onCommentTextChange = { commentText = it },
                         onLoadComments = { viewModel.loadCommentsForPost(post.id) },
-                        onSubmitComment = {
-                            viewModel.createComment(post.id, userId, commentText)
-                            commentText = ""
-                        }
+                        userId = userId,
+                        viewModel = forumViewModel
                     )
                 }
                 1 -> item {
