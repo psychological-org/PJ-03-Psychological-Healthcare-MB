@@ -59,10 +59,12 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.Emotions
+import com.example.beaceful.ui.navigation.AppointmentDetails
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
@@ -193,6 +195,7 @@ fun AppointmentList(
     val success by viewModel.success.collectAsState()
     val error by viewModel.error.collectAsState()
     val context = LocalContext.current
+    val userRole = try { UserSession.getCurrentUserRole() } catch (e: IllegalStateException) { "" }
 
     LaunchedEffect(success) {
         success?.let { successMessage ->
@@ -217,7 +220,8 @@ fun AppointmentList(
             AppointmentCard(
                 appointment,
                 onAppointmentClick = {
-                    navController.navigate("appointment_details/${appointment.id}")
+                    val isDoctorView = userRole == "doctor"
+                    navController.navigate(AppointmentDetails.createRoute(appointment.id, isDoctorView))
                 },
             )
         }

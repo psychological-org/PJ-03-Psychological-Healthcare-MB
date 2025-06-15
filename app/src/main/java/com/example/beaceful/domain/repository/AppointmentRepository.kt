@@ -174,8 +174,21 @@ class AppointmentRepository @Inject constructor(
 
     suspend fun getAppointmentById(appointmentId: Int): Appointment? = withContext(Dispatchers.IO) {
         try {
-            appointmentApiService.getAppointmentById(appointmentId)
+            val response = appointmentApiService.getAppointmentById(appointmentId)
+            Log.d("AppointmentRepository", "Raw appointment $appointmentId: $response")
+            Appointment.fromApiResponse(
+                id = response.id ?: 0,
+                status = response.status,
+                appointmentDate = response.appointmentDate,
+                appointmentTime = response.appointmentTime,
+                patientId = response.patientId,
+                doctorId = response.doctorId,
+                note = response.note,
+                rating = response.rating,
+                review = response.review
+            )
         } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error fetching appointment $appointmentId: ${e.message}", e)
             null
         }
     }
@@ -201,7 +214,37 @@ class AppointmentRepository @Inject constructor(
             emptyList()
         }
     }
-    fun getAllAppointmentsOfPatient(patientId: String) : List<Appointment> = DumpDataProvider.appointments.filter { it.patientId == patientId }
+
+    suspend fun getAllAppointmentsOfPatient(patientId: String): List<Appointment> = withContext(Dispatchers.IO) {
+        try {
+            val response = appointmentApiService.getAppointments(page = 0, limit = 100)
+            Log.d("AppointmentRepository", "Raw appointments: ${response.content}")
+            val filteredAppointments = response.content
+                .filter {
+                    it.patientId == patientId &&
+                            it.appointmentTime != null &&
+                            (it.status == "pending" || it.status == "confirmed")
+                }
+                .map { appt ->
+                    Appointment.fromApiResponse(
+                        id = appt.id ?: 0,
+                        status = appt.status,
+                        appointmentDate = appt.appointmentDate,
+                        appointmentTime = appt.appointmentTime,
+                        patientId = appt.patientId,
+                        doctorId = appt.doctorId,
+                        note = appt.note,
+                        rating = appt.rating,
+                        review = appt.review
+                    )
+                }
+            Log.d("AppointmentRepository", "Filtered appointments for patient $patientId: $filteredAppointments")
+            filteredAppointments
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error fetching appointments for patient: ${e.message}", e)
+            emptyList()
+        }
+    }
 
     suspend fun getAllPatientsOfDoctorByStatus(doctorId: String, status: AppointmentStatus): List<User> = withContext(Dispatchers.IO) {
         try {

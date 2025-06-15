@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.customer
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,8 +22,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.components.cards.CustomerList
+import com.example.beaceful.ui.screens.authen.LoginScreen
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
@@ -36,7 +39,13 @@ fun CustomerScreen(
 
     // Gọi API để lấy danh sách bệnh nhân
     LaunchedEffect(Unit) {
-        viewModel.getPatients("0e370c47-9a29-4a8e-8f17-4e473d68cadd")
+        try {
+            val userId = UserSession.getCurrentUserId()
+            viewModel.getPatients(userId)
+            viewModel.getAppointments(userId)
+        } catch (e: IllegalStateException) {
+            navController.navigate("login")
+        }
     }
 
     Column(modifier = Modifier.fillMaxHeight().padding(top = 16.dp)) {
