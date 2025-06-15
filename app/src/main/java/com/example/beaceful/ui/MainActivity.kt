@@ -1,4 +1,4 @@
-package com.example.beaceful.ui
+ package com.example.beaceful.ui
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,8 +21,7 @@ import com.example.beaceful.ui.navigation.AppointmentDetails
 import com.example.beaceful.ui.navigation.AppointmentRoute
 import com.example.beaceful.ui.navigation.BeacefulNavHost
 import com.example.beaceful.ui.navigation.BeacefulRoutes
-import com.example.beaceful.ui.navigation.ChatDetailRoute
-import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
+import com.example.beaceful.ui.navigation.BeacefulBottomNav
 import com.example.beaceful.ui.navigation.Booking
 import com.example.beaceful.ui.navigation.CustomerRoute
 import com.example.beaceful.ui.navigation.DiaryCalendar
@@ -93,7 +92,7 @@ fun BeacefulApp() {
             bottomBar = {
                 if (showBottomBar) {
                     BottomNavRow(
-                        allScreens = BeacefulBottomNavPatient,
+                        allScreens = BeacefulBottomNav,
                         onTabSelected = { newScreen ->
                             navController.navigateSingleTopTo(newScreen.route)
                         },

@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.media.MediaRecorder
 import android.net.Uri
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,6 +39,7 @@ import com.example.beaceful.ui.components.AnimatedCircle
 import com.example.beaceful.ui.components.preprocessProportions
 import com.example.beaceful.ui.navigation.WriteDiaryExpand
 import com.example.beaceful.ui.viewmodel.DiaryViewModel
+import com.example.beaceful.ui.viewmodel.RecommendationViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -50,34 +53,34 @@ data class PieChartData(
     val color: Color,
 )
 
-val emotions: List<PieChartData> = listOf(
-    PieChartData(
-        label = "anger",
-        score = (0.5293946266174316).toFloat(),
-        color = Emotions.ANGRY.textColor
-    ),
-    PieChartData(
-        label = "sadness",
-        score = (0.3829881548881531).toFloat(),
-        color = Emotions.SAD.textColor
-    ),
-    PieChartData(
-        label = "joy",
-        score = (0.07129291445016861).toFloat(),
-        color = Emotions.HAPPY.textColor
-    ),
-    PieChartData(
-        label = "fear",
-        score = (0.011929457075893879).toFloat(),
-        color = Emotions.CONFUSE.textColor
-    ),
-    PieChartData(
-        label = "love",
-        score = (0.0034298289101570845).toFloat(),
-        color = Emotions.INLOVE.textColor
-    )
-)
-val negativity_score = 0.9252
+//val emotions: List<PieChartData> = listOf(
+//    PieChartData(
+//        label = "anger",
+//        score = (0.5293946266174316).toFloat(),
+//        color = Emotions.ANGRY.textColor
+//    ),
+//    PieChartData(
+//        label = "sadness",
+//        score = (0.3829881548881531).toFloat(),
+//        color = Emotions.SAD.textColor
+//    ),
+//    PieChartData(
+//        label = "joy",
+//        score = (0.07129291445016861).toFloat(),
+//        color = Emotions.HAPPY.textColor
+//    ),
+//    PieChartData(
+//        label = "fear",
+//        score = (0.011929457075893879).toFloat(),
+//        color = Emotions.CONFUSE.textColor
+//    ),
+//    PieChartData(
+//        label = "love",
+//        score = (0.0034298289101570845).toFloat(),
+//        color = Emotions.INLOVE.textColor
+//    )
+//)
+//val negativity_score = 0.9252
 
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
@@ -85,7 +88,8 @@ fun DiaryFullScreen(
     diaryId: Int,
     modifier: Modifier = Modifier,
     navController: NavHostController,
-    viewModel: DiaryViewModel = hiltViewModel()
+    viewModel: DiaryViewModel = hiltViewModel(),
+    recommendationViewModel: RecommendationViewModel = hiltViewModel()
 ) {
     val diary = viewModel.getDiary(diaryId)
     if (diary == null) {
@@ -267,8 +271,57 @@ fun DiaryFullScreen(
         )
     }
 
-    LaunchedEffect(latestDiaryText) {
-        diaryText = latestDiaryText
+//    LaunchedEffect(latestDiaryText) {
+//        diaryText = latestDiaryText
+//    }
+
+    // Log và gọi API khi diaryText thay đổi
+    LaunchedEffect(diaryText) {
+        Log.d("DiaryFullScreen", "Diary content: $diaryText")
+        if (diaryText.isNotBlank()) {
+            recommendationViewModel.getRecommendation(diaryText)
+        }
+    }
+
+    var emotionsState by remember {
+        mutableStateOf<List<PieChartData>>(emptyList())
+    }
+    var recommendationText by remember { mutableStateOf("") }
+
+    // Quan sát LiveData từ RecommendationViewModel
+    val recommendation by recommendationViewModel.recommendation.observeAsState()
+    LaunchedEffect(recommendation) {
+        recommendation?.let { result ->
+            if (result.isSuccess) {
+                val answerResponse = result.getOrNull()
+                val answer = answerResponse?.answer
+                Log.d("DiaryFullScreen", "Recommendation success: $answer")
+                // Cập nhật recommendation text
+                recommendationText = answer ?: "Không có khuyến nghị"
+
+                // Lấy dữ liệu emotions từ AnswerResponse (giả định AnswerResponse chứa emotions)
+                // Cần cập nhật model AnswerResponse để chứa emotions và negativity_score
+                emotionsState = (answerResponse?.emotions ?: emptyList()).map { emotion ->
+                    PieChartData(
+                        label = emotion.label,
+                        score = emotion.score.toFloat(),
+                        color = when (emotion.label) {
+                            "joy" -> Emotions.HAPPY.textColor
+                            "sadness" -> Emotions.SAD.textColor
+                            "anger" -> Emotions.ANGRY.textColor
+                            "love" -> Emotions.INLOVE.textColor
+                            "fear" -> Emotions.CONFUSE.textColor
+                            "surprise" -> Emotions.CONFUSE.textColor // Gán tạm surprise
+                            else -> Color.Gray
+                        }
+                    )
+                }
+            } else if (result.isFailure) {
+                Log.e("DiaryFullScreen", "Recommendation error: ${result.exceptionOrNull()?.message}")
+                recommendationText = "Lỗi khi lấy khuyến nghị: ${result.exceptionOrNull()?.message}"
+                emotionsState = emptyList()
+            }
+        }
     }
 
     Column(
@@ -476,7 +529,23 @@ fun DiaryFullScreen(
                 )
                 Spacer(Modifier.height(4.dp))
                 AnimatedCircle(
-                    proportions = preprocessProportions(emotions),
+                    proportions = preprocessProportions(emotionsState),
+                )
+            }
+            item {
+                // Hiển thị recommendation text
+                Text(
+                    text = recommendationText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 8.dp)
+                        .background(
+                            MaterialTheme.colorScheme.secondary,
+                            RoundedCornerShape(8.dp)
+                        )
+                        .padding(12.dp)
                 )
             }
             item {
