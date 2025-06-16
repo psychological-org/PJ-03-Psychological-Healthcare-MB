@@ -12,6 +12,7 @@ import com.example.beaceful.core.network.collection.CollectionSeenApiService
 import com.example.beaceful.core.network.collection.CollectionTypeDeserializer
 import com.example.beaceful.core.network.comment.CommentApiService
 import com.example.beaceful.core.network.community.CommunityApiService
+import com.example.beaceful.core.network.fcm_token.FcmTokenApiService
 import com.example.beaceful.core.network.participant_community.ParticipantCommunityApiService
 import com.example.beaceful.core.network.post.PostApiService
 import com.example.beaceful.core.network.recommended.RecommendationApiService
@@ -254,5 +255,11 @@ object NetworkModule {
     @Singleton
     fun provideRecommendationApiService(retrofit: Retrofit): RecommendationApiService {
         return retrofit.create(RecommendationApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFcmTokenApiService(retrofit: Retrofit): FcmTokenApiService {
+        return retrofit.create(FcmTokenApiService::class.java)
     }
 }

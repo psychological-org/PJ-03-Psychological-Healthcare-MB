@@ -9,22 +9,30 @@ import androidx.lifecycle.viewModelScope
 import com.example.beaceful.core.network.auth.AuthDataStore
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.BuildConfig
+import com.example.beaceful.core.network.fcm_token.FcmTokenApiService
+import com.example.beaceful.core.network.fcm_token.FcmTokenRequest
 import com.example.beaceful.core.network.user.UserRequest
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.firebase.FirebaseTest
 import com.example.beaceful.domain.repository.AuthRepository
 import com.example.beaceful.domain.repository.UserRepository
+import com.google.firebase.messaging.FirebaseMessaging
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import okhttp3.ResponseBody
 import javax.inject.Inject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val userRepository: UserRepository,
+    private val fcmTokenApiService: FcmTokenApiService,
     @ApplicationContext private val context: Context
 ) : ViewModel() {
 
@@ -56,6 +64,39 @@ class AuthViewModel @Inject constructor(
         return role
     }
 
+    private fun sendFcmToken(userId: String) {
+        Log.d(TAG, "Fetching FCM token for userId: $userId")
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d(TAG, "Retrieved FCM token: $token")
+                val deviceId = android.provider.Settings.Secure.getString(
+                    context.contentResolver,
+                    android.provider.Settings.Secure.ANDROID_ID
+                )
+                Log.d(TAG, "Device ID: $deviceId")
+                val request = FcmTokenRequest(userId, token, deviceId, "ANDROID")
+
+                fcmTokenApiService.saveFcmToken(request).enqueue(object : Callback<ResponseBody> {
+                    override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                        if (response.isSuccessful) {
+                            val tokenId = response.body()?.string() ?: "Unknown"
+                            Log.d(TAG, "FCM token saved successfully: tokenId=$tokenId, token=$token")
+                        } else {
+                            Log.e(TAG, "Failed to save FCM token: code=${response.code()}, message=${response.message()}, errorBody=${response.errorBody()?.string()}")
+                        }
+                    }
+
+                    override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                        Log.e(TAG, "Failed to save FCM token: ${t.message}", t)
+                    }
+                })
+            } else {
+                Log.e(TAG, "Failed to get FCM token: ${task.exception?.message}", task.exception)
+            }
+        }
+    }
+
     fun login(username: String, password: String) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -80,6 +121,7 @@ class AuthViewModel @Inject constructor(
                 UserSession.setCurrentUserRole(role)
                 Log.d("AuthViewModel", "UserSession role set to: ${UserSession.getCurrentUserRole()}")
                 AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
+                sendFcmToken(user.id)
                 _success.value = "Đăng nhập thành công"
                 FirebaseTest.checkAuthStatus()
             } catch (e: Exception) {
@@ -129,6 +171,7 @@ class AuthViewModel @Inject constructor(
                 UserSession.setCurrentUserId(user.id) // Lưu mongoId
                 UserSession.setCurrentUserRole(mapRoleIdToRole(user.roleId))
                 AuthDataStore.saveTokens(context, loginResponse.token, loginResponse.refreshToken)
+                sendFcmToken(user.id)
                 _success.value = "Đăng ký thành công"
             } catch (e: Exception) {
                 _error.value = "Đăng ký thất bại: ${e.message}"

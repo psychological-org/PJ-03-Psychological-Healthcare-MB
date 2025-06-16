@@ -4,6 +4,9 @@ import com.google.gson.annotations.SerializedName
 import androidx.compose.ui.graphics.vector.ImageVector
 import java.time.*
 import java.time.format.DateTimeFormatter
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 
 data class User(
     val id: String,
@@ -46,10 +49,12 @@ data class Message(
 )
 
 data class Notification(
-    val id: Int,
-    val content: String,
-    val link: String? = null,
-    val type: NotificationType = NotificationType.SYSTEM
+    val id: Long,
+    val title: String,
+    val body: String,
+    val timestamp: Long,
+    val appointmentId: Int?,
+    val userRole: String
 )
 
 data class UserNotification(
@@ -204,4 +209,15 @@ data class ProfileSelection(
     val title: String,
     val icon: ImageVector,
     val onClick: () -> Unit
+)
+
+
+@Entity(tableName = "notifications")
+data class NotificationEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val title: String,
+    val body: String,
+    val timestamp: Long,
+    val appointmentId: Int?,
+    val userRole: String
 )

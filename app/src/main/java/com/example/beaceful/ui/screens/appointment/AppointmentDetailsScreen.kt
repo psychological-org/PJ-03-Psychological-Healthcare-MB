@@ -201,7 +201,7 @@ fun AppointmentDetailsScreen(
                                     onClick = {
                                         viewModel.updateAppointmentStatus(
                                             appointmentId = appointmentId,
-                                            status = appointment!!.status,
+                                            status = AppointmentStatus.COMPLETED,
                                             note = doctorNote
                                         )
                                         navController.popBackStack()

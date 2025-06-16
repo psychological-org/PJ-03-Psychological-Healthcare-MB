@@ -35,6 +35,7 @@ import com.example.beaceful.ui.screens.authen.LoginScreen
 import com.example.beaceful.ui.screens.authen.SignUpScreen
 import com.example.beaceful.ui.screens.authen.VerifyScreen
 import com.example.beaceful.ui.screens.chat.ChatScreen
+import com.example.beaceful.ui.screens.notification.NotificationScreen
 import com.example.beaceful.ui.screens.profile.EditAccountScreen
 import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
@@ -299,6 +300,9 @@ fun BeacefulNavHost(
         }
         composable(route = VerifyRoute.route) {
             VerifyScreen()
+        }
+        composable(route = NotificationRoute.route) {
+            NotificationScreen(navController = navController)
         }
     }
 }
