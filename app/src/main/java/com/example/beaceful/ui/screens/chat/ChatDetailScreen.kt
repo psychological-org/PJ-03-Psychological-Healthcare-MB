@@ -71,6 +71,7 @@ fun ChatDetailScreen(
     var messageText by remember { mutableStateOf("") }
     var isSending by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val otherUserAvatarUrl by viewModel.otherUserAvatarUrl
 
     // Quyền đọc ảnh
     val readImagePermissionState = rememberPermissionState(Manifest.permission.READ_MEDIA_IMAGES)
@@ -176,7 +177,7 @@ fun ChatDetailScreen(
                     title = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             AsyncImage(
-                                model = "https://via.placeholder.com/30",
+                                model = otherUserAvatarUrl ?: "https://via.placeholder.com/30",
                                 contentDescription = "Avatar",
                                 modifier = Modifier
                                     .size(50.dp)
@@ -332,7 +333,7 @@ fun ChatDetailScreen(
             ) {
                 item { Spacer(Modifier.height(60.dp)) }
                 items(messages.reversed()) { message ->
-                    MessageItem(message, viewModel.currentUserId ?: "")
+                    MessageItem(message, viewModel.currentUserId ?: "", viewModel)
                 }
                 item { Spacer(Modifier.height(90.dp)) }
             }
@@ -341,10 +342,15 @@ fun ChatDetailScreen(
 }
 
 @Composable
-fun MessageItem(message: Message, currentUserId: String) {
+fun MessageItem(message: Message, currentUserId: String, viewModel: ChatDetailViewModel) {
     val isSentByCurrentUser = message.senderId == currentUserId
     var isPlaying by remember { mutableStateOf(false) }
     val mediaPlayer = remember { MediaPlayer() }
+    val avatarUrl = if (isSentByCurrentUser) {
+        viewModel.currentUserAvatarUrl.value // Avatar của người dùng hiện tại
+    } else {
+        viewModel.otherUserAvatarUrl.value // Avatar của chat partner
+    }
 
     Row(
         modifier = Modifier
@@ -354,7 +360,7 @@ fun MessageItem(message: Message, currentUserId: String) {
     ) {
         if (!isSentByCurrentUser) {
             AsyncImage(
-                model = "https://via.placeholder.com/24",
+                model = avatarUrl ?: "https://via.placeholder.com/24",
                 contentDescription = "Avatar",
                 modifier = Modifier
                     .size(24.dp)
@@ -455,7 +461,7 @@ fun MessageItem(message: Message, currentUserId: String) {
         if (isSentByCurrentUser) {
             Spacer(modifier = Modifier.width(8.dp))
             AsyncImage(
-                model = "https://via.placeholder.com/24",
+                model = avatarUrl ?: "https://via.placeholder.com/24",
                 contentDescription = "Avatar",
                 modifier = Modifier
                     .size(24.dp)

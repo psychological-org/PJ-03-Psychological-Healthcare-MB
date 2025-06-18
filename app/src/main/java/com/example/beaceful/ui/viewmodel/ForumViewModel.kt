@@ -85,11 +85,39 @@ class ForumViewModel @Inject constructor(
         }
     }
 
+//    fun fetchPosts(page: Int = 0, limit: Int = 100) {
+//        viewModelScope.launch {
+//            try {
+//                _isLoading.value = true
+//                val posts = postRepository.getAllPosts(page, limit)
+//                    .filter { postRepository.existsById(it.id) }
+//                _allPosts.value = posts
+//                    .filterNot { it.id in _hiddenPostIds }
+//                    .sortedByDescending { it.createdAt }
+//                val userId = UserSession.getCurrentUserId()
+//                val likedMap = posts.associate { post ->
+//                    post.id to postRepository.isPostLiked(post.id, userId)
+//                }
+//                _likedPosts.value = likedMap
+//            } catch (e: Exception) {
+//                _error.value = "Lỗi khi tải bài viết: ${e.message}"
+//            } finally {
+//                _isLoading.value = false
+//            }
+//        }
+//    }
+
     fun fetchPosts(page: Int = 0, limit: Int = 100) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
-                val posts = postRepository.getAllPosts(page, limit)
+                val communityIds = _userCommunityIds.value
+                if (communityIds.isEmpty()) {
+                    _allPosts.value = emptyList()
+                    _likedPosts.value = emptyMap()
+                    return@launch
+                }
+                val posts = postRepository.getPostsByCommunityIds(communityIds, page, limit)
                     .filter { postRepository.existsById(it.id) }
                 _allPosts.value = posts
                     .filterNot { it.id in _hiddenPostIds }
@@ -218,15 +246,10 @@ class ForumViewModel @Inject constructor(
                     communityId = communityId,
                     userId = userId
                 )
-                val postId = postRepository.createPost(postRequest)
-                val newPost = postRepository.getPostById(postId)
-                if (newPost != null) {
-                    _allPosts.value = (_allPosts.value + newPost)
-                        .filterNot { it.id in _hiddenPostIds }
-                        .sortedByDescending { it.createdAt }
-                    _likedPosts.value = _likedPosts.value + (newPost.id to false)
-                    Log.d("ForumViewModel", "Added new post $postId to _allPosts")
-                }
+                val newPost = postRepository.createPost(postRequest)
+                _allPosts.value = listOf(newPost) + _allPosts.value
+                _likedPosts.value = _likedPosts.value + (newPost.id to false)
+                Log.d("ForumViewModel", "Added new post ${newPost.id} to _allPosts")
                 _postText.value = ""
                 _error.value = null
             } catch (e: Exception) {

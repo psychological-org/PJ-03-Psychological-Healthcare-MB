@@ -174,35 +174,37 @@ fun CommunityScreen(
             }
 
             when (selectedTab) {
-                0 -> items(localPosts.filter { it.communityId == communityId }) { post ->
-                    val user = postAuthors[post.posterId] ?: return@items
-                    var commentCount by remember { mutableStateOf(0) }
+                0 -> if (isJoined) {
+                    items(localPosts.filter { it.communityId == communityId }) { post ->
+                        val user = postAuthors[post.posterId] ?: return@items
+                        var commentCount by remember { mutableStateOf(0) }
 
-                    LaunchedEffect(post.id) {
-                        commentCount = viewModel.getCommentCountForPost(post.id)
-                    }
-
-                    PostCard(
-                        post = post,
-                        isLiked = likedPosts[post.id] ?: false,
-                        onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                        onToggleLike = {
-                            viewModel.toggleLike(post.id, userId)
-                        },
-                        user = user,
-                        commentCount = commentCount,
-                        onDeletePost = {
-                            if (post.posterId == userId) {
-                                viewModel.deletePost(post.id, userId)
-                            } else {
-                                viewModel.hidePost(post.id)
-                            }
-                        },
-                        userId = userId,
-                        onEditPost = { content, visibility ->
-                            viewModel.updatePost(post.id, userId, content, visibility)
+                        LaunchedEffect(post.id) {
+                            commentCount = viewModel.getCommentCountForPost(post.id)
                         }
-                    )
+
+                        PostCard(
+                            post = post,
+                            isLiked = likedPosts[post.id] ?: false,
+                            onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
+                            onToggleLike = {
+                                viewModel.toggleLike(post.id, userId)
+                            },
+                            user = user,
+                            commentCount = commentCount,
+                            onDeletePost = {
+                                if (post.posterId == userId) {
+                                    viewModel.deletePost(post.id, userId)
+                                } else {
+                                    viewModel.hidePost(post.id)
+                                }
+                            },
+                            userId = userId,
+                            onEditPost = { content, visibility ->
+                                viewModel.updatePost(post.id, userId, content, visibility)
+                            }
+                        )
+                    }
                 }
 
                 1 -> item {

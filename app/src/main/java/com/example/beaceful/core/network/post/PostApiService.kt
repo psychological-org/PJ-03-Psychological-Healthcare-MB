@@ -48,6 +48,13 @@ interface PostApiService {
         @Query("limit") limit: Int = 10
     ): PagedResponse<PostResponse>
 
+    @GET("posts/by-community-ids")
+    suspend fun getPostsByCommunityIds(
+        @Query("communityIds") communityIds: List<Int>,
+        @Query("page") page: Int = 0,
+        @Query("limit") limit: Int = 10
+    ): PagedResponse<PostResponse>
+
     @GET("posts/like-post/{postId}/user/{userId}")
     suspend fun isPostLiked(
         @Path("postId") postId: Int,

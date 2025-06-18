@@ -14,6 +14,8 @@ import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.PostVisibility
 import com.example.beaceful.domain.model.User
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -48,8 +50,14 @@ class PostRepository @Inject constructor(
         }
     }
 
-    suspend fun createPost(postRequest: PostRequest): Int {
-        return postApiService.createPost(postRequest)
+    suspend fun createPost(postRequest: PostRequest): Post {
+        try {
+            val postId = postApiService.createPost(postRequest)
+            return getPostById(postId) ?: throw RuntimeException("Failed to fetch post after creation")
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating post: ${e.message}", e)
+            throw e
+        }
     }
 
     suspend fun getPostsByCommunity(communityId: Int, page: Int = 0, limit: Int = 10): List<Post> {
@@ -99,16 +107,53 @@ class PostRepository @Inject constructor(
             userId = userId,
             postId = postId
         )
-        val commentId = commentApiService.createComment(request)
-        return Comment(
-            id = commentId,
-            content = content,
-            imageUrl = null,
-            userId = userId,
-            postId = postId,
-            reactCount = 0,
-            createdAt = LocalDateTime.now()
-        )
+        try {
+            val commentId = commentApiService.createComment(request)
+            val commentResponse = commentApiService.findById(commentId)
+            return commentResponse.toComment()
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error creating comment: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun getPostsByCommunityIds(communityIds: List<Int>, page: Int = 0, limit: Int = 10): List<Post> {
+        return postApiService.getPostsByCommunityIds(communityIds, page, limit).content.map { it.toPost() }
+    }
+
+    suspend fun updateComment(commentId: Int, content: String) {
+        try {
+            val comment = commentApiService.findById(commentId).toComment()
+            val request = CommentRequest(
+                id = commentId,
+                content = content,
+                imageUrl = comment.imageUrl,
+                userId = comment.userId,
+                postId = comment.postId,
+                reactCount = comment.reactCount
+            )
+            commentApiService.updateComment(request)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error updating comment: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun deleteComment(commentId: Int) {
+        try {
+            commentApiService.deleteComment(commentId)
+        } catch (e: Exception) {
+            Log.e("PostRepository", "Error deleting comment: ${e.message}", e)
+            throw e
+        }
+    }
+
+    suspend fun toggleLikeComment(commentId: Int, userId: String) {
+        commentApiService.toggleLikeComment(commentId, userId)
+    }
+
+    suspend fun isCommentLiked(commentId: Int, userId: String): Boolean {
+        return commentApiService.isCommentLiked(commentId, userId)
     }
 
     suspend fun isPostLiked(postId: Int, userId: String): Boolean {
@@ -153,6 +198,23 @@ class PostRepository @Inject constructor(
 }
 
 fun PostResponse.toPost(): Post {
+    // [SỬA] Parse createdAt từ UTC sang Asia/Ho_Chi_Minh
+    val parsedDateTime = try {
+        OffsetDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            .atZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+            .toLocalDateTime()
+    } catch (e: Exception) {
+        // Fallback cho định dạng không có Z (ví dụ: 2025-06-18T10:31:00)
+        try {
+            LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                .atZone(ZoneId.of("UTC"))
+                .withZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+                .toLocalDateTime()
+        } catch (e2: Exception) {
+            Log.e("PostResponse", "Error parsing createdAt: $createdAt", e2)
+            LocalDateTime.now()
+        }
+    }
     return Post(
         id = id,
         content = content,
@@ -161,7 +223,7 @@ fun PostResponse.toPost(): Post {
         visibility = toPostVisibility(visibility),
         imageUrl = imageUrl,
         reactCount = reactCount,
-        createdAt = LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+        createdAt = parsedDateTime
     )
 }
 
