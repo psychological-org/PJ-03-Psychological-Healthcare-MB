@@ -104,7 +104,7 @@ fun CommunityScreen(
         LazyColumn {
             item {
                 Column(
-                    modifier = Modifier.padding(24.dp, 6.dp),
+                    modifier = Modifier.fillMaxWidth().padding(24.dp, 16.dp),
                     verticalArrangement = Arrangement.spacedBy(6.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {

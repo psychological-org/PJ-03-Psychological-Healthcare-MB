@@ -251,7 +251,9 @@ fun ProfileScreen(
                     CustomInputField(
                         placeholder = R.string.co7_your_thought,
                         inputText = "",
-                        onTextChange = { },
+                        onTextChange = {
+                            //TODO
+                            },
                         onSent = {
 
                         },

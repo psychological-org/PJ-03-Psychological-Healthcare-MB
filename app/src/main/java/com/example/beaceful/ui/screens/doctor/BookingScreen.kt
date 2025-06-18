@@ -43,6 +43,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -90,216 +91,212 @@ fun BookingScreen(
         }
     }
 
-    Box {
-        Column {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.Default.ChevronLeft,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-            Spacer(Modifier.height(6.dp))
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Card(
-                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                    modifier = Modifier.fillMaxSize(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+    Column (        modifier = modifier
+        .fillMaxSize()
+        .padding(top = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        IconButton(onClick = { navController.popBackStack() }) {
+            Icon(
+                imageVector = Icons.Default.ChevronLeft,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
+                .padding(top = 16.dp)
+                .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                .background(MaterialTheme.colorScheme.primary),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(16.dp)
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(
-                                text = "${
-                                    currentMonth.month.name.lowercase()
-                                        .replaceFirstChar { it.uppercase() }
-                                } ${currentMonth.year}",
-                                modifier = Modifier
-                                    .background(
-                                        MaterialTheme.colorScheme.onPrimary,
-                                        RoundedCornerShape(24.dp)
-                                    )
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Row {
-                                IconButton(onClick = { viewModel.goToPreviousMonth() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowBack,
-                                        contentDescription = "Previous"
-                                    )
-                                }
-                                IconButton(onClick = { viewModel.goToNextMonth() }) {
-                                    Icon(
-                                        Icons.AutoMirrored.Filled.ArrowForward,
-                                        contentDescription = "Next"
-                                    )
-                                }
-                            }
-                        }
-
-                        Spacer(Modifier.height(16.dp))
-                        AnimatedContent(
-                            targetState = currentMonth,
-                            transitionSpec = {
-                                if (targetState > initialState) {
-                                    (slideInHorizontally { it } + fadeIn()).togetherWith(
-                                        slideOutHorizontally { -it } + fadeOut())
-                                } else {
-                                    (slideInHorizontally { -it } + fadeIn()).togetherWith(
-                                        slideOutHorizontally { it } + fadeOut())
-                                }
-                            }
-                        ) { currentMonth ->
-                            CustomCalendar(
-                                currentMonth = currentMonth,
-                                highlightDates = { date -> date.toLocalDate() == selectedDate },
-                                getColorsForDate = { date ->
-                                    if (date.toLocalDate() == selectedDate) {
-                                        listOf(Color(0xFFB089CA))
-                                    } else {
-                                        emptyList()
-                                    }
-                                },
-                                onClickDate = { date ->
-                                    selectedDate = date.toLocalDate()
-                                    selectedAppointmentTime = null
-                                },
-                                isBookingMode = true
-                            )
-                        }
-
-                        Spacer(Modifier.height(24.dp))
-
-                        Text(
-                            text = stringResource(R.string.bo2),
-                            modifier = Modifier
-                                .background(
-                                    MaterialTheme.colorScheme.onPrimary,
-                                    RoundedCornerShape(24.dp)
-                                )
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(Modifier.height(12.dp))
-                        Box(
-                            modifier = Modifier.background(
-                                MaterialTheme.colorScheme.tertiary,
+                    Text(
+                        text = "${
+                            currentMonth.month.name.lowercase()
+                                .replaceFirstChar { it.uppercase() }
+                        } ${currentMonth.year}",
+                        modifier = Modifier
+                            .background(
+                                MaterialTheme.colorScheme.onPrimary,
                                 RoundedCornerShape(24.dp)
                             )
-                        ) {
-                            AnimatedContent(
-                                targetState = selectedDate,
-                                transitionSpec = {
-                                    if (targetState > initialState) {
-                                        (slideInHorizontally { it } + fadeIn()).togetherWith(
-                                            slideOutHorizontally { -it } + fadeOut())
-                                    } else {
-                                        (slideInHorizontally { -it } + fadeIn()).togetherWith(
-                                            slideOutHorizontally { it } + fadeOut())
-                                    }
-                                }
-                            ) { selectedDate ->
-                                val timeSlots = viewModel.generateTimeSlots(selectedDate, bookedSlots)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Row {
+                        IconButton(onClick = { viewModel.goToPreviousMonth() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Previous"
+                            )
+                        }
+                        IconButton(onClick = { viewModel.goToNextMonth() }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Next"
+                            )
+                        }
+                    }
+                }
+            }
 
-                                LazyColumn(
-                                    modifier = Modifier
-                                        .fillMaxWidth(),
-                                    contentPadding = PaddingValues(
-                                        horizontal = 12.dp,
-                                        vertical = 6.dp
-                                    )
-                                ) {
-                                    items(timeSlots.chunked(2)) { rowSlots ->
-                                        Row(
-                                            modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                        ) {
-                                            rowSlots.forEach { slot ->
-                                                val isSelected = selectedAppointmentTime == slot.time
-                                                val isDisabled = slot.isBooked
+            item {
+                Spacer(Modifier.height(4.dp))
+                AnimatedContent(
+                    targetState = currentMonth,
+                    transitionSpec = {
+                        if (targetState > initialState) {
+                            (slideInHorizontally { it } + fadeIn()).togetherWith(
+                                slideOutHorizontally { -it } + fadeOut())
+                        } else {
+                            (slideInHorizontally { -it } + fadeIn()).togetherWith(
+                                slideOutHorizontally { it } + fadeOut())
+                        }
+                    }
+                ) { currentMonth ->
+                    CustomCalendar(
+                        currentMonth = currentMonth,
+                        highlightDates = { date -> date.toLocalDate() == selectedDate },
+                        getColorsForDate = { date ->
+                            if (date.toLocalDate() == selectedDate) {
+                                listOf(Color(0xFFB089CA))
+                            } else {
+                                emptyList()
+                            }
+                        },
+                        onClickDate = { date ->
+                            selectedDate = date.toLocalDate()
+                            selectedAppointmentTime = null
+                        },
+                        isBookingMode = true
+                    )
+                }
+            }
 
-                                                Button(
-                                                    onClick = {
-                                                        if (!isDisabled) selectedAppointmentTime = slot.time
-                                                    },
-                                                    enabled = !isDisabled,
-                                                    shape = RoundedCornerShape(24.dp),
-                                                    colors = when {
-                                                        isDisabled -> ButtonDefaults.buttonColors(
-                                                            containerColor = Color.Gray,
-                                                            contentColor = Color.White
-                                                        )
-                                                        isSelected -> ButtonDefaults.buttonColors(
-                                                            containerColor = MaterialTheme.colorScheme.onPrimary,
-                                                            contentColor = MaterialTheme.colorScheme.primary
-                                                        )
-                                                        else -> ButtonDefaults.buttonColors(
-                                                            containerColor = MaterialTheme.colorScheme.primary,
-                                                            contentColor = MaterialTheme.colorScheme.onPrimary
-                                                        )
-                                                    },
-                                                    modifier = Modifier.weight(1f)
-                                                ) {
-                                                    Text(
-                                                        text = if (isDisabled) {
-                                                            "${
-                                                                slot.time.hour.toString().padStart(2, '0')
-                                                            }:00 - ${
-                                                                (slot.time.hour + 1).toString().padStart(2, '0')
-                                                            }:00 (Đã đặt)"
-                                                        } else {
-                                                            "${
-                                                                slot.time.hour.toString().padStart(2, '0')
-                                                            }:00 - ${
-                                                                (slot.time.hour + 1).toString().padStart(2, '0')
-                                                            }:00"
-                                                        },
-                                                        textAlign = TextAlign.Center,
-                                                        style = MaterialTheme.typography.bodySmall
-                                                    )
-                                                }
-                                            }
-                                            if (rowSlots.size == 1) {
-                                                Spacer(modifier = Modifier.weight(1f))
-                                            }
-                                        }
-                                    }
-                                }
+            item {
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = stringResource(R.string.bo2),
+                    modifier = Modifier
+                        .background(
+                            MaterialTheme.colorScheme.onPrimary,
+                            RoundedCornerShape(24.dp)
+                        )
+                        .padding(horizontal = 12.dp, vertical = 6.dp),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            item {
+                Box(
+                    modifier = Modifier.background(
+                        MaterialTheme.colorScheme.tertiary,
+                        RoundedCornerShape(24.dp)
+                    )
+                ) {
+                    AnimatedContent(
+                        targetState = selectedDate,
+                        transitionSpec = {
+                            if (targetState > initialState) {
+                                (slideInHorizontally { it } + fadeIn()).togetherWith(
+                                    slideOutHorizontally { -it } + fadeOut())
+                            } else {
+                                (slideInHorizontally { -it } + fadeIn()).togetherWith(
+                                    slideOutHorizontally { it } + fadeOut())
                             }
                         }
-                        Spacer(Modifier.height(12.dp))
-                        Button(
-                            onClick = {
-                                selectedAppointmentTime?.let { time ->
-                                    viewModel.bookAppointment(
-                                        doctorId = doctorId,
-                                        patientId = patientId,
-                                        time
-                                    )
-                                }
-                            },
-                            enabled = selectedAppointmentTime != null,
-                            shape = RoundedCornerShape(24.dp),
-                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
-                            modifier = Modifier.align(Alignment.CenterHorizontally)
+                    ) { selectedDate ->
+                        val timeSlots = viewModel.generateTimeSlots(selectedDate, bookedSlots)
+
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
                         ) {
-                            Text("Xác nhận", color = Color.White)
+                            timeSlots
+                                .chunked(2)
+                                .forEach { rowSlots ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        rowSlots.forEach { slot ->
+                                            val isSelected  = selectedAppointmentTime == slot.time
+                                            val isDisabled  = slot.isBooked
+
+                                            Button(
+                                                onClick = {
+                                                    if (!isDisabled) selectedAppointmentTime = slot.time
+                                                },
+                                                enabled = !isDisabled,
+                                                shape = RoundedCornerShape(24.dp),
+                                                colors = when {
+                                                    isDisabled -> ButtonDefaults.buttonColors(
+                                                        containerColor = Color.Gray,
+                                                        contentColor   = Color.White
+                                                    )
+                                                    isSelected -> ButtonDefaults.buttonColors(
+                                                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                                                        contentColor   = MaterialTheme.colorScheme.primary
+                                                    )
+                                                    else -> ButtonDefaults.buttonColors(
+                                                        containerColor = MaterialTheme.colorScheme.primary,
+                                                        contentColor   = MaterialTheme.colorScheme.onPrimary
+                                                    )
+                                                },
+                                                modifier = Modifier.weight(1f)
+                                            ) {
+                                                val startH = slot.time.hour.toString().padStart(2, '0')
+                                                val endH   = (slot.time.hour + 1).toString().padStart(2, '0')
+                                                Text(
+                                                    text = if (isDisabled) "$startH:00 - $endH:00 (Đã đặt)"
+                                                    else              "$startH:00 - $endH:00",
+                                                    textAlign = TextAlign.Center,
+                                                    style = MaterialTheme.typography.bodySmall
+                                                )
+                                            }
+                                        }
+                                        if (rowSlots.size == 1) Spacer(modifier = Modifier.weight(1f))
+                                    }
+                                }
                         }
+                    }
+                }
+            }
+            item {
+                Row (modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+                    Button(
+                        onClick = {
+                            selectedAppointmentTime?.let { time ->
+                                viewModel.bookAppointment(
+                                    doctorId = doctorId,
+                                    patientId = patientId,
+                                    time
+                                )
+                                navController.popBackStack()
+                            }
+                        },
+                        enabled = selectedAppointmentTime != null,
+                        shape = RoundedCornerShape(24.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    ) {
+                        Text("Xác nhận", color = Color.White)
                     }
                 }
             }
         }
     }
 }
+
+

@@ -368,7 +368,8 @@ fun DiaryFullScreen(
                         .padding(horizontal = 12.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary
+                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                        focusedContainerColor = MaterialTheme.colorScheme.tertiary,
                     ),
                     trailingIcon = {
                         Icon(
@@ -493,14 +494,14 @@ fun DiaryFullScreen(
                 recordedVoiceUri?.let { uri ->
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth()
+                            .fillMaxWidth().background(color = MaterialTheme.colorScheme.tertiary)
                             .padding(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
                             text = "Tin nhắn thoại",
                             modifier = Modifier.weight(1f),
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onTertiary
                         )
                         IconButton(onClick = {
                             recordedVoiceUri = null; tempVoiceFile.value?.delete()
@@ -532,22 +533,22 @@ fun DiaryFullScreen(
                     proportions = preprocessProportions(emotionsState),
                 )
             }
-            item {
-                // Hiển thị recommendation text
-                Text(
-                    text = recommendationText,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .background(
-                            MaterialTheme.colorScheme.secondary,
-                            RoundedCornerShape(8.dp)
-                        )
-                        .padding(12.dp)
-                )
-            }
+//            item {
+//                // Hiển thị recommendation text
+//                Text(
+//                    text = recommendationText,
+//                    style = MaterialTheme.typography.bodyMedium,
+//                    color = Color.White,
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(horizontal = 8.dp)
+//                        .background(
+//                            MaterialTheme.colorScheme.secondary,
+//                            RoundedCornerShape(8.dp)
+//                        )
+//                        .padding(12.dp)
+//                )
+//            }
             item {
                 // --- Confirm Button ---
                 Row(

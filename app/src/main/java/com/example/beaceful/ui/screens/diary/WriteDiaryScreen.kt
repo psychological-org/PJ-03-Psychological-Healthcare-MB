@@ -37,6 +37,7 @@ import com.example.beaceful.R
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.calendar.TimePickerDialog
+import com.example.beaceful.ui.navigation.DiaryRoute
 import com.example.beaceful.ui.navigation.WriteDiary
 import com.example.beaceful.ui.navigation.WriteDiaryExpand
 import com.example.beaceful.ui.screens.home.EmotionItem
@@ -447,7 +448,9 @@ fun WriteDiaryScreen(
                                 posterId = userId,
                                 createAt = selectedDate,
                             )
-                            navController.popBackStack("diary", inclusive = false)
+//                            navController.popBackStack("diary", inclusive = false)
+                            navController.navigate(DiaryRoute.route)
+
                         },
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)

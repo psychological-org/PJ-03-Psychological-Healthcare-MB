@@ -168,6 +168,6 @@ data object VerifyRoute : BeacefulRoutes {
 }
 
 
-val BeacefulBottomNavPatient = listOf(DiaryRoute, Doctor, Forum, Profile, NotificationRoute)
-val BeacefulBottomNavDoctor = listOf(DiaryRoute, CustomerRoute, AppointmentRoute, Forum, Profile, NotificationRoute)
+val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)
+val BeacefulBottomNavDoctor = listOf(Home, AppointmentRoute, CustomerRoute, Forum, Profile)
 

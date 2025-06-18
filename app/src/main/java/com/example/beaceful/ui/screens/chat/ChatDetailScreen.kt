@@ -46,6 +46,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.beaceful.R
+import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.viewmodel.ChatViewModel
 import com.google.accompanist.permissions.shouldShowRationale
 import java.io.File

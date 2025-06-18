@@ -283,8 +283,8 @@ fun EditAccountScreen(
     if (showDeleteDialog) {
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Xác nhận xóa tài khoản") },
-            text = { Text("Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.") },
+            title = { Text("Xác nhận xóa tài khoản", color = MaterialTheme.colorScheme.primary) },
+            text = { Text("Bạn có chắc chắn muốn xóa tài khoản? Hành động này không thể hoàn tác.", color = MaterialTheme.colorScheme.primary) },
             confirmButton = {
                 TextButton(
                     onClick = {

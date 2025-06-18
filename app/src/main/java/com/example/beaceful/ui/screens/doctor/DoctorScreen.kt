@@ -167,7 +167,7 @@ fun UserCard(
                 ) {
                     StatItem(
                         icon = Icons.Rounded.FlightTakeoff,
-                        label = "10 năm",
+                        label = "${profile.yearOfExperience} năm",
                     )
                     StatItem(
                         icon = Icons.Outlined.StarOutline,
