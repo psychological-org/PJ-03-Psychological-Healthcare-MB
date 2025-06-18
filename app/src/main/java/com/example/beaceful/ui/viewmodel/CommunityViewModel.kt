@@ -116,9 +116,8 @@ class CommunityViewModel @Inject constructor(
                     communityId = communityId,
                     userId = userId
                 )
-                postRepository.createPost(postRequest)
-                // Reload posts for the community
-                loadCommunity(communityId)
+                val newPost = postRepository.createPost(postRequest)
+                _posts.value = listOf(newPost) + _posts.value
                 _postText.value = ""
                 _error.value = null
             } catch (e: Exception) {

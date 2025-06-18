@@ -1,7 +1,9 @@
 package com.example.beaceful.ui.components
 
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,15 +17,24 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PeopleAlt
 import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -195,7 +206,23 @@ fun PostDetailsScreen(
 }
 
 @Composable
-fun CommentCard(comment: Comment, commenter: User?) {
+fun CommentCard(comment: Comment, commenter: User?, viewModel: PostDetailsViewModel = hiltViewModel()) {
+
+    val userId = UserSession.getCurrentUserId() ?: return
+    var expandedMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editContent by remember { mutableStateOf(comment.content) }
+    val isEditable = comment.userId == userId
+    val coroutineScope = rememberCoroutineScope()
+    var isLiked by remember { mutableStateOf(false) }
+    val error by viewModel.error.collectAsState()
+    var reactCount by remember { mutableStateOf(comment.reactCount ?: 0) }
+
+    LaunchedEffect(comment.id) {
+        isLiked = viewModel.isCommentLiked(comment.id)
+    }
+
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RectangleShape,
@@ -206,7 +233,10 @@ fun CommentCard(comment: Comment, commenter: User?) {
             color = MaterialTheme.colorScheme.secondary
         )
 
-        Row(modifier = Modifier.padding(12.dp)) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            verticalAlignment = Alignment.Top
+        ) {
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(commenter?.avatarUrl)
@@ -224,12 +254,56 @@ fun CommentCard(comment: Comment, commenter: User?) {
                         shape = CircleShape
                     )
             )
-            Column(modifier = Modifier.padding(start = 8.dp)) {
-                Text(
-                    commenter?.fullName ?: "Ẩn danh",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium
-                )
+            Column(
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .weight(1f)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        commenter?.fullName ?: "Ẩn danh",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                    Box {
+                        IconButton(onClick = { expandedMenu = !expandedMenu }) {
+                            Icon(
+                                Icons.Default.MoreHoriz,
+                                contentDescription = "More options",
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = expandedMenu,
+                            onDismissRequest = { expandedMenu = false }
+                        ) {
+                            if (isEditable) {
+                                DropdownMenuItem(
+                                    text = { Text("Chỉnh sửa", color = MaterialTheme.colorScheme.primary) },
+                                    onClick = {
+                                        expandedMenu = false
+                                        showEditDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { Text("Xóa", color = MaterialTheme.colorScheme.primary) },
+                                    onClick = {
+                                        expandedMenu = false
+                                        showDeleteDialog = true
+                                    }
+                                )
+                            }
+                            DropdownMenuItem(
+                                text = { Text("Báo cáo", color = MaterialTheme.colorScheme.primary) },
+                                onClick = { expandedMenu = false }
+                            )
+                        }
+                    }
+                }
                 Text(
                     formatDateWithHour(comment.createdAt),
                     color = MaterialTheme.colorScheme.secondary,
@@ -241,8 +315,93 @@ fun CommentCard(comment: Comment, commenter: User?) {
                     color = MaterialTheme.colorScheme.primary,
                     style = MaterialTheme.typography.bodyMedium
                 )
+                Spacer(Modifier.height(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(onClick = {
+                        coroutineScope.launch {
+                            viewModel.toggleLikeComment(comment.id)
+                            isLiked = viewModel.isCommentLiked(comment.id)
+                        }
+                    }) {
+                        Icon(
+                            imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Like comment",
+                            tint = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+                    Text(
+                        text = (comment.reactCount ?: 0).toString(),
+                        color = MaterialTheme.colorScheme.secondary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Xóa bình luận", color = MaterialTheme.colorScheme.primary) },
+            text = { Text("Bạn có chắc muốn xóa bình luận này?", color = MaterialTheme.colorScheme.primary) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.deleteComment(comment.id)
+                            showDeleteDialog = false
+                        }
+                    }
+                ) {
+                    Text("Xóa")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Hủy")
+                }
+            }
+        )
+    }
+
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text("Chỉnh sửa bình luận", color = MaterialTheme.colorScheme.primary) },
+            text = {
+                OutlinedTextField(
+                    value = editContent,
+                    onValueChange = { editContent = it },
+                    label = { Text("Nội dung") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            viewModel.updateComment(comment.id, editContent)
+                            showEditDialog = false
+                        }
+                    },
+                    enabled = editContent.isNotBlank()
+                ) {
+                    Text("Lưu")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        showEditDialog = false
+                        editContent = comment.content
+                    }
+                ) {
+                    Text("Hủy")
+                }
+            }
+        )
     }
 }
 

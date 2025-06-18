@@ -50,6 +50,9 @@ class ChatDetailViewModel @Inject constructor(
     var otherUserId: String? = null
     var otherUserName: String? = null
 
+    val currentUserAvatarUrl = mutableStateOf<String?>(null)
+    val otherUserAvatarUrl = mutableStateOf<String?>(null)
+
     init {
         viewModelScope.launch {
             loadCurrentUserId()
@@ -61,12 +64,36 @@ class ChatDetailViewModel @Inject constructor(
             currentUserId = UserSession.getCurrentUserId()
             println("Loaded currentUserId (mongoId): $currentUserId")
             ensureUserExistsInFirebase(currentUserId!!)
+            loadUserAvatar(currentUserId!!, isCurrentUser = true)
         } catch (e: IllegalStateException) {
             _error.value = "Người dùng chưa đăng nhập"
             println("Load current user ID error: ${e.message}")
         } catch (e: Exception) {
             _error.value = "Lỗi tải thông tin người dùng: ${e.message}"
             println("Load current user ID error: ${e.message}")
+        }
+    }
+
+    private suspend fun loadUserAvatar(userId: String, isCurrentUser: Boolean) {
+        try {
+            val snapshot = database.reference.child("users").child(userId).get().await()
+            if (snapshot.exists()) {
+                val firebaseUser = snapshot.getValue(FirebaseUser::class.java)
+                val avatarUrl = firebaseUser?.avatarUrl
+                if (isCurrentUser) {
+                    currentUserAvatarUrl.value = avatarUrl
+                    println("Loaded current user avatar: $avatarUrl")
+                } else {
+                    otherUserAvatarUrl.value = avatarUrl
+                    println("Loaded other user avatar: $avatarUrl")
+                }
+            } else {
+                _error.value = "Không tìm thấy thông tin người dùng $userId trong Firebase"
+                println("No user data found for $userId in Firebase")
+            }
+        } catch (e: Exception) {
+            _error.value = "Lỗi tải avatar cho user $userId: ${e.message}"
+            println("Error loading avatar for $userId: ${e.message}")
         }
     }
 
@@ -139,6 +166,9 @@ class ChatDetailViewModel @Inject constructor(
         otherUserId = userId
         otherUserName = userName
         println("setChatPartner: userId=$userId, userName=$userName")
+        viewModelScope.launch {
+            loadUserAvatar(userId, isCurrentUser = false)
+        }
         loadMessages()
     }
 
