@@ -235,7 +235,7 @@ object DumpDataProvider {
         Collection(
             id = 1,
             name = "Thư giãn",
-            resourceUrl = "https://cdn.example.com/audio/lofi.mp3",
+            resourceUrl = "https://store-s3-psychology.s3.ap-southeast-1.amazonaws.com/music/6.mp3",
             topicId = 1,
             type = CollectionType.MUSIC
         ),

@@ -417,7 +417,9 @@ fun DiaryFullScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = { navController.popBackStack()
+                stopPlayback()
+            }) {
                 Icon(
                     imageVector = Icons.Default.ChevronLeft,
                     contentDescription = null,
@@ -683,6 +685,8 @@ fun DiaryFullScreen(
                 ) {
                     Button(
                         onClick = {
+                            stopPlayback()
+
                             val savedImagePath =
                                 selectedImageUri?.let { saveImageToInternalStorage(it) }
                             val savedVoicePath =

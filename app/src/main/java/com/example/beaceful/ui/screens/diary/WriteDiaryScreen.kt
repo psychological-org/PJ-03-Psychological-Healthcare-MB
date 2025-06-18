@@ -327,7 +327,9 @@ fun WriteDiaryScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = { navController.popBackStack()
+                stopPlayback()
+            }) {
                 Icon(
                     imageVector = Icons.Default.ChevronLeft,
                     contentDescription = null,
@@ -565,8 +567,8 @@ fun WriteDiaryScreen(
                 ) {
                     Button(
                         onClick = {
-                            Log.d("Record", "$recordedVoiceUri")
-                            Log.d("Record2", "${Uri.parse(recordedVoiceUri?.toString())}")
+
+                           stopPlayback()
 
                             val savedImagePath =
                                 selectedImageUri?.let { saveImageToInternalStorage(it) }

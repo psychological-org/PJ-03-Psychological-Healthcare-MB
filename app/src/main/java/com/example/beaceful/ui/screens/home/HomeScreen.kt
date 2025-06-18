@@ -212,7 +212,7 @@ fun HomeScreen(
                 collectionsState?.let { result ->
                     when {
                         result.isSuccess -> {
-                            val collections = result.getOrNull()?.content.orEmpty()
+                            val collections = DumpDataProvider.collections
                             val musicCollections =
                                 collections.filter { it.type == CollectionType.MUSIC }
                             MusicListScreen(musicCollections)

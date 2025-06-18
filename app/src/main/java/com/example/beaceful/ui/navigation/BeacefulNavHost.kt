@@ -213,7 +213,7 @@ fun BeacefulNavHost(
         }
 
         composable(
-            route = "appointment_details/{appointmentId}/{isDoctorView}",
+            route = "appt_details/{appointmentId}/{isDoctorView}",
             arguments = listOf(
                 navArgument("appointmentId") { type = NavType.IntType },
                 navArgument("isDoctorView") { type = NavType.BoolType }
