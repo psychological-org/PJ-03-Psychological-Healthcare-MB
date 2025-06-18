@@ -110,7 +110,7 @@ data object ChatDetailRoute : BeacefulRoutes {
 }
 data object AppointmentRoute : BeacefulRoutes {
     override val icon = Icons.Default.CalendarToday
-    override val route = "appointment"
+    override val route = "appt"
 }
 
 data object CustomerRoute : BeacefulRoutes {
@@ -119,7 +119,7 @@ data object CustomerRoute : BeacefulRoutes {
 }
 
 data object CustomerDetails : BeacefulRoutes {
-    override val icon = Icons.Filled.Home
+    override val icon = Icons.Default.TagFaces
     override val route = "customer_details/{customerId}/{isDoctorView}"
 
     fun createRoute(customerId: String, isDoctorView: Boolean): String {
@@ -128,11 +128,11 @@ data object CustomerDetails : BeacefulRoutes {
 }
 
 data object AppointmentDetails : BeacefulRoutes {
-    override val icon = Icons.Filled.Home
+    override val icon = Icons.Default.CalendarToday
     override val route = "appointment_details/{appointmentId}/{isDoctorView}"
 
     fun createRoute(appointmentId: Int, isDoctorView: Boolean): String {
-        return "appointment_details/$appointmentId/$isDoctorView"
+        return "appt_details/$appointmentId/$isDoctorView"
     }
 }
 
@@ -167,7 +167,17 @@ data object VerifyRoute : BeacefulRoutes {
     override val route = "login_forgot_verify"
 }
 
+data object RatingRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "appt_rating"
+}
+
+data object RatingFullScreenRoute : BeacefulRoutes {
+    override val icon = Icons.Default.TagFaces
+    override val route = "appt_rating_full"
+}
+
 
 val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)
-val BeacefulBottomNavDoctor = listOf(Home, AppointmentRoute, CustomerRoute, Forum, Profile)
+val BeacefulBottomNavDoctor = listOf(Home, AppointmentRoute, CustomerRoute, Forum, Profile, RatingRoute)
 

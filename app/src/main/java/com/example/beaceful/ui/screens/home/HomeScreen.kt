@@ -75,11 +75,14 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.R
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.CollectionType
 import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.cards.MiniMusicPlayer
 import com.example.beaceful.ui.components.cards.MusicListScreen
+import com.example.beaceful.ui.navigation.BeacefulBottomNavDoctor
+import com.example.beaceful.ui.navigation.BeacefulBottomNavPatient
 import com.example.beaceful.ui.navigation.NotificationRoute
 import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
@@ -120,6 +123,8 @@ fun HomeScreen(
 
     }
 
+    val role by UserSession.currentUserRole.collectAsState()
+
     Box() {
         Image(
             painter = when (timePhase) {
@@ -134,21 +139,23 @@ fun HomeScreen(
         Column(
             modifier.verticalScroll(rememberScrollState()),
         ) {
-Row (Modifier
-    .fillMaxWidth()
-    .padding(16.dp), horizontalArrangement = Arrangement.End) {
-    IconButton(
-        onClick = { navController.navigate(NotificationRoute.route) },
-        modifier = Modifier
-            .size(28.dp),
-    ) {
-        Icon(
-            Icons.Default.Notifications,
-            contentDescription = "",
-            tint = MaterialTheme.colorScheme.primary,
-        )
-    }
-}
+            Row(
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp), horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = { navController.navigate(NotificationRoute.route) },
+                    modifier = Modifier
+                        .size(28.dp),
+                ) {
+                    Icon(
+                        Icons.Default.Notifications,
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
             Spacer(Modifier.height(100.dp))
 //        Greeting block
             OutlinedTextByTime(
@@ -162,16 +169,30 @@ Row (Modifier
                 modifier = Modifier.padding(horizontal = 24.dp),
                 timePhase = timePhase,
             )
-            OutlinedTextByTime(
-                text = stringResource(R.string.ho1_greeting),
-                modifier = Modifier.padding(horizontal = 24.dp), timePhase = timePhase
-            )
-            Spacer(Modifier.height(16.dp))
+            if (role !== "doctor"){
+                OutlinedTextByTime(
+                    text = stringResource(R.string.ho1_greeting),
+                    modifier = Modifier.padding(horizontal = 24.dp), timePhase = timePhase
+                )
+            }
+            else {
+                OutlinedTextByTime(
+                    text = "Chào mừng trở lại với chúng tôi",
+                    modifier = Modifier.padding(horizontal = 24.dp), timePhase = timePhase
+                )
+            }
+            if (role == "patient"){
+                Spacer(Modifier.height(16.dp))
 
-            HomeScreenEmotionsRow(
-                navController = navController
-            )
-            Spacer(Modifier.height(36.dp))
+                HomeScreenEmotionsRow(
+                    navController = navController
+                )
+                Spacer(Modifier.height(36.dp))
+                RecommendationCard(
+                    recommendationText = "\"Trong bóng tối, hãy là ngọn nến của chính mình.\"\n\nTôi hiểu rằng bạn đang trải qua giai đoạn khó khăn. Những cảm xúc tiêu cực có thể rất nặng nề, nhưng bạn không đơn độc. Hãy cho phép bản thân được buồn, được mệt mỏi, và nhớ rằng đây chỉ là một phần của cuộc sống. Hãy thử bài tập hít thở sâu, tập trung vào hiện tại để xoa dịu tâm trí.\n\nTrong công việc hoặc học tập, hãy bắt đầu với những mục tiêu nhỏ, dễ đạt được. Chia nhỏ nhiệm vụ lớn thành những bước nhỏ hơn để giảm bớt áp lực. Đừng ngần ngại tìm kiếm sự giúp đỡ từ đồng nghiệp hoặc bạn bè khi cần.\n\nHãy kết nối với những người bạn tin tưởng. Chia sẻ cảm xúc của bạn một cách trung thực và mở lòng đón nhận sự hỗ trợ từ họ. Đôi khi, chỉ cần biết rằng có ai đó lắng nghe và quan tâm cũng có thể tạo ra sự khác biệt lớn.\n\nHôm nay, bạn có thể thử viết nhật ký để giải tỏa cảm xúc hoặc đi bộ nhẹ nhàng trong 15 phút để thư giãn đầu óc.\n\nNếu bạn cảm thấy những cảm xúc này quá sức chịu đựng, hãy tìm đến chuyên gia tâm lý để được hỗ trợ. Ứng dụng này có hỗ trợ đặt lịch khám nếu bạn cần, hoặc bạn có thể liên hệ đường dây nóng 179 hoặc 1900 9254. Bạn mạnh mẽ hơn bạn nghĩ đấy!\n",
+                    background = R.drawable.home_diary_background
+                )
+            }
 
 //        Diary block
 //            Column() {
@@ -181,10 +202,7 @@ Row (Modifier
 //            }
 //            Spacer(Modifier.height(36.dp))
 
-            RecommendationCard(
-                recommendationText = "\"Trong bóng tối, hãy là ngọn nến của chính mình.\"\n\nTôi hiểu rằng bạn đang trải qua giai đoạn khó khăn. Những cảm xúc tiêu cực có thể rất nặng nề, nhưng bạn không đơn độc. Hãy cho phép bản thân được buồn, được mệt mỏi, và nhớ rằng đây chỉ là một phần của cuộc sống. Hãy thử bài tập hít thở sâu, tập trung vào hiện tại để xoa dịu tâm trí.\n\nTrong công việc hoặc học tập, hãy bắt đầu với những mục tiêu nhỏ, dễ đạt được. Chia nhỏ nhiệm vụ lớn thành những bước nhỏ hơn để giảm bớt áp lực. Đừng ngần ngại tìm kiếm sự giúp đỡ từ đồng nghiệp hoặc bạn bè khi cần.\n\nHãy kết nối với những người bạn tin tưởng. Chia sẻ cảm xúc của bạn một cách trung thực và mở lòng đón nhận sự hỗ trợ từ họ. Đôi khi, chỉ cần biết rằng có ai đó lắng nghe và quan tâm cũng có thể tạo ra sự khác biệt lớn.\n\nHôm nay, bạn có thể thử viết nhật ký để giải tỏa cảm xúc hoặc đi bộ nhẹ nhàng trong 15 phút để thư giãn đầu óc.\n\nNếu bạn cảm thấy những cảm xúc này quá sức chịu đựng, hãy tìm đến chuyên gia tâm lý để được hỗ trợ. Ứng dụng này có hỗ trợ đặt lịch khám nếu bạn cần, hoặc bạn có thể liên hệ đường dây nóng 179 hoặc 1900 9254. Bạn mạnh mẽ hơn bạn nghĩ đấy!\n",
-                background = R.drawable.home_diary_background
-            )
+
 
 //        Music
             HomeSection(
@@ -195,9 +213,11 @@ Row (Modifier
                     when {
                         result.isSuccess -> {
                             val collections = result.getOrNull()?.content.orEmpty()
-                            val musicCollections = collections.filter { it.type == CollectionType.MUSIC }
+                            val musicCollections =
+                                collections.filter { it.type == CollectionType.MUSIC }
                             MusicListScreen(musicCollections)
                         }
+
                         result.isFailure -> {
                             Text(
                                 text = "Error loading collections: ${result.exceptionOrNull()?.message}",
@@ -277,8 +297,7 @@ Row (Modifier
             }
             if (current != null) {
                 Spacer(Modifier.height(80.dp))
-            }
-            else {
+            } else {
                 Spacer(Modifier.height(8.dp))
             }
         }
@@ -560,8 +579,7 @@ fun RecommendationCard(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                    .padding(bottom = 24.dp)
-                ,
+                    .padding(bottom = 24.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally,
                 contentPadding = PaddingValues(
@@ -572,7 +590,7 @@ fun RecommendationCard(
                 )
             ) {
                 // Animated chuyển nội dung
-                item{
+                item {
                     AnimatedContent(
                         targetState = paragraphs[currentIndex],
                         transitionSpec = {
@@ -608,13 +626,21 @@ fun RecommendationCard(
                         currentIndex =
                             if (currentIndex > 0) currentIndex - 1 else paragraphs.size - 1
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous", tint =MaterialTheme.colorScheme.onPrimary)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Previous",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
 
                     IconButton(onClick = {
                         currentIndex = (currentIndex + 1) % paragraphs.size
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next", tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Next",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }
@@ -757,7 +783,7 @@ fun OutlinedTextByTime(
     fontWeight: FontWeight = FontWeight.Medium,
 ) {
     Box {
-        if (timePhase == 2){
+        if (timePhase == 2) {
             for (dx in -strokeWidth..strokeWidth) {
                 for (dy in -strokeWidth..strokeWidth) {
                     if (dx != 0 || dy != 0) {

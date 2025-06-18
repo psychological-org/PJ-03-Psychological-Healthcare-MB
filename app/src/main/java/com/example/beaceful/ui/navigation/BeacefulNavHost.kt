@@ -5,7 +5,6 @@ import androidx.annotation.RequiresApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -34,8 +33,9 @@ import com.example.beaceful.ui.screens.home.HomeScreen
 import com.example.beaceful.ui.screens.authen.LoginScreen
 import com.example.beaceful.ui.screens.authen.SignUpScreen
 import com.example.beaceful.ui.screens.authen.VerifyScreen
-import com.example.beaceful.ui.screens.chat.ChatScreen
 import com.example.beaceful.ui.screens.notification.NotificationScreen
+import com.example.beaceful.ui.screens.notification.RatingScreen
+import com.example.beaceful.ui.screens.notification.RatingFullScreen
 import com.example.beaceful.ui.screens.profile.EditAccountScreen
 import com.example.beaceful.ui.screens.profile.EditProfileScreen
 import com.example.beaceful.ui.screens.profile.ProfileScreen
@@ -303,6 +303,12 @@ fun BeacefulNavHost(
         }
         composable(route = NotificationRoute.route) {
             NotificationScreen(navController = navController)
+        }
+        composable(route = RatingRoute.route) {
+            RatingScreen()
+        }
+        composable(route = RatingFullScreenRoute.route) {
+            RatingFullScreen()
         }
     }
 }
