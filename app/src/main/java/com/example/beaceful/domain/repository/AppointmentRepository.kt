@@ -92,7 +92,7 @@ class AppointmentRepository @Inject constructor(
                 .filter {
                     it.doctorId == doctorId &&
                             it.appointmentTime != null && // Chỉ lấy lịch có appointmentTime
-                            (it.status == "pending" || it.status == "confirmed")
+                            (it.status == "pending" || it.status == "confirmed" || it.status == "completed" || it.status == "cancelled")
                 }
                 .map { appt ->
                     Appointment.fromApiResponse(
@@ -223,7 +223,7 @@ class AppointmentRepository @Inject constructor(
                 .filter {
                     it.patientId == patientId &&
                             it.appointmentTime != null &&
-                            (it.status == "pending" || it.status == "confirmed")
+                            (it.status == "pending" || it.status == "confirmed" || it.status == "completed" || it.status == "cancelled")
                 }
                 .map { appt ->
                     Appointment.fromApiResponse(

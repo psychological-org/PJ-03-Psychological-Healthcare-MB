@@ -2,13 +2,17 @@ package com.example.beaceful.ui.screens.diary
 
 import android.Manifest
 import android.content.Context
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -17,6 +21,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.OpenInFull
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
@@ -115,8 +121,26 @@ fun DiaryFullScreen(
         })
     }
     var recordedVoiceUri by remember { mutableStateOf<Uri?>(diary.voiceUrl?.let { Uri.parse(it) }) }
+    Log.d("Record", "$recordedVoiceUri")
+
     var isRecording by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val mediaPlayer = remember { mutableStateOf<MediaPlayer?>(null) }
+    val isPlaying = remember { mutableStateOf(false) }
+    val currentPosition = remember { mutableStateOf(0) }
+    val duration = remember { mutableStateOf(1) }
+
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    val updatePosition = remember {
+        object : Runnable {
+            override fun run() {
+                mediaPlayer.value?.let {
+                    currentPosition.value = it.currentPosition
+                    handler.postDelayed(this, 500)
+                }
+            }
+        }
+    }
 
     // Quyền đọc ảnh
     val readImagePermissionState = rememberPermissionState(Manifest.permission.READ_MEDIA_IMAGES)
@@ -159,6 +183,25 @@ fun DiaryFullScreen(
             file.absolutePath
         } catch (e: Exception) {
             println("Error saving image: ${e.message}")
+            null
+        }
+    }
+
+    fun saveVoiceToInternalStorage(uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val file = File(context.filesDir, "voices/diary_voice_${System.currentTimeMillis()}.m4a")
+            file.parentFile?.mkdirs() // Tạo folder voices nếu chưa có
+
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            file.absolutePath
+        } catch (e: Exception) {
+            println("Error saving voice: ${e.message}")
             null
         }
     }
@@ -211,6 +254,49 @@ fun DiaryFullScreen(
             isRecording = false
         }
     }
+
+
+    fun playRecordedVoice(uri: Uri) {
+        try {
+            if (mediaPlayer.value == null) {
+                mediaPlayer.value = MediaPlayer().apply {
+                    setDataSource(context, uri)
+                    prepare()
+                    start()
+                    isPlaying.value = true
+                    duration.value = this.duration
+                    handler.post(updatePosition)
+
+                    setOnCompletionListener {
+                        // Phát lại từ đầu
+                        seekTo(0)
+                        start()
+                    }
+                }
+            } else {
+                mediaPlayer.value?.start()
+                isPlaying.value = true
+                handler.post(updatePosition)
+            }
+        } catch (e: Exception) {
+            println("Error playing voice: ${e.message}")
+        }
+    }
+
+    fun pausePlayback() {
+        mediaPlayer.value?.pause()
+        isPlaying.value = false
+        handler.removeCallbacks(updatePosition)
+    }
+
+    fun stopPlayback() {
+        mediaPlayer.value?.release()
+        mediaPlayer.value = null
+        isPlaying.value = false
+        handler.removeCallbacks(updatePosition)
+        currentPosition.value = 0
+    }
+
 
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
@@ -331,7 +417,9 @@ fun DiaryFullScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = { navController.popBackStack()
+                stopPlayback()
+            }) {
                 Icon(
                     imageVector = Icons.Default.ChevronLeft,
                     contentDescription = null,
@@ -486,35 +574,75 @@ fun DiaryFullScreen(
                 )
                 Spacer(Modifier.height(4.dp))
 
-                UploadButton(label = if (isRecording) "Dừng ghi âm" else "Nhấn để ghi âm") {
-                    if (isRecording) stopRecording() else startRecording()
+                if (recordedVoiceUri == null) {
+                    UploadButton(label = if (isRecording) "Dừng ghi âm" else "Nhấn để ghi âm") {
+                        if (isRecording) stopRecording() else startRecording()
+                    }
                 }
 
                 // Hiển thị voice đã ghi
                 recordedVoiceUri?.let { uri ->
                     Row(
                         modifier = Modifier
-                            .fillMaxWidth().background(color = MaterialTheme.colorScheme.tertiary)
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Tin nhắn thoại",
-                            modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.onTertiary
-                        )
-                        IconButton(onClick = {
-                            recordedVoiceUri = null; tempVoiceFile.value?.delete()
-                        }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Clear Voice",
-                                tint = Color.Gray
+                            .fillMaxWidth()
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                shape = RoundedCornerShape(50.dp)
                             )
+                            .padding(8.dp)
+                    ) {
+                        Box(){
+                            // Nút phát / tạm dừng
+                            IconButton(
+                                onClick = {
+                                    if (isPlaying.value) {
+                                        pausePlayback()
+                                    } else {
+                                        playRecordedVoice(uri)
+                                    }
+                                },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying.value) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+
+                            // Thanh tiến độ
+                            Slider(
+                                value = currentPosition.value.toFloat(),
+                                onValueChange = { value ->
+                                    currentPosition.value = value.toInt()
+                                    mediaPlayer.value?.seekTo(value.toInt())
+                                },
+                                valueRange = 0f..duration.value.toFloat(),
+                                modifier = Modifier
+                                    .padding(horizontal = 40.dp)
+                                    .align(Alignment.Center)
+                            )
+
+                            IconButton(onClick = {
+                                recordedVoiceUri = null
+                                tempVoiceFile.value?.delete()
+                                stopPlayback()
+                            },
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                            ) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear Voice",
+                                    tint = Color.Gray
+                                )
+                            }
                         }
                     }
                 }
+
             }
+
 
             item {
                 Text(
@@ -557,13 +685,18 @@ fun DiaryFullScreen(
                 ) {
                     Button(
                         onClick = {
+                            stopPlayback()
+
                             val savedImagePath =
                                 selectedImageUri?.let { saveImageToInternalStorage(it) }
+                            val savedVoicePath =
+                                recordedVoiceUri?.let { saveVoiceToInternalStorage(it) }
+
                             viewModel.updateDiary(
                                 id = diaryId,
                                 content = diaryText.takeIf { it.isNotBlank() },
                                 imageUrl = savedImagePath,
-                                voiceUrl = recordedVoiceUri?.toString()
+                                voiceUrl = savedVoicePath,
                             )
                             navController.popBackStack("diary", inclusive = false)
                         },

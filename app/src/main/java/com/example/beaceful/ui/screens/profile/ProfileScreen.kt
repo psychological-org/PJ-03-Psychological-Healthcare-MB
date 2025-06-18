@@ -5,14 +5,17 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -23,12 +26,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.StarBorder
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
@@ -49,19 +55,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import com.example.beaceful.R
 import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.core.util.formatDate
+import com.example.beaceful.domain.model.DumpDataProvider
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomInputField
 import com.example.beaceful.ui.components.cards.PostCard
 import com.example.beaceful.ui.navigation.CustomerDetails
 import com.example.beaceful.ui.navigation.EditRoute
 import com.example.beaceful.ui.navigation.PostDetails
+import com.example.beaceful.ui.navigation.RatingFullScreenRoute
 import com.example.beaceful.ui.screens.doctor.DoctorAboutSection
+import com.example.beaceful.ui.screens.notification.RatingItem
+import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 import com.example.beaceful.ui.viewmodel.ForumViewModel
 import com.example.beaceful.ui.viewmodel.ProfileViewModel
 import com.example.beaceful.viewmodel.DoctorViewModel
@@ -76,7 +88,8 @@ fun ProfileScreen(
 ) {
     val userId = UserSession.getCurrentUserId()
     val userRole = UserSession.getCurrentUserRole()
-    val tabTitles = listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
+    val tabTitles =
+        listOf(stringResource(R.string.do5_activity), stringResource(R.string.do6_about_me))
     var selectedTab by remember { mutableIntStateOf(0) }
     val user by viewModel.user.collectAsState()
     val posts by viewModel.posts.collectAsState()
@@ -190,9 +203,15 @@ fun ProfileScreen(
                 Spacer(Modifier.height(8.dp))
             }
             item {
-                Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(space = 16.dp, alignment = Alignment.CenterHorizontally)) {
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(
+                        space = 16.dp,
+                        alignment = Alignment.CenterHorizontally
+                    )
+                ) {
                     Button(
-                        onClick = {navController.navigate(EditRoute.route)},
+                        onClick = { navController.navigate(EditRoute.route) },
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
@@ -211,7 +230,12 @@ fun ProfileScreen(
                     Button(
                         onClick = {
                             val isDoctorView = userRole == "doctor"
-                            navController.navigate(CustomerDetails.createRoute(userId, isDoctorView))
+                            navController.navigate(
+                                CustomerDetails.createRoute(
+                                    userId,
+                                    isDoctorView
+                                )
+                            )
                         },
                         shape = RoundedCornerShape(20.dp),
                         colors = ButtonDefaults.buttonColors(containerColor = Color.Transparent),
@@ -253,7 +277,7 @@ fun ProfileScreen(
                         inputText = "",
                         onTextChange = {
                             //TODO
-                            },
+                        },
                         onSent = {
 
                         },
@@ -296,8 +320,9 @@ fun ProfileScreen(
                         viewModel = forumViewModel
                     )
                 }
+
                 1 -> item {
-                    AboutSection(biography = user!!.biography)
+                    AboutSection(user!!, navController)
                 }
             }
         }
@@ -305,16 +330,47 @@ fun ProfileScreen(
 }
 
 @Composable
-fun AboutSection(biography: String?) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+fun AboutSection(
+    user: User,
+    navController: NavHostController,
+    viewModel: AppointmentViewModel = hiltViewModel(),
+) {
+    val role by UserSession.currentUserRole.collectAsState()
+//    val appointments by viewModel.appointments.collectAsState()
+    val appointments = DumpDataProvider.appointments.filter { it.rating != null }
+    var expanded by remember { mutableStateOf(false) }
+
+    Column ( Modifier.padding(horizontal = 16.dp)
     ) {
-        Text(
-            text = biography ?: "Không có thông tin.",
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.bodyMedium
-        )
+            Text(
+                text = user.biography ?: "Không có thông tin.",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        Spacer(Modifier.height(12.dp))
+        if (role == "doctor"){
+                Text(
+                    text = "Đánh giá của bệnh nhân",
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            Spacer(Modifier.height(6.dp))
+            appointments.take(5).forEach() { appointment ->
+                RatingItem(appointment = appointment)
+            }
+            Spacer(Modifier.height(6.dp))
+            Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                OutlinedButton(
+                    onClick = { navController.navigate(RatingFullScreenRoute.route)  },
+                    shape = RoundedCornerShape(24.dp),
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
+                ) {
+                    Text(
+                        "Xem thêm",
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+        }
     }
 }

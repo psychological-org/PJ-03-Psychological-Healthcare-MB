@@ -71,6 +71,8 @@ fun BeacefulApp() {
                 route.startsWith("forum") -> Forum
                 route.startsWith("diary") -> DiaryRoute
                 route.startsWith("profile") -> Profile
+                route.startsWith("appt") -> AppointmentRoute
+                route.startsWith("customer") -> CustomerRoute
                 else -> Home
             }
         }

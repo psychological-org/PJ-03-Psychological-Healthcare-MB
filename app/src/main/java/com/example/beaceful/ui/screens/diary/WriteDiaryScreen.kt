@@ -2,14 +2,19 @@ package com.example.beaceful.ui.screens.diary
 
 import android.Manifest
 import android.content.Context
+import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.net.Uri
 import android.os.Build
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -79,6 +84,22 @@ fun WriteDiaryScreen(
     var recordedVoiceUri by remember { mutableStateOf<Uri?>(null) }
     var isRecording by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val mediaPlayer = remember { mutableStateOf<MediaPlayer?>(null) }
+    val isPlaying = remember { mutableStateOf(false) }
+    val currentPosition = remember { mutableStateOf(0) }
+    val duration = remember { mutableStateOf(1) }
+
+    val handler = remember { Handler(Looper.getMainLooper()) }
+    val updatePosition = remember {
+        object : Runnable {
+            override fun run() {
+                mediaPlayer.value?.let {
+                    currentPosition.value = it.currentPosition
+                    handler.postDelayed(this, 500)
+                }
+            }
+        }
+    }
 
     // Quyền đọc ảnh
     val readImagePermissionState = rememberPermissionState(Manifest.permission.READ_MEDIA_IMAGES)
@@ -124,6 +145,26 @@ fun WriteDiaryScreen(
             null
         }
     }
+
+    fun saveVoiceToInternalStorage(uri: Uri): String? {
+        return try {
+            val inputStream = context.contentResolver.openInputStream(uri)
+            val file = File(context.filesDir, "voices/diary_voice_${System.currentTimeMillis()}.m4a")
+            file.parentFile?.mkdirs() // Tạo folder voices nếu chưa có
+
+            inputStream?.use { input ->
+                file.outputStream().use { output ->
+                    input.copyTo(output)
+                }
+            }
+
+            file.absolutePath
+        } catch (e: Exception) {
+            println("Error saving voice: ${e.message}")
+            null
+        }
+    }
+
 
     // Tạo URI tạm thời cho ảnh chụp từ máy ảnh
     fun createImageUri(context: Context): Uri {
@@ -174,6 +215,48 @@ fun WriteDiaryScreen(
         }
     }
 
+    fun playRecordedVoice(uri: Uri) {
+        try {
+            if (mediaPlayer.value == null) {
+                mediaPlayer.value = MediaPlayer().apply {
+                    setDataSource(context, uri)
+                    prepare()
+                    start()
+                    isPlaying.value = true
+                    duration.value = this.duration
+                    handler.post(updatePosition)
+
+                    setOnCompletionListener {
+                        // Phát lại từ đầu
+                        seekTo(0)
+                        start()
+                    }
+                }
+            } else {
+                mediaPlayer.value?.start()
+                isPlaying.value = true
+                handler.post(updatePosition)
+            }
+        } catch (e: Exception) {
+            println("Error playing voice: ${e.message}")
+        }
+    }
+
+    fun pausePlayback() {
+        mediaPlayer.value?.pause()
+        isPlaying.value = false
+        handler.removeCallbacks(updatePosition)
+    }
+
+    fun stopPlayback() {
+        mediaPlayer.value?.release()
+        mediaPlayer.value = null
+        isPlaying.value = false
+        handler.removeCallbacks(updatePosition)
+        currentPosition.value = 0
+    }
+
+
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
         recordAudioPermissionState.status.shouldShowRationale
@@ -202,8 +285,11 @@ fun WriteDiaryScreen(
             onDismissRequest = { showImageSourceDialog = false },
             title = { Text("Chọn nguồn ảnh", color = MaterialTheme.colorScheme.primary) },
             text = {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Button (onClick = {
+                Column(
+                    Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Button(onClick = {
                         if (readImagePermissionState.status.isGranted) {
                             pickImageLauncher.launch("image/*")
                             showImageSourceDialog = false
@@ -241,7 +327,9 @@ fun WriteDiaryScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = { navController.popBackStack() }) {
+            IconButton(onClick = { navController.popBackStack()
+                stopPlayback()
+            }) {
                 Icon(
                     imageVector = Icons.Default.ChevronLeft,
                     contentDescription = null,
@@ -283,7 +371,7 @@ fun WriteDiaryScreen(
                     trailingIcon = {
                         Icon(
                             Icons.Default.Clear, contentDescription = null,
-                            modifier = Modifier.clickable(onClick = {diaryTitle = ""})
+                            modifier = Modifier.clickable(onClick = { diaryTitle = "" })
                         )
                     }
                 )
@@ -352,7 +440,7 @@ fun WriteDiaryScreen(
                 )
                 Spacer(Modifier.height(4.dp))
 
-                if(selectedImageUri == null){
+                if (selectedImageUri == null) {
                     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         UploadButton(label = "Chọn ảnh") {
                             showImageSourceDialog = true
@@ -402,8 +490,10 @@ fun WriteDiaryScreen(
                 )
                 Spacer(Modifier.height(4.dp))
 
-                UploadButton(label = if (isRecording) "Dừng ghi âm" else "Nhấn để ghi âm") {
-                    if (isRecording) stopRecording() else startRecording()
+                if (recordedVoiceUri == null) {
+                    UploadButton(label = if (isRecording) "Dừng ghi âm" else "Nhấn để ghi âm") {
+                        if (isRecording) stopRecording() else startRecording()
+                    }
                 }
 
                 // Hiển thị voice đã ghi
@@ -411,40 +501,86 @@ fun WriteDiaryScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Tin nhắn thoại",
-                            modifier = Modifier.weight(1f),
-                            color = Color.White
-                        )
-                        IconButton(onClick = {
-                            recordedVoiceUri = null; tempVoiceFile.value?.delete()
-                        }) {
-                            Icon(
-                                Icons.Default.Clear,
-                                contentDescription = "Clear Voice",
-                                tint = Color.Gray
+                            .border(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                shape = RoundedCornerShape(50.dp)
                             )
+                            .padding(8.dp)
+                    ) {
+                        Box(){
+                            // Nút phát / tạm dừng
+                            IconButton(
+                                onClick = {
+                                    if (isPlaying.value) {
+                                        pausePlayback()
+                                    } else {
+                                        playRecordedVoice(uri)
+                                    }
+                                },
+                                modifier = Modifier.align(Alignment.CenterStart)
+                            ) {
+                                Icon(
+                                    imageVector = if (isPlaying.value) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+
+                            // Thanh tiến độ
+                            Slider(
+                                value = currentPosition.value.toFloat(),
+                                onValueChange = { value ->
+                                    currentPosition.value = value.toInt()
+                                    mediaPlayer.value?.seekTo(value.toInt())
+                                },
+                                valueRange = 0f..duration.value.toFloat(),
+                                modifier = Modifier
+                                    .padding(horizontal = 40.dp)
+                                    .align(Alignment.Center)
+                            )
+
+                            IconButton(onClick = {
+                                recordedVoiceUri = null
+                                tempVoiceFile.value?.delete()
+                                stopPlayback()
+                            },
+                                modifier = Modifier.align(Alignment.CenterEnd)
+                                ) {
+                                Icon(
+                                    Icons.Default.Clear,
+                                    contentDescription = "Clear Voice",
+                                    tint = Color.Gray
+                                )
+                            }
                         }
                     }
                 }
+
             }
 
             // --- Confirm Button ---
             item {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
                     Button(
                         onClick = {
+
+                           stopPlayback()
+
                             val savedImagePath =
                                 selectedImageUri?.let { saveImageToInternalStorage(it) }
+                            val savedVoicePath =
+                                recordedVoiceUri?.let { saveVoiceToInternalStorage(it) }
+
                             viewModel.saveDiary(
                                 emotion = selectedEmotion,
                                 title = diaryTitle,
                                 content = diaryContent.takeIf { it.isNotBlank() },
                                 imageUrl = savedImagePath,
-                                voiceUrl = recordedVoiceUri?.toString(),
+                                voiceUrl = savedVoicePath,
                                 posterId = userId,
                                 createAt = selectedDate,
                             )
