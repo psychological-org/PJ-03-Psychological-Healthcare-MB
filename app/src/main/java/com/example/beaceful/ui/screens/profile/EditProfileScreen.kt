@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -91,8 +92,13 @@ fun EditProfileScreen(
         profileViewModel.fetchUserProfile()
     }
 
-    if (user == null) {
-        Text("Không tồn tại")
+    if (user == null && error == null) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
+        }
     } else {
         LazyColumn(
             modifier = Modifier
@@ -101,13 +107,11 @@ fun EditProfileScreen(
         ) {
             item {
                 Box {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile_background),
+                    AsyncImage(
+                        model = user!!.backgroundUrl,
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        contentScale = ContentScale.Crop
                     )
                     AsyncImage(
                         model = user!!.avatarUrl,

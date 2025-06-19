@@ -44,6 +44,9 @@ class AppointmentViewModel @Inject constructor(
     private val _success = MutableStateFlow<String?>(null)
     val success: StateFlow<String?> = _success
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     private val _patientAppointmentCounts = MutableStateFlow<Map<String, Int>>(emptyMap())
     val patientAppointmentCounts: StateFlow<Map<String, Int>> = _patientAppointmentCounts
 
@@ -315,6 +318,53 @@ class AppointmentViewModel @Inject constructor(
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải lịch hẹn của bệnh nhân: ${e.message}"
                 Log.e(TAG, "Error loading all patient appointments: ${e.message}", e)
+            }
+        }
+    }
+
+    fun getRatedAppointments(doctorId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val ratedAppointments = repo.getRatedAppointmentsOfDoctor(doctorId)
+                _appointments.value = ratedAppointments
+                Log.d(TAG, "Loaded rated appointments for doctor $doctorId: $ratedAppointments")
+                val patientIds = ratedAppointments.map { it.patientId }.toSet()
+                patientIds.forEach { getPatient(it) }
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi tải đánh giá: ${e.message}"
+                Log.e(TAG, "Error loading rated appointments: ${e.message}", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun updateAppointmentRating(appointmentId: Int, rating: Int, review: String) {
+        viewModelScope.launch {
+            try {
+                val appointment = repo.getAppointmentById(appointmentId)
+                if (appointment != null) {
+                    val updatedAppointment = appointment.copy(
+                        rating = rating,
+                        review = review
+                    )
+                    val success = repo.updateAppointment(updatedAppointment)
+                    if (success) {
+                        _success.value = "Đánh giá thành công"
+                        _appointment.value = updatedAppointment
+                        _appointments.value = _appointments.value.map {
+                            if (it.id == appointmentId) updatedAppointment else it
+                        }
+                    } else {
+                        _error.value = "Không thể gửi đánh giá"
+                    }
+                } else {
+                    _error.value = "Không tìm thấy lịch hẹn"
+                }
+            } catch (e: Exception) {
+                _error.value = "Lỗi khi gửi đánh giá: ${e.message}"
+                Log.e(TAG, "Error updating rating: ${e.message}", e)
             }
         }
     }

@@ -119,7 +119,7 @@ fun BeacefulNavHost(
             arguments = listOf(navArgument("postId") { type = NavType.IntType })
         ) { backStackEntry ->
             val postId = backStackEntry.arguments?.getInt("postId") ?: return@composable
-            PostDetailsScreen(postId = postId)
+            PostDetailsScreen(postId = postId, navController = navController)
         }
 
         composable(
@@ -304,11 +304,20 @@ fun BeacefulNavHost(
         composable(route = NotificationRoute.route) {
             NotificationScreen(navController = navController)
         }
-        composable(route = RatingRoute.route) {
-            RatingScreen()
+        composable(
+            route =  RatingRoute.route,
+            arguments = listOf(navArgument("apptId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val apptId = backStackEntry.arguments?.getInt("apptId") ?: return@composable
+            RatingScreen(
+                apptId = apptId,
+                navController = navController
+            )
         }
-        composable(route = RatingFullScreenRoute.route) {
-            RatingFullScreen()
+        composable(route = RatingFullScreenRoute.route, arguments = listOf(navArgument("doctorId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val doctorId = backStackEntry.arguments?.getString("doctorId") ?: return@composable
+            RatingFullScreen(doctorId = doctorId)
         }
     }
 }

@@ -86,8 +86,10 @@ fun DoctorScreen(
             onSearch = { selected ->
                 query = selected.name
             },
+            onDismiss = {query = ""},
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(Modifier.height(8.dp))
         UserListScreen(
             modifier = Modifier.fillMaxSize(),
             users = filteredDoctors,

@@ -3,6 +3,7 @@ package com.example.beaceful.ui.screens.forum
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -16,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
@@ -118,6 +120,9 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
     val coroutineScope = rememberCoroutineScope()
     val postAuthors = remember { mutableStateMapOf<String, User?>() }
     var commentText by remember { mutableStateOf("") }
+    val showFullScreenLoading = isLoading && posts.isEmpty()
+    val isPostsLoading by viewModel.isPostsLoading.collectAsState()
+    val isCommunitiesLoading by viewModel.isCommunitiesLoading.collectAsState()
 
     // Làm mới dữ liệu khi quay lại NewsScreen
     LaunchedEffect(navController.currentBackStackEntry) {
@@ -132,93 +137,128 @@ fun NewsScreen(navController: NavController, viewModel: ForumViewModel, userId: 
         }
     }
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        CustomSearchBar(
-            suggestions = nameSuggestions,
-            onSearch = { selected ->
-                navController.navigate(CommunityRoute.createRoute(selected.id, userId))
-            },
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            CustomSearchBar(
+                suggestions = nameSuggestions,
+                onSearch = { selected ->
+                    navController.navigate(CommunityRoute.createRoute(selected.id, userId))
+                },
+                modifier = Modifier.padding(horizontal = 16.dp)
+            )
 
-        Spacer(Modifier.height(16.dp))
-        LazyColumn(
-            modifier = Modifier.fillMaxSize()
-        ) {
-            item {
-                Text(
-                    stringResource(R.string.co3_communities),
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(16.dp))
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    items(communityIds) { communityId ->
-                        val community = viewModel.getCommunityById(communityId)
-                        if (community != null) {
-                            CommunityItem(
-                                community = community,
-                                onClick = {
-                                    navController.navigate(CommunityRoute.createRoute(communityId, userId))
-                                }
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.height(16.dp))
-            }
+            Spacer(Modifier.height(16.dp))
 
-            item {
-                Text(
-                    stringResource(R.string.co4_recent_activity),
-                    modifier = Modifier.padding(horizontal = 16.dp)
-                )
-                Spacer(Modifier.height(16.dp))
-            }
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
 
-            items(posts) { post ->
-                val user = postAuthors[post.posterId] ?: return@items
-                var commentCount by remember { mutableStateOf(0) }
-
-                LaunchedEffect(post.id) {
-                    commentCount = viewModel.getCommentCountForPost(post.id)
-                }
-
-                PostCard(
-                    post = post,
-                    user = user,
-                    commentCount = commentCount,
-                    isLiked = likedPosts[post.id] ?: false,
-                    onPostClick = { navController.navigate(PostDetails.createRoute(post.id)) },
-                    onToggleLike = { viewModel.toggleLike(post.id, userId) },
-                    onDeletePost = {
-                        if (post.posterId == userId) {
-                            viewModel.deletePost(post.id, userId)
-                        } else {
-                            viewModel.hidePost(post.id)
-                        }
-                    },
-                    onEditPost = { content, visibility ->
-                        viewModel.updatePost(post.id, userId, content, visibility)
-                    },
-                    community = if (post.communityId != null) viewModel.getCommunityById(post.communityId) else null,
-                    comments = comments.filter { it.postId == post.id },
-                    onLoadComments = { viewModel.loadCommentsForPost(post.id) },
-                    userId = userId
-                )
-            }
-
-            item {
-                error?.let {
-                    Spacer(Modifier.height(8.dp))
+                item {
                     Text(
-                        text = it,
-                        color = MaterialTheme.colorScheme.error,
+                        text = "Cộng đồng của tôi",
+                        style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
+                    Spacer(Modifier.height(16.dp))
+
+                    if (isCommunitiesLoading && communityIds.isEmpty()) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        LazyRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentPadding = PaddingValues(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            items(communityIds) { id ->
+                                viewModel.getCommunityById(id)?.let { community ->
+                                    CommunityItem(
+                                        community = community,
+                                        onClick = {
+                                            navController.navigate(
+                                                CommunityRoute.createRoute(id, userId)
+                                            )
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                item {
+                    Text(
+                        text = "Hoạt động mới nhất",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(horizontal = 16.dp)
+                    )
+                    Spacer(Modifier.height(16.dp))
+                }
+
+                if (isPostsLoading && posts.isEmpty()) {
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 48.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            CircularProgressIndicator()
+                        }
+                    }
+                } else {
+                    items(posts) { post ->
+                        val author = postAuthors[post.posterId] ?: return@items
+                        var commentCount by remember { mutableStateOf(0) }
+
+                        LaunchedEffect(post.id) {
+                            commentCount = viewModel.getCommentCountForPost(post.id)
+                        }
+
+                        PostCard(
+                            post = post,
+                            user = author,
+                            commentCount = commentCount,
+                            isLiked = likedPosts[post.id] ?: false,
+                            onPostClick = {
+                                navController.navigate(PostDetails.createRoute(post.id))
+                            },
+                            onToggleLike = {
+                                viewModel.toggleLike(post.id, userId)
+                            },
+                            onDeletePost = {
+                                if (post.posterId == userId) {
+                                    viewModel.deletePost(post.id, userId)
+                                } else {
+                                    viewModel.hidePost(post.id)
+                                }
+                            },
+                            onEditPost = { content, visibility ->
+                                viewModel.updatePost(post.id, userId, content, visibility)
+                            },
+                            community = post.communityId?.let { viewModel.getCommunityById(it) },
+                            comments = comments.filter { it.postId == post.id },
+                            onLoadComments = { viewModel.loadCommentsForPost(post.id) },
+                            userId = userId
+                        )
+                    }
+                }
+
+                item {
+                    error?.let {
+                        Spacer(Modifier.height(8.dp))
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(horizontal = 16.dp)
+                        )
+                    }
                 }
             }
         }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MoreHoriz
@@ -61,6 +62,7 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatDateWithHour
 import com.example.beaceful.domain.model.PostVisibility
@@ -74,7 +76,8 @@ import java.time.LocalDateTime
 fun PostDetailsScreen(
     postId: Int,
     viewModel: PostDetailsViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navController : NavHostController,
 ) {
     val userId = UserSession.getCurrentUserId()
     val post by viewModel.post.collectAsState()
@@ -107,11 +110,18 @@ fun PostDetailsScreen(
             modifier = modifier
                 .fillMaxSize()
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             if (author != null) {
                 item {
                     Row {
+                        IconButton(onClick = {navController.popBackStack() }){
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBackIos,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        Spacer(Modifier.width(8.dp))
                         AsyncImage(
                             model = ImageRequest.Builder(LocalContext.current)
                                 .data(author?.avatarUrl)
@@ -167,6 +177,7 @@ fun PostDetailsScreen(
                 }
             }
             item {
+                Spacer(Modifier.height(16.dp))
                 Text(
                     "Bình luận:",
                     style = MaterialTheme.typography.titleMedium,
@@ -174,6 +185,7 @@ fun PostDetailsScreen(
                 )
             }
             item {
+                Spacer(Modifier.height(8.dp))
                 CustomInputField(
                     placeholder = R.string.write_your_comment,
                     inputText = commentText,
@@ -232,9 +244,10 @@ fun CommentCard(comment: Comment, commenter: User?, viewModel: PostDetailsViewMo
             modifier = Modifier.fillMaxWidth(),
             color = MaterialTheme.colorScheme.secondary
         )
+        Spacer(Modifier.height(8.dp))
 
         Row(
-            modifier = Modifier.padding(12.dp),
+            modifier = Modifier.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.Top
         ) {
             AsyncImage(
@@ -403,12 +416,4 @@ fun CommentCard(comment: Comment, commenter: User?, viewModel: PostDetailsViewMo
             }
         )
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PostDetailsPreview() {
-    PostDetailsScreen(
-        postId = 1
-    )
 }

@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.beaceful.core.util.UserSession
+import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.ViewMode
 import com.example.beaceful.ui.components.calendar.CalendarAppointmentScreen
 import com.example.beaceful.ui.components.calendar.CalendarDiaryScreen
@@ -92,7 +93,7 @@ fun AppointmentScreen(
                     Spacer(Modifier.height(6.dp))
 
                     AppointmentList(
-                        appointments = appointments,
+                        appointments = appointments.filter { it.status == AppointmentStatus.PENDING },
                         navController = navController,
                     )
                 }
