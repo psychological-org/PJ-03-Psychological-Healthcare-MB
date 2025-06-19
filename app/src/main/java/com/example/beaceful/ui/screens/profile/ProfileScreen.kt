@@ -143,13 +143,19 @@ fun ProfileScreen(
         ) {
             item {
                 Box {
-                    Image(
-                        painter = painterResource(id = R.drawable.profile_background),
+//                    Image(
+//                        painter = painterResource(id = R.drawable.profile_background),
+//                        contentDescription = null,
+//                        contentScale = ContentScale.Crop,
+//                        modifier = Modifier
+//                            .fillMaxWidth()
+//                            .height(180.dp)
+//                    )
+                    AsyncImage(
+                        model = user!!.backgroundUrl,
                         contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(180.dp)
+                        modifier = Modifier.fillMaxWidth().height(180.dp),
+                        contentScale = ContentScale.Crop
                     )
                     AsyncImage(
                         model = user!!.avatarUrl,
@@ -336,39 +342,77 @@ fun AboutSection(
     viewModel: AppointmentViewModel = hiltViewModel(),
 ) {
     val role by UserSession.currentUserRole.collectAsState()
-//    val appointments by viewModel.appointments.collectAsState()
-    val appointments = DumpDataProvider.appointments.filter { it.rating != null }
+    val appointments by viewModel.appointments.collectAsState()
+    val error by viewModel.error.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     var expanded by remember { mutableStateOf(false) }
+    val doctorId = try { UserSession.getCurrentUserId() } catch (e: IllegalStateException) { "" }
 
-    Column ( Modifier.padding(horizontal = 16.dp)
-    ) {
-            Text(
-                text = user.biography ?: "Không có thông tin.",
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.bodyMedium
-            )
+    // Gọi API để lấy các đánh giá nếu là bác sĩ
+    LaunchedEffect(role, doctorId) {
+        if (role == "doctor" && doctorId.isNotEmpty()) {
+            viewModel.getRatedAppointments(doctorId)
+        }
+    }
+
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            text = user.biography ?: "Không có thông tin.",
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodyMedium
+        )
         Spacer(Modifier.height(12.dp))
-        if (role == "doctor"){
-                Text(
-                    text = "Đánh giá của bệnh nhân",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.titleMedium
-                )
+        if (role == "doctor") {
+            Text(
+                text = "Đánh giá của bệnh nhân",
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.titleMedium
+            )
             Spacer(Modifier.height(6.dp))
-            appointments.take(5).forEach() { appointment ->
-                RatingItem(appointment = appointment)
-            }
-            Spacer(Modifier.height(6.dp))
-            Row (Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
-                OutlinedButton(
-                    onClick = { navController.navigate(RatingFullScreenRoute.route)  },
-                    shape = RoundedCornerShape(24.dp),
-                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
-                ) {
+
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
+                error != null -> {
                     Text(
-                        "Xem thêm",
-                        color = MaterialTheme.colorScheme.secondary
+                        text = "Lỗi khi tải đánh giá: $error",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium
                     )
+                }
+                appointments.isEmpty() -> {
+                    Text(
+                        text = "Chưa có đánh giá nào.",
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                else -> {
+                    appointments.filter { it.rating != null }.take(5).forEach { appointment ->
+                        RatingItem(appointment = appointment)
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        OutlinedButton(
+                            onClick = { navController.navigate(RatingFullScreenRoute.route)  },
+                            shape = RoundedCornerShape(24.dp),
+                            border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
+                        ) {
+                            Text(
+                                "Xem thêm",
+                                color = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
                 }
             }
         }

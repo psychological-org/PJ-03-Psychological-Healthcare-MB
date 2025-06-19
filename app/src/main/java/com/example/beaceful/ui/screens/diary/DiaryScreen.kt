@@ -71,7 +71,7 @@ fun DiaryScreen(
                 IconButton(onClick = { viewModel.goToPreviousMonth() }) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous")
                 }
-                Button(onClick = {}) {
+                Button(onClick = {viewModel.goBackCurrentMonth()}) {
                     Text(
                         text = "${
                             currentMonth.month.name.lowercase().replaceFirstChar { it.uppercase() }

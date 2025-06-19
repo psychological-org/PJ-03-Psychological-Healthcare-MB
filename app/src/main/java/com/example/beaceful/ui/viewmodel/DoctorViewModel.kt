@@ -28,6 +28,9 @@ class DoctorViewModel @Inject constructor(
     private val _doctors = MutableStateFlow<List<User>>(emptyList())
     val doctors: StateFlow<List<User>> = _doctors.asStateFlow()
 
+    private val _selectedDoctor = MutableStateFlow<User?>(null)
+    val selectedDoctor: StateFlow<User?> = _selectedDoctor.asStateFlow()
+
     private val _doctorPosts = MutableStateFlow<List<Post>>(emptyList())
     val doctorPosts: StateFlow<List<Post>> = _doctorPosts.asStateFlow()
 
@@ -36,6 +39,9 @@ class DoctorViewModel @Inject constructor(
 
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     data class DoctorStats(
         val averageRating: Double? = null,
@@ -49,6 +55,7 @@ class DoctorViewModel @Inject constructor(
     private fun fetchDoctors() {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 val users = repository.getAllUsers().filter { it.roleId == 2 }
                 _doctors.value = users
                 // Lấy stats cho từng bác sĩ
@@ -56,6 +63,31 @@ class DoctorViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error fetching doctors: ${e.message}", e)
                 _error.value = "Lỗi khi tải danh sách bác sĩ: ${e.message}"
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun fetchDoctorById(doctorId: String) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                _error.value = null
+                val doctor = repository.getUserById(doctorId)
+                if (doctor != null && doctor.roleId == 2) {
+                    _selectedDoctor.value = doctor
+                    Log.d("DoctorViewModel", "Fetched doctor $doctorId: $doctor")
+                } else {
+                    _error.value = "Bác sĩ không tồn tại"
+                    _selectedDoctor.value = null
+                }
+            } catch (e: Exception) {
+                Log.e("DoctorViewModel", "Error fetching doctor $doctorId: ${e.message}", e)
+                _error.value = "Lỗi khi tải thông tin bác sĩ: ${e.message}"
+                _selectedDoctor.value = null
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -98,12 +130,15 @@ class DoctorViewModel @Inject constructor(
     fun fetchDoctorPosts(doctorId: String) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 val posts = repository.getPostsByUser(doctorId)
                 Log.d("DoctorViewModel", "Fetched posts for doctor $doctorId: $posts")
                 _doctorPosts.value = posts
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error fetching doctor posts: ${e.message}", e)
                 _error.value = "Lỗi khi tải bài viết của bác sĩ: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -149,6 +184,7 @@ class DoctorViewModel @Inject constructor(
     fun toggleLike(postId: Int, userId: String) {
         viewModelScope.launch {
             try {
+                _isLoading.value = true
                 val isLiked = repository.toggleLike(postId, userId)
                 Log.d("DoctorViewModel", "Toggled like for post $postId: $isLiked")
                 // Reload posts to update reactCount
@@ -156,6 +192,8 @@ class DoctorViewModel @Inject constructor(
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error toggling like: ${e.message}", e)
                 _error.value = "Lỗi khi thích bài viết: ${e.message}"
+            } finally {
+                _isLoading.value = false
             }
         }
     }

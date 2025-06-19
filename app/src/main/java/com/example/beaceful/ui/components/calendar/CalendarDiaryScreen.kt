@@ -173,30 +173,43 @@ fun CalendarDiaryScreen(
                 ) { selectedIndex ->
                     when (selectedIndex) {
                         0 -> Box(
-                            modifier = Modifier.background(
-                                MaterialTheme.colorScheme.tertiary,
-                                RoundedCornerShape(24.dp)
-                            ).fillMaxWidth()
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.tertiary,
+                                    RoundedCornerShape(24.dp)
+                                )
+                                .fillMaxWidth()
                         ) { MoodBarChart(moodCount) }
 
                         1 -> Box(
-                            modifier = Modifier.background(
-                                MaterialTheme.colorScheme.tertiary,
-                                RoundedCornerShape(24.dp)
-                            ).fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)
+                            modifier = Modifier
+                                .background(
+                                    MaterialTheme.colorScheme.tertiary,
+                                    RoundedCornerShape(24.dp)
+                                )
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp, vertical = 12.dp)
                         ) {
                             if (nextAppointments.isEmpty()) {
                                 Text(text = "Trống", textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onTertiary)
                             } else {
-                                nextAppointments.forEach { appointment ->
-                                    val doctor = doctors[appointment]
-                                    if (doctor != null) {
-                                        Column {
-                                            Text(text = formatAppointmentDate(appointment.appointmentDate), color = MaterialTheme.colorScheme.onTertiary)
-                                            Text(text = "Bs. ${doctor.fullName}", color = MaterialTheme.colorScheme.onTertiary)
-                                            HorizontalDivider(
-                                                color = MaterialTheme.colorScheme.secondary
-                                            )
+                                Column{
+                                    nextAppointments.forEach { appointment ->
+                                        val doctor = doctors[appointment]
+                                        if (doctor != null) {
+                                            Column {
+                                                Text(
+                                                    text = formatAppointmentDate(appointment.appointmentDate),
+                                                    color = MaterialTheme.colorScheme.onTertiary
+                                                )
+                                                Text(
+                                                    text = "Bs. ${doctor.fullName}",
+                                                    color = MaterialTheme.colorScheme.onTertiary
+                                                )
+                                                HorizontalDivider(
+                                                    color = MaterialTheme.colorScheme.secondary
+                                                )
+                                            }
                                         }
                                     }
                                 }

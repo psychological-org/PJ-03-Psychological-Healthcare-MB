@@ -241,17 +241,32 @@ fun HomeScreen(
                 onClickSeeMore = {}
             ) {
                 val collections = DumpDataProvider.collections
-                val musicCollections = collections.filter { it.type == CollectionType.MUSIC }
-
-                if (musicCollections.isNotEmpty()) {
-                    MusicListScreen(musicCollections)
-                } else {
-                    Text(
-                        text = "No music collections available.",
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(16.dp)
-                    )
-                }
+                val musicCollections =
+                    collections.filter { it.type == CollectionType.MUSIC }
+                MusicListScreen(musicCollections)
+//                collectionsState?.let { result ->
+//                    when {
+//                        result.isSuccess -> {
+//                            val collections = DumpDataProvider.collections
+//                            val musicCollections =
+//                                collections.filter { it.type == CollectionType.MUSIC }
+//                            MusicListScreen(musicCollections)
+//                        }
+//
+//                        result.isFailure -> {
+//                            Text(
+//                                text = "Error loading collections: ${result.exceptionOrNull()?.message}",
+//                                color = MaterialTheme.colorScheme.error,
+//                                modifier = Modifier.padding(16.dp)
+//                            )
+//                        }
+//                    }
+//                } ?: run {
+//                    Text(
+//                        text = "Loading collections...",
+//                        modifier = Modifier.padding(16.dp)
+//                    )
+//                }
             }
 
 //        Book

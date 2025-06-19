@@ -65,6 +65,12 @@ class ForumViewModel @Inject constructor(
     private val _likedPosts = MutableStateFlow<Map<Int, Boolean>>(emptyMap())
     val likedPosts: StateFlow<Map<Int, Boolean>> = _likedPosts.asStateFlow()
 
+    private val _isPostsLoading = MutableStateFlow(false)
+    val isPostsLoading: StateFlow<Boolean> = _isPostsLoading.asStateFlow()
+
+    private val _isCommunitiesLoading = MutableStateFlow(false)
+    val isCommunitiesLoading: StateFlow<Boolean> = _isCommunitiesLoading.asStateFlow()
+
     init {
         fetchUsers()
         fetchPosts()
@@ -110,7 +116,7 @@ class ForumViewModel @Inject constructor(
     fun fetchPosts(page: Int = 0, limit: Int = 100) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
+                _isPostsLoading.value = true
                 val communityIds = _userCommunityIds.value
                 if (communityIds.isEmpty()) {
                     _allPosts.value = emptyList()
@@ -119,18 +125,18 @@ class ForumViewModel @Inject constructor(
                 }
                 val posts = postRepository.getPostsByCommunityIds(communityIds, page, limit)
                     .filter { postRepository.existsById(it.id) }
+
                 _allPosts.value = posts
                     .filterNot { it.id in _hiddenPostIds }
                     .sortedByDescending { it.createdAt }
+
                 val userId = UserSession.getCurrentUserId()
-                val likedMap = posts.associate { post ->
-                    post.id to postRepository.isPostLiked(post.id, userId)
-                }
-                _likedPosts.value = likedMap
+                _likedPosts.value = posts.associate { it.id to postRepository.isPostLiked(it.id, userId) }
+                _error.value = null
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải bài viết: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _isPostsLoading.value = false
             }
         }
     }
@@ -138,13 +144,13 @@ class ForumViewModel @Inject constructor(
     private fun fetchCommunities(page: Int = 0, limit: Int = 10) {
         viewModelScope.launch {
             try {
-                _isLoading.value = true
-                val communities = communityRepository.getAllCommunities(page, limit)
-                _allCommunities.value = communities
+                _isCommunitiesLoading.value = true
+                _allCommunities.value = communityRepository.getAllCommunities(page, limit)
+                _error.value = null
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải cộng đồng: ${e.message}"
             } finally {
-                _isLoading.value = false
+                _isCommunitiesLoading.value = false
             }
         }
     }

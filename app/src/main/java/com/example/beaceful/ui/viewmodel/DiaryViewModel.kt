@@ -172,6 +172,11 @@ class DiaryViewModel @Inject constructor(
         loadDiariesForMonth(_currentMonth.value)
     }
 
+    fun goBackCurrentMonth() {
+        _currentMonth.update { LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).withDayOfMonth(1) }
+        loadDiariesForMonth(_currentMonth.value)
+    }
+
     fun loadDiariesForMonth(month: LocalDateTime) {
         viewModelScope.launch {
             _diariesForMonth.value = repo.getDiariesInMonth(month)

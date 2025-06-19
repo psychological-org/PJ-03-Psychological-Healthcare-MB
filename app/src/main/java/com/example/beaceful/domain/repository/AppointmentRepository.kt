@@ -256,4 +256,34 @@ class AppointmentRepository @Inject constructor(
             emptyList()
         }
     }
+
+    suspend fun getRatedAppointmentsOfDoctor(doctorId: String): List<Appointment> = withContext(Dispatchers.IO) {
+        try {
+            val response = appointmentApiService.getAppointments(page = 0, limit = 100)
+            Log.d("AppointmentRepository", "Raw appointments for rated: ${response.content}")
+            response.content
+                .filter {
+                    it.doctorId == doctorId &&
+                            it.appointmentTime != null &&
+                            it.rating != null &&
+                            (it.status == "completed")
+                }
+                .map { appt ->
+                    Appointment.fromApiResponse(
+                        id = appt.id ?: 0,
+                        status = appt.status,
+                        appointmentDate = appt.appointmentDate,
+                        appointmentTime = appt.appointmentTime,
+                        patientId = appt.patientId,
+                        doctorId = appt.doctorId,
+                        note = appt.note,
+                        rating = appt.rating,
+                        review = appt.review
+                    )
+                }
+        } catch (e: Exception) {
+            Log.e("AppointmentRepository", "Error fetching rated appointments: ${e.message}", e)
+            emptyList()
+        }
+    }
 }

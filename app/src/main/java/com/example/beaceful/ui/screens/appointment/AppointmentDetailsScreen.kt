@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -51,6 +52,7 @@ import com.example.beaceful.R
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.AppointmentStatus
+import com.example.beaceful.ui.navigation.RatingRoute
 import com.example.beaceful.ui.viewmodel.AppointmentViewModel
 
 @Composable
@@ -116,6 +118,15 @@ fun AppointmentDetailsScreen(
                 .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Row {
+                IconButton(onClick = { navController.popBackStack() }) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBackIos,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
             Text(
 //                text = "${stringResource(R.string.cu2)} ${patient!!.fullName}",
                 text = "${stringResource(R.string.cu2)} ${
@@ -223,6 +234,26 @@ fun AppointmentDetailsScreen(
                                 ) {
                                     Text(
                                         "Hủy lịch hẹn",
+                                        color = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!isEditable || appointment!!.status == AppointmentStatus.COMPLETED) {
+                    item {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            if (appointment!!.status == AppointmentStatus.COMPLETED && !isDoctorView && appointment!!.rating == null) {
+                                OutlinedButton(
+                                    onClick = { navController.navigate(RatingRoute.createRoute(appointmentId)) },
+                                    shape = RoundedCornerShape(24.dp)
+                                ) {
+                                    Text(
+                                        "Đánh giá",
                                         color = MaterialTheme.colorScheme.onPrimary
                                     )
                                 }

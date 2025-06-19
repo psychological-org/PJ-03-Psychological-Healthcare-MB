@@ -169,15 +169,17 @@ data object VerifyRoute : BeacefulRoutes {
 
 data object RatingRoute : BeacefulRoutes {
     override val icon = Icons.Default.TagFaces
-    override val route = "appt_rating"
+    override val route = "appt_rating/{apptId}"
+
+    fun createRoute(apptId: Int) = "appt_rating/$apptId"
 }
 
 data object RatingFullScreenRoute : BeacefulRoutes {
     override val icon = Icons.Default.TagFaces
-    override val route = "appt_rating_full"
+    override val route = "appt_rating_full/{doctorId}"
 }
 
 
 val BeacefulBottomNavPatient = listOf(Home, DiaryRoute, Doctor, Forum, Profile)
-val BeacefulBottomNavDoctor = listOf(Home, AppointmentRoute, CustomerRoute, Forum, Profile, RatingRoute)
+val BeacefulBottomNavDoctor = listOf(Home, AppointmentRoute, CustomerRoute, Forum, Profile)
 
