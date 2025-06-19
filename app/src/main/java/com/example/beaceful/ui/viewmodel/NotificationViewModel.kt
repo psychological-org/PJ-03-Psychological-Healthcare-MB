@@ -3,6 +3,7 @@ package com.example.beaceful.ui.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.beaceful.core.util.NotificationEventBus
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.UserNotification
 import com.example.beaceful.domain.repository.UserNotificationRepository
@@ -32,9 +33,23 @@ class NotificationViewModel @Inject constructor(
 
     private val TAG = "NotificationViewModel"
 
+    init {
+        fetchNotifications()
+        // Thu thập sự kiện thông báo đẩy
+        viewModelScope.launch {
+            NotificationEventBus.notificationEvents.collect { notification ->
+                addPushNotification(notification)
+            }
+        }
+    }
+
     fun fetchNotifications() {
         val userId = try {
-            UserSession.getCurrentUserId()
+            UserSession.getCurrentUserId() ?: run {
+                _error.value = "Người dùng chưa đăng nhập"
+                Log.e(TAG, "User not logged in")
+                return
+            }
         } catch (e: IllegalStateException) {
             _error.value = "Người dùng chưa đăng nhập"
             Log.e(TAG, "User not logged in", e)
@@ -46,10 +61,12 @@ class NotificationViewModel @Inject constructor(
             try {
                 _isLoading.value = true
                 val response = repository.getUserNotifications(userId, _currentPage.value, _limit)
-                _notifications.update { it + response.content }
+                _notifications.update { current ->
+                    (current + response.content).distinctBy { it.id }
+                }
                 _totalPages.value = response.totalPages
                 _currentPage.value += 1
-                Log.d(TAG, "Fetched notifications for user $userId: ${response.content}")
+                Log.d(TAG, "Fetched notifications for user $userId: ${response.content.size}")
             } catch (e: Exception) {
                 _error.value = "Lỗi khi tải thông báo: ${e.message}"
                 Log.e(TAG, "Error loading notifications: ${e.message}", e)
@@ -57,6 +74,18 @@ class NotificationViewModel @Inject constructor(
                 _isLoading.value = false
             }
         }
+    }
+
+    fun addPushNotification(notification: UserNotification) {
+        _notifications.update { current ->
+            val exists = current.any { it.id == notification.id }
+            if (!exists) {
+                listOf(notification) + current
+            } else {
+                current
+            }
+        }
+        Log.d(TAG, "Added push notification: ${notification.content}, id=${notification.id}")
     }
 
     fun clearError() {

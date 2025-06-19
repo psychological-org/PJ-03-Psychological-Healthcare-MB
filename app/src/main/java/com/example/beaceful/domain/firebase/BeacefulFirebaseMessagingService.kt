@@ -11,10 +11,13 @@ import androidx.core.app.NotificationCompat
 import com.example.beaceful.R
 import com.example.beaceful.core.network.fcm_token.FcmTokenApiService
 import com.example.beaceful.core.network.fcm_token.FcmTokenRequest
+import com.example.beaceful.core.util.NotificationEventBus
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.local.NotificationDao
 import com.example.beaceful.domain.model.NotificationEntity
+import com.example.beaceful.domain.model.UserNotification
 import com.example.beaceful.ui.MainActivity
+import com.example.beaceful.ui.viewmodel.NotificationViewModel
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
 import dagger.hilt.android.AndroidEntryPoint
@@ -31,16 +34,31 @@ import javax.inject.Inject
 class BeacefulFirebaseMessagingService : FirebaseMessagingService() {
 
     @Inject lateinit var fcmTokenApiService: FcmTokenApiService
-    @Inject lateinit var notificationDao: NotificationDao
 
     private val TAG = "BeacefulFCM"
     private val CHANNEL_ID = "beaceful_notifications"
     private val CHANNEL_NAME = "Beaceful Notifications"
 
-    override fun onNewToken(token: String) {
-        super.onNewToken(token)
-        Log.d(TAG, "New FCM token: $token")
-        sendFcmTokenToServer(token)
+    override fun onCreate() {
+        super.onCreate()
+        createNotificationChannel()
+    }
+
+    private fun createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                CHANNEL_ID,
+                CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Beaceful Notifications"
+                enableLights(true)
+                enableVibration(true)
+            }
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+            Log.d(TAG, "Created notification channel: $CHANNEL_ID")
+        }
     }
 
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
@@ -54,49 +72,38 @@ class BeacefulFirebaseMessagingService : FirebaseMessagingService() {
         val notificationRole = remoteMessage.data["role"]
         Log.d(TAG, "Current user role: $currentUserRole, Notification role: $notificationRole")
 
-        // Lọc thông báo: chỉ xử lý nếu role khớp hoặc không có role (tương thích ngược)
+        // Lọc thông báo: chỉ xử lý nếu role khớp hoặc không có role
         if (notificationRole == null || notificationRole == currentUserRole) {
             val title = remoteMessage.notification?.title ?: remoteMessage.data["title"] ?: "Thông báo mới"
             val body = remoteMessage.notification?.body ?: remoteMessage.data["body"] ?: "Bạn có thông báo mới"
             val appointmentId = remoteMessage.data["appointment_id"]?.toIntOrNull()
+            val userNotificationId = remoteMessage.data["userNotificationId"] ?: ""
 
-            Log.d(TAG, "Parsed notification: title=$title, body=$body, appointmentId=$appointmentId, userRole=$currentUserRole")
-            sendNotification(title, body, appointmentId)
+            Log.d(TAG, "Parsed notification: title=$title, body=$body, appointmentId=$appointmentId, userRole=$currentUserRole, userNotificationId=$userNotificationId")
 
+            // Tạo UserNotification
+            val notification = UserNotification(
+                id = userNotificationId,
+                userId = UserSession.getCurrentUserId() ?: "",
+                notificationId = "",
+                content = body,
+                isRead = false,
+            )
+
+            // Phát sự kiện qua NotificationEventBus
             CoroutineScope(Dispatchers.IO).launch {
-                notificationDao.insert(
-                    NotificationEntity(
-                        title = title,
-                        body = body,
-                        timestamp = System.currentTimeMillis(),
-                        appointmentId = appointmentId,
-                        userRole = currentUserRole
-                    )
-                )
-                Log.d(TAG, "Saved notification to Room: title=$title, body=$body, appointmentId=$appointmentId, userRole=$currentUserRole")
+                NotificationEventBus.emitNotification(notification)
+                Log.d(TAG, "Emitted notification event: $body")
             }
+
+            // Hiển thị thông báo
+            sendNotification(title, body, appointmentId)
         } else {
             Log.d(TAG, "Ignoring notification: role $notificationRole does not match current user role $currentUserRole")
         }
     }
 
     private fun sendNotification(title: String, messageBody: String, appointmentId: Int?) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
-            ).apply {
-                description = "Beaceful Notifications"
-                enableLights(true)
-                enableVibration(true)
-            }
-            notificationManager.createNotificationChannel(channel)
-            Log.d(TAG, "Created notification channel: $CHANNEL_ID")
-        }
-
         val intent = Intent(this, MainActivity::class.java).apply {
             putExtra("navigate_to", "appointment_details")
             putExtra("appointment_id", appointmentId)
@@ -104,22 +111,29 @@ class BeacefulFirebaseMessagingService : FirebaseMessagingService() {
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
-            0,
+            System.currentTimeMillis().toInt(),
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
         val notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
+            .setSmallIcon(R.drawable.chat_bg) // Thay bằng icon của bạn
             .setContentTitle(title)
             .setContentText(messageBody)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pendingIntent)
 
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = System.currentTimeMillis().toInt()
         notificationManager.notify(notificationId, notificationBuilder.build())
         Log.d(TAG, "Notification sent with ID: $notificationId, title: $title, body: $messageBody")
+    }
+
+    override fun onNewToken(token: String) {
+        super.onNewToken(token)
+        Log.d(TAG, "New FCM token: $token")
+        sendFcmTokenToServer(token)
     }
 
     private fun sendFcmTokenToServer(token: String) {

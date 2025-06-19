@@ -1,5 +1,6 @@
  package com.example.beaceful.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -54,6 +55,24 @@ class MainActivity : ComponentActivity() {
         S3Manager.initialize(this)
         setContent {
             BeacefulApp()
+        }
+    }
+    override fun onNewIntent(intent: Intent) {
+        if (intent != null) {
+            super.onNewIntent(intent)
+        }
+        setIntent(intent)
+        handleIntent(intent)
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        intent?.let {
+            val navigateTo = it.getStringExtra("navigate_to")
+            val appointmentId = it.getIntExtra("appointment_id", -1)
+            if (navigateTo == "appointment_details" && appointmentId != -1) {
+                Log.d("MainActivity", "Handling intent: navigate_to=$navigateTo, appointment_id=$appointmentId")
+                // Điều hướng sẽ được xử lý trong BeacefulApp
+            }
         }
     }
 }
