@@ -582,7 +582,6 @@ fun WriteDiaryScreen(
                                 imageUrl = savedImagePath,
                                 voiceUrl = savedVoicePath,
                                 posterId = userId,
-                                createAt = selectedDate,
                             )
 //                            navController.popBackStack("diary", inclusive = false)
                             navController.navigate(DiaryRoute.route)

@@ -6,6 +6,8 @@ import java.time.*
 import java.time.format.DateTimeFormatter
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.example.beaceful.core.network.recommended.Emotion
+import com.example.beaceful.core.network.recommended.SerializableEmotion
 
 
 data class User(
@@ -118,7 +120,9 @@ data class Diary(
     val imageUrl: String? = null,
     val voiceUrl: String? = null,
     val posterId: String,
-    val createdAt: LocalDateTime = LocalDateTime.now()
+    val createdAt: LocalDateTime = LocalDateTime.now(),
+    val emotions: List<SerializableEmotion>? = null,
+    val negativityScore: Float? = null
 )
 
 data class Topic(

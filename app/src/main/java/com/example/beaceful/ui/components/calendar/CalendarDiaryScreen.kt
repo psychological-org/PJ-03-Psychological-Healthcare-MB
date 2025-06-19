@@ -37,6 +37,7 @@ import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -57,6 +58,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.core.util.formatAppointmentDate
 import com.example.beaceful.domain.model.Appointment
 import com.example.beaceful.domain.model.Diary
@@ -74,11 +76,23 @@ fun CalendarDiaryScreen(
     viewModel: DiaryViewModel = hiltViewModel(),
     currentMonth: LocalDateTime,
 ) {
+    var userId = UserSession.getCurrentUserId()
     var selectedDiaries by remember { mutableStateOf<List<Diary>?>(null) }
     var selectedIndex by remember { mutableIntStateOf(0) }
     val options = listOf("Mood count", "Lịch sắp tới")
     val diariesForDate by viewModel.diariesForDate.collectAsState()
+    var moodCount by remember { mutableStateOf<Map<Emotions, Int>>(emptyMap()) }
+    var nextAppointments by remember { mutableStateOf<List<Appointment>>(emptyList()) }
+    var doctors by remember { mutableStateOf<Map<Appointment, User?>>(emptyMap()) }
 
+    // Gọi các hàm suspend trong coroutine
+    LaunchedEffect(currentMonth, selectedIndex) {
+        moodCount = viewModel.moodCount(currentMonth)
+        if (selectedIndex == 1) {
+            nextAppointments = viewModel.getUpcoming(userId)
+            doctors = nextAppointments.associateWith { viewModel.getDoctorByAppointment(it) }
+        }
+    }
 
     Box {
         LazyColumn(
@@ -106,13 +120,13 @@ fun CalendarDiaryScreen(
             item {
                 CustomCalendar(
                     currentMonth = currentMonth,
-                    highlightDates = { date -> viewModel.repo.getDiariesOnDate(date.toLocalDate()).isNotEmpty() },
+                    highlightDates = { date -> viewModel.getDiariesOnDate(date.toLocalDate()).isNotEmpty() },
                     getColorsForDate = { date ->
-                        viewModel.repo.getDiariesOnDate(date.toLocalDate())
+                        viewModel.getDiariesOnDate(date.toLocalDate())
                             .take(2)
                             .map { it.emotion.textColor }
                     },
-                    onClickDate = { date -> selectedDiaries = viewModel.repo.getDiariesOnDate(date.toLocalDate()) }
+                    onClickDate = { date -> selectedDiaries = viewModel.getDiariesOnDate(date.toLocalDate()) }
                 )
                 Spacer(Modifier.height(8.dp))
 
@@ -144,7 +158,6 @@ fun CalendarDiaryScreen(
             }
 
             item {
-                val moodCount = viewModel.moodCount(currentMonth)
 
                 AnimatedContent(
                     targetState = selectedIndex,
@@ -172,17 +185,15 @@ fun CalendarDiaryScreen(
                                 RoundedCornerShape(24.dp)
                             ).fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp)
                         ) {
-                            val nextAppointments: List<Appointment> = viewModel.getUpcoming("4")
                             if (nextAppointments.isEmpty()) {
                                 Text(text = "Trống", textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onTertiary)
                             } else {
                                 nextAppointments.forEach { appointment ->
-                                    val doctor: User? =
-                                        viewModel.getDoctorByAppointment(appointment)
+                                    val doctor = doctors[appointment]
                                     if (doctor != null) {
                                         Column {
-                                            Text(text = formatAppointmentDate(appointment.appointmentDate),color = MaterialTheme.colorScheme.onTertiary)
-                                            Text(text = "Bs. ${doctor.fullName}",color = MaterialTheme.colorScheme.onTertiary)
+                                            Text(text = formatAppointmentDate(appointment.appointmentDate), color = MaterialTheme.colorScheme.onTertiary)
+                                            Text(text = "Bs. ${doctor.fullName}", color = MaterialTheme.colorScheme.onTertiary)
                                             HorizontalDivider(
                                                 color = MaterialTheme.colorScheme.secondary
                                             )
