@@ -23,12 +23,13 @@ import kotlinx.coroutines.flow.StateFlow
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDateTime
 import javax.inject.Inject
 
 data class ChatPreview(
     val userId: String,
     val lastMessage: String,
-    val createdAt: String,
+    val createdAt: LocalDateTime,
     val isNewMessage: Boolean
 )
 
@@ -40,6 +41,8 @@ class ChatViewModel @Inject constructor(
     val users = mutableStateOf<List<User>>(emptyList())
     val chatPreviews = mutableStateOf<Map<String, ChatPreview>>(emptyMap())
     private var currentUserId: String? = null
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error
     private var messagesListener: ValueEventListener? = null
@@ -50,6 +53,7 @@ class ChatViewModel @Inject constructor(
 
     private fun loadCurrentUserId() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 currentUserId = UserSession.getCurrentUserId()
                 println("Current user ID (mongoId): $currentUserId")
@@ -66,12 +70,15 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 _error.value = "Lỗi tải thông tin người dùng: ${e.message}"
                 println("Load current user ID error: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     private suspend fun ensureUserExistsInFirebase(userId: String) {
         try {
+            _isLoading.value = true
             val snapshot = database.reference.child("users").child(userId).get().await()
             if (snapshot.exists()) {
                 println("User $userId already exists in Firebase")
@@ -124,11 +131,14 @@ class ChatViewModel @Inject constructor(
         } catch (e: Exception) {
             _error.value = "Lỗi đảm bảo user tồn tại: ${e.message}"
             println("Ensure user error: ${e.message}")
+        } finally {
+            _isLoading.value = false
         }
     }
 
     fun loadUsers() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val snapshot = database.reference.child("users").get().await()
                 println("Users snapshot: ${snapshot.childrenCount} users found")
@@ -154,12 +164,15 @@ class ChatViewModel @Inject constructor(
             } catch (e: Exception) {
                 _error.value = "Lỗi tải danh sách người dùng: ${e.message}"
                 println("Load users error: ${e.message}")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
 
     fun loadChatPreviews() {
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 val currentUserId = currentUserId ?: run {
                     _error.value = "Người dùng chưa đăng nhập"
@@ -175,81 +188,88 @@ class ChatViewModel @Inject constructor(
                 messagesListener = object : ValueEventListener {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         viewModelScope.launch {
-                            println("Messages snapshot: ${snapshot.childrenCount} messages found")
-                            val previews = mutableMapOf<String, ChatPreview>()
-                            val messages = snapshot.children.mapNotNull { snap ->
-                                try {
-                                    val firebaseMessage = snap.getValue(FirebaseMessage::class.java)
-                                    firebaseMessage?.toMessage()?.takeIf {
-                                        it.senderId == currentUserId || it.receiverId == currentUserId
-                                    }?.also {
-                                        println("Valid message: senderId=${it.senderId}, receiverId=${it.receiverId}, content=${it.content}")
+                            _isLoading.value = true
+                            try {
+                                println("Messages snapshot: ${snapshot.childrenCount} messages found")
+                                val previews = mutableMapOf<String, ChatPreview>()
+                                val messages = snapshot.children.mapNotNull { snap ->
+                                    try {
+                                        val firebaseMessage = snap.getValue(FirebaseMessage::class.java)
+                                        firebaseMessage?.toMessage()?.takeIf {
+                                            it.senderId == currentUserId || it.receiverId == currentUserId
+                                        }?.also {
+                                            println("Valid message: senderId=${it.senderId}, receiverId=${it.receiverId}, content=${it.content}")
+                                        }
+                                    } catch (e: Exception) {
+                                        println("Error parsing message ${snap.key}: ${e.message}")
+                                        null
                                     }
-                                } catch (e: Exception) {
-                                    println("Error parsing message ${snap.key}: ${e.message}")
-                                    null
                                 }
-                            }
 
-                            if (messages.isEmpty()) {
-                                println("No messages found for user $currentUserId")
-                                chatPreviews.value = emptyMap()
-                                return@launch
-                            }
-
-                            val userIds = users.value.map { it.id }
-                            println("Available user IDs: $userIds")
-
-                            val groupedMessages = mutableMapOf<String, MutableList<Message>>()
-                            messages.forEach { message ->
-                                val otherUserId = if (message.senderId == currentUserId) {
-                                    message.receiverId
-                                } else {
-                                    message.senderId
+                                if (messages.isEmpty()) {
+                                    println("No messages found for user $currentUserId")
+                                    chatPreviews.value = emptyMap()
+                                    return@launch
                                 }
-                                println("Message: senderId=${message.senderId}, receiverId=${message.receiverId}, otherUserId=$otherUserId")
-                                if (otherUserId in userIds) {
-                                    groupedMessages.getOrPut(otherUserId) { mutableListOf() }.add(message)
+
+                                val userIds = users.value.map { it.id }
+                                println("Available user IDs: $userIds")
+
+                                val groupedMessages = mutableMapOf<String, MutableList<Message>>()
+                                messages.forEach { message ->
+                                    val otherUserId = if (message.senderId == currentUserId) {
+                                        message.receiverId
+                                    } else {
+                                        message.senderId
+                                    }
+                                    println("Message: senderId=${message.senderId}, receiverId=${message.receiverId}, otherUserId=$otherUserId")
+                                    if (otherUserId in userIds) {
+                                        groupedMessages.getOrPut(otherUserId) { mutableListOf() }.add(message)
+                                    }
                                 }
-                            }
 
-                            if (groupedMessages.isEmpty()) {
-                                println("No valid chat sessions found for user $currentUserId")
-                                chatPreviews.value = emptyMap()
-                                return@launch
-                            }
-
-                            groupedMessages.forEach { (otherUserId, msgList) ->
-                                val latestMessage = msgList.maxByOrNull { it.createdAt }
-                                if (latestMessage != null) {
-                                    println("Creating preview for $otherUserId: senderId=${latestMessage.senderId}, receiverId=${latestMessage.receiverId}, content=${latestMessage.content}")
-                                    previews[otherUserId] = ChatPreview(
-                                        userId = otherUserId,
-                                        lastMessage = if (latestMessage.senderId == currentUserId) {
-                                            "Bạn: ${latestMessage.content ?: "[Media]"}"
-                                        } else {
-                                            latestMessage.content ?: "[Media]"
-                                        },
-                                        createdAt = latestMessage.createdAt.format(DateTimeFormatter.ofPattern("HH:mm:ss")),
-                                        isNewMessage = latestMessage.senderId != currentUserId && !latestMessage.isRead
-                                    )
+                                if (groupedMessages.isEmpty()) {
+                                    println("No valid chat sessions found for user $currentUserId")
+                                    chatPreviews.value = emptyMap()
+                                    return@launch
                                 }
-                            }
 
-                            println("Loaded ${previews.size} chat previews")
-                            chatPreviews.value = previews
+                                groupedMessages.forEach { (otherUserId, msgList) ->
+                                    val latestMessage = msgList.maxByOrNull { it.createdAt }
+                                    if (latestMessage != null) {
+                                        println("Creating preview for $otherUserId: senderId=${latestMessage.senderId}, receiverId=${latestMessage.receiverId}, content=${latestMessage.content}")
+                                        previews[otherUserId] = ChatPreview(
+                                            userId = otherUserId,
+                                            lastMessage = if (latestMessage.senderId == currentUserId) {
+                                                "Bạn: ${latestMessage.content ?: "[Media]"}"
+                                            } else {
+                                                latestMessage.content ?: "[Media]"
+                                            },
+                                            createdAt = latestMessage.createdAt,
+                                            isNewMessage = latestMessage.senderId != currentUserId && !latestMessage.isRead
+                                        )
+                                    }
+                                }
+
+                                println("Loaded ${previews.size} chat previews")
+                                chatPreviews.value = previews
+                            } finally {
+                                _isLoading.value = false
+                            }
                         }
                     }
 
                     override fun onCancelled(error: DatabaseError) {
                         _error.value = "Lỗi tải tin nhắn: ${error.message}"
                         println("Load messages error: ${error.message}")
+                        _isLoading.value = false
                     }
                 }
                 database.reference.child("messages").addValueEventListener(messagesListener!!)
             } catch (e: Exception) {
                 _error.value = "Lỗi tải tin nhắn: ${e.message}"
                 println("Load chat previews error: ${e.message}")
+                _isLoading.value = false
             }
         }
     }
@@ -272,8 +292,13 @@ class ChatViewModel @Inject constructor(
     fun refreshData() {
         viewModelScope.launch {
             println("Refreshing ChatViewModel data")
-            clearDataOnLogout()
-            loadCurrentUserId()
+            _isLoading.value = true
+            try {
+                clearDataOnLogout()
+                loadCurrentUserId()
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
 

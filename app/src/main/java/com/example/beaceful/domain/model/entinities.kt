@@ -60,11 +60,11 @@ data class Notification(
 )
 
 data class UserNotification(
-    val id: Int,
-    val receiverId: String,
-    val notificationId: Int,
-    val isRead: Boolean = false,
-    val content: String
+    val id: String,
+    val userId: String,
+    val notificationId: String,
+    val content: String,
+    val isRead: Boolean
 )
 
 data class Appointment(

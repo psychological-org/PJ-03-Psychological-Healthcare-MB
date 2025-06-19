@@ -13,6 +13,7 @@ import com.example.beaceful.core.network.collection.CollectionTypeDeserializer
 import com.example.beaceful.core.network.comment.CommentApiService
 import com.example.beaceful.core.network.community.CommunityApiService
 import com.example.beaceful.core.network.fcm_token.FcmTokenApiService
+import com.example.beaceful.core.network.notification.UserNotificationApiService
 import com.example.beaceful.core.network.participant_community.ParticipantCommunityApiService
 import com.example.beaceful.core.network.post.PostApiService
 import com.example.beaceful.core.network.recommended.RecommendationApiService
@@ -26,6 +27,8 @@ import com.example.beaceful.domain.repository.CollectionSeenRepository
 import com.example.beaceful.domain.repository.CommunityRepository
 import com.example.beaceful.domain.repository.PostRepository
 import com.example.beaceful.domain.repository.TopicRepository
+import com.example.beaceful.domain.repository.UserNotificationRepository
+import com.example.beaceful.domain.repository.UserNotificationRepositoryImpl
 import com.example.beaceful.domain.repository.UserRepository
 import com.example.beaceful.ui.viewmodel.AuthViewModel
 import com.google.gson.Gson
@@ -263,5 +266,17 @@ object NetworkModule {
     @Singleton
     fun provideFcmTokenApiService(retrofit: Retrofit): FcmTokenApiService {
         return retrofit.create(FcmTokenApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserNotificationApiService(retrofit: Retrofit): UserNotificationApiService {
+        return retrofit.create(UserNotificationApiService::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserNotificationRepository(userNotificationApiService: UserNotificationApiService): UserNotificationRepository {
+        return UserNotificationRepositoryImpl(userNotificationApiService)
     }
 }
