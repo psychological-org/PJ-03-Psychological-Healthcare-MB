@@ -403,7 +403,9 @@ fun AboutSection(
                         horizontalArrangement = Arrangement.End
                     ) {
                         OutlinedButton(
-                            onClick = { navController.navigate(RatingFullScreenRoute.route)  },
+                            onClick = {
+                                navController.navigate(RatingFullScreenRoute.createRoute(doctorId))
+                            },
                             shape = RoundedCornerShape(24.dp),
                             border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondary)
                         ) {

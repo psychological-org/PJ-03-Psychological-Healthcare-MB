@@ -177,6 +177,8 @@ data object RatingRoute : BeacefulRoutes {
 data object RatingFullScreenRoute : BeacefulRoutes {
     override val icon = Icons.Default.TagFaces
     override val route = "appt_rating_full/{doctorId}"
+
+    fun createRoute(doctorId: String) = "appt_rating_full/$doctorId"
 }
 
 

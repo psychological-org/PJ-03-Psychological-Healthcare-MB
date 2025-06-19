@@ -1,5 +1,6 @@
 package com.example.beaceful.ui.screens.notification
 
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -53,6 +54,7 @@ fun RatingFullScreen(
     doctorId: String,
     viewModel: AppointmentViewModel = hiltViewModel()
 ) {
+    Log.d("RatingFullScreen", "Received doctorId: $doctorId")
     val appointments by viewModel.appointments.collectAsState()
     val error by viewModel.error.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
