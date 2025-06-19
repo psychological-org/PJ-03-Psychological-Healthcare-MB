@@ -3,9 +3,11 @@ package com.example.beaceful.viewmodel
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.beaceful.domain.model.AppointmentStatus
 import com.example.beaceful.domain.model.Comment
 import com.example.beaceful.domain.model.Post
 import com.example.beaceful.domain.model.User
+import com.example.beaceful.domain.repository.AppointmentRepository
 import com.example.beaceful.domain.repository.PostRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,8 +18,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class DoctorViewModel @Inject constructor(
-    private val repository: PostRepository
+    private val repository: PostRepository,
+    private val appointmentRepository: AppointmentRepository
 ) : ViewModel() {
+
+    private val _doctorStats = MutableStateFlow<Map<String, DoctorStats>>(emptyMap())
+    val doctorStats: StateFlow<Map<String, DoctorStats>> = _doctorStats.asStateFlow()
+
     private val _doctors = MutableStateFlow<List<User>>(emptyList())
     val doctors: StateFlow<List<User>> = _doctors.asStateFlow()
 
@@ -36,6 +43,11 @@ class DoctorViewModel @Inject constructor(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    data class DoctorStats(
+        val averageRating: Double? = null,
+        val appointmentCount: Int = 0
+    )
+
     init {
         fetchDoctors()
     }
@@ -45,8 +57,9 @@ class DoctorViewModel @Inject constructor(
             try {
                 _isLoading.value = true
                 val users = repository.getAllUsers().filter { it.roleId == 2 }
-                Log.d("DoctorViewModel", "Fetched doctors: $users")
                 _doctors.value = users
+                // Lấy stats cho từng bác sĩ
+                fetchDoctorStats(users.map { it.id })
             } catch (e: Exception) {
                 Log.e("DoctorViewModel", "Error fetching doctors: ${e.message}", e)
                 _error.value = "Lỗi khi tải danh sách bác sĩ: ${e.message}"
@@ -76,6 +89,41 @@ class DoctorViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    private fun fetchDoctorStats(doctorIds: List<String>) {
+        viewModelScope.launch {
+            val statsMap = mutableMapOf<String, DoctorStats>()
+            doctorIds.forEach { doctorId ->
+                try {
+                    val appointments = appointmentRepository.getAppointmentsOfDoctor(doctorId)
+                    Log.d("DoctorViewModel", "Appointments for doctor $doctorId: $appointments")
+
+                    // Tính rating trung bình
+                    val ratings = appointments.mapNotNull { it.rating?.toDouble() }
+                    Log.d("DoctorViewModel", "Ratings for doctor $doctorId: $ratings")
+                    val averageRating = if (ratings.isNotEmpty()) {
+                        ratings.average()
+                    } else {
+                        null
+                    }
+
+                    // Đếm số lượt khám
+                    val appointmentCount = appointments.count { it.status == AppointmentStatus.COMPLETED }
+                    Log.d("DoctorViewModel", "Completed appointments for doctor $doctorId: $appointmentCount")
+
+                    statsMap[doctorId] = DoctorStats(
+                        averageRating = averageRating,
+                        appointmentCount = appointmentCount
+                    )
+                } catch (e: Exception) {
+                    Log.e("DoctorViewModel", "Error fetching stats for doctor $doctorId: ${e.message}", e)
+                    statsMap[doctorId] = DoctorStats()
+                }
+            }
+            _doctorStats.value = statsMap
+            Log.d("DoctorViewModel", "Doctor stats: $statsMap")
         }
     }
 
