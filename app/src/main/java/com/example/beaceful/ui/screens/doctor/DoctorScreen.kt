@@ -91,7 +91,8 @@ fun DoctorScreen(
         UserListScreen(
             modifier = Modifier.fillMaxSize(),
             users = filteredDoctors,
-            navController = navController
+            navController = navController,
+            viewModel = viewModel
         )
     }
 }
@@ -101,7 +102,8 @@ fun DoctorScreen(
 fun UserListScreen(
     modifier: Modifier = Modifier,
     users: List<User>,
-    navController: NavHostController
+    navController: NavHostController,
+    viewModel: DoctorViewModel
 ) {
 
     LazyVerticalGrid(
@@ -115,7 +117,8 @@ fun UserListScreen(
             UserCard(doctor,
                 onProfileClick = {
                     navController.navigate(SingleDoctorProfile.createRoute(doctor.id))
-                })
+                },
+                viewModel = viewModel)
         }
     }
 }
@@ -126,8 +129,11 @@ fun UserCard(
     profile: User,
     onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    viewModel: DoctorViewModel = hiltViewModel()
 ) {
 
+    val doctorStats by viewModel.doctorStats.collectAsState()
+    val stats = doctorStats[profile.id] ?: DoctorViewModel.DoctorStats()
 
     Box(
         modifier = modifier
@@ -171,11 +177,11 @@ fun UserCard(
                     )
                     StatItem(
                         icon = Icons.Outlined.StarOutline,
-                        label = "3.4/5",
+                        label = stats.averageRating?.let { String.format("%.1f/5", it) } ?: "N/A",
                     )
                     StatItem(
                         icon = Icons.Filled.Person,
-                        label = "234",
+                        label = stats.appointmentCount.toString(),
                     )
                 }
 

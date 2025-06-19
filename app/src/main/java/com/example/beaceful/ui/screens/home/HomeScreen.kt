@@ -240,26 +240,15 @@ fun HomeScreen(
                 title = R.string.ho5_music_for_u,
                 onClickSeeMore = {}
             ) {
-                collectionsState?.let { result ->
-                    when {
-                        result.isSuccess -> {
-                            val collections = DumpDataProvider.collections
-                            val musicCollections =
-                                collections.filter { it.type == CollectionType.MUSIC }
-                            MusicListScreen(musicCollections)
-                        }
+                val collections = DumpDataProvider.collections
+                val musicCollections = collections.filter { it.type == CollectionType.MUSIC }
 
-                        result.isFailure -> {
-                            Text(
-                                text = "Error loading collections: ${result.exceptionOrNull()?.message}",
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
-                    }
-                } ?: run {
+                if (musicCollections.isNotEmpty()) {
+                    MusicListScreen(musicCollections)
+                } else {
                     Text(
-                        text = "Loading collections...",
+                        text = "No music collections available.",
+                        color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(16.dp)
                     )
                 }
