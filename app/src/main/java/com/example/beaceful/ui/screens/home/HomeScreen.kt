@@ -74,6 +74,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.beaceful.R
 import com.example.beaceful.core.util.UserSession
 import com.example.beaceful.domain.model.CollectionType
@@ -88,6 +89,7 @@ import com.example.beaceful.ui.navigation.SelectEmotionDiary
 import com.example.beaceful.ui.navigation.WriteDiary
 import com.example.beaceful.ui.screens.diary.PieChartData
 import com.example.beaceful.ui.viewmodel.CollectionViewModel
+import com.example.beaceful.ui.viewmodel.DiaryViewModel
 import com.example.beaceful.ui.viewmodel.MusicPlayerViewModel
 import com.example.beaceful.ui.viewmodel.RecommendationViewModel
 import kotlinx.coroutines.delay
@@ -100,6 +102,8 @@ import java.time.ZoneId
 fun HomeScreen(
     navController: NavHostController,
     modifier: Modifier = Modifier,
+    diaryViewModel: DiaryViewModel = hiltViewModel(),
+    recommendationViewModel: RecommendationViewModel = hiltViewModel()
 ) {
     val musicPlayerViewModel: MusicPlayerViewModel = hiltViewModel()
     val collectionViewModel: CollectionViewModel = hiltViewModel()
@@ -118,9 +122,35 @@ fun HomeScreen(
         else -> 0 //dem
     }
 
-    LaunchedEffect(Unit) {
-        collectionViewModel.getAllCollections()
+    val allDiaries by diaryViewModel.allDiaries.collectAsState()
+    val latestDiary = allDiaries.firstOrNull()
+    val recommendationText = recommendationViewModel.homeRecommendation.collectAsState().value
 
+    // HOẶC: Nếu muốn refresh khi navigate back từ màn hình khác
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    LaunchedEffect(navBackStackEntry) {
+        // Chỉ refresh khi thực sự quay lại HomeScreen
+        if (navBackStackEntry?.destination?.route?.contains("home") == true) {
+            Log.d("HomeScreen", "Navigated back to HomeScreen, refreshing diaries...")
+            diaryViewModel.refreshDiaries()
+        }
+    }
+
+    // Logic xử lý recommendation khi có diary mới
+    LaunchedEffect(allDiaries) {
+        Log.d("HomeScreen", "Diaries updated, size: ${allDiaries.size}")
+        if (latestDiary != null) {
+            Log.d("HomeScreen", "Latest diary: id=${latestDiary.id}, negativityScore=${latestDiary.negativityScore}, createdAt=${latestDiary.createdAt}")
+            latestDiary.negativityScore?.let { score ->
+                recommendationViewModel.getHomeRecommendation(score)
+            } ?: run {
+                Log.d("HomeScreen", "Negativity score is null, using default 0.5f")
+                recommendationViewModel.getHomeRecommendation(0.5f)
+            }
+        } else {
+            Log.d("HomeScreen", "No diaries found, using default 0.5f")
+            recommendationViewModel.getHomeRecommendation(0.5f)
+        }
     }
 
     val role by UserSession.currentUserRole.collectAsState()
@@ -189,7 +219,8 @@ fun HomeScreen(
                 )
                 Spacer(Modifier.height(36.dp))
                 RecommendationCard(
-                    recommendationText = "\"Trong bóng tối, hãy là ngọn nến của chính mình.\"\n\nTôi hiểu rằng bạn đang trải qua giai đoạn khó khăn. Những cảm xúc tiêu cực có thể rất nặng nề, nhưng bạn không đơn độc. Hãy cho phép bản thân được buồn, được mệt mỏi, và nhớ rằng đây chỉ là một phần của cuộc sống. Hãy thử bài tập hít thở sâu, tập trung vào hiện tại để xoa dịu tâm trí.\n\nTrong công việc hoặc học tập, hãy bắt đầu với những mục tiêu nhỏ, dễ đạt được. Chia nhỏ nhiệm vụ lớn thành những bước nhỏ hơn để giảm bớt áp lực. Đừng ngần ngại tìm kiếm sự giúp đỡ từ đồng nghiệp hoặc bạn bè khi cần.\n\nHãy kết nối với những người bạn tin tưởng. Chia sẻ cảm xúc của bạn một cách trung thực và mở lòng đón nhận sự hỗ trợ từ họ. Đôi khi, chỉ cần biết rằng có ai đó lắng nghe và quan tâm cũng có thể tạo ra sự khác biệt lớn.\n\nHôm nay, bạn có thể thử viết nhật ký để giải tỏa cảm xúc hoặc đi bộ nhẹ nhàng trong 15 phút để thư giãn đầu óc.\n\nNếu bạn cảm thấy những cảm xúc này quá sức chịu đựng, hãy tìm đến chuyên gia tâm lý để được hỗ trợ. Ứng dụng này có hỗ trợ đặt lịch khám nếu bạn cần, hoặc bạn có thể liên hệ đường dây nóng 179 hoặc 1900 9254. Bạn mạnh mẽ hơn bạn nghĩ đấy!\n",
+//                    recommendationText = "\"Trong bóng tối, hãy là ngọn nến của chính mình.\"\n\nTôi hiểu rằng bạn đang trải qua giai đoạn khó khăn. Những cảm xúc tiêu cực có thể rất nặng nề, nhưng bạn không đơn độc. Hãy cho phép bản thân được buồn, được mệt mỏi, và nhớ rằng đây chỉ là một phần của cuộc sống. Hãy thử bài tập hít thở sâu, tập trung vào hiện tại để xoa dịu tâm trí.\n\nTrong công việc hoặc học tập, hãy bắt đầu với những mục tiêu nhỏ, dễ đạt được. Chia nhỏ nhiệm vụ lớn thành những bước nhỏ hơn để giảm bớt áp lực. Đừng ngần ngại tìm kiếm sự giúp đỡ từ đồng nghiệp hoặc bạn bè khi cần.\n\nHãy kết nối với những người bạn tin tưởng. Chia sẻ cảm xúc của bạn một cách trung thực và mở lòng đón nhận sự hỗ trợ từ họ. Đôi khi, chỉ cần biết rằng có ai đó lắng nghe và quan tâm cũng có thể tạo ra sự khác biệt lớn.\n\nHôm nay, bạn có thể thử viết nhật ký để giải tỏa cảm xúc hoặc đi bộ nhẹ nhàng trong 15 phút để thư giãn đầu óc.\n\nNếu bạn cảm thấy những cảm xúc này quá sức chịu đựng, hãy tìm đến chuyên gia tâm lý để được hỗ trợ. Ứng dụng này có hỗ trợ đặt lịch khám nếu bạn cần, hoặc bạn có thể liên hệ đường dây nóng 179 hoặc 1900 9254. Bạn mạnh mẽ hơn bạn nghĩ đấy!\n",
+                    recommendationText = recommendationText,
                     background = R.drawable.home_diary_background
                 )
             }
@@ -566,7 +597,6 @@ fun RecommendationCard(
             }
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
-            // Hình nền
             Image(
                 painter = painterResource(background),
                 contentDescription = null,
@@ -575,100 +605,104 @@ fun RecommendationCard(
                 modifier = Modifier.fillMaxSize(),
             )
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
-                    .padding(bottom = 24.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                contentPadding = PaddingValues(
-                    start = 40.dp,
-                    end = 40.dp,
-                    top = 16.dp,
-                    bottom = 0.dp
-                )
-            ) {
-                // Animated chuyển nội dung
-                item {
-                    AnimatedContent(
-                        targetState = paragraphs[currentIndex],
-                        transitionSpec = {
-                            (slideInHorizontally { fullWidth -> fullWidth } + fadeIn()).togetherWith(
-                                slideOutHorizontally { fullWidth -> -fullWidth } + fadeOut())
-                        }
-                    ) { paragraph ->
-                        Text(
-                            text = paragraph,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            textAlign = TextAlign.Center,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-
-
-            }
-
-            // Mũi tên (ẩn nếu chỉ có 1 đoạn)
-            if (paragraphs.size > 1) {
-                Row(
+            if (paragraphs.isEmpty()) {
+                Text(
+                    text = "Không có gợi ý hiện tại",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier
                         .fillMaxSize()
-                        .align(Alignment.Center)
-                        .offset(y = 50.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    IconButton(onClick = {
-                        currentIndex =
-                            if (currentIndex > 0) currentIndex - 1 else paragraphs.size - 1
-                    }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Previous",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-
-                    IconButton(onClick = {
-                        currentIndex = (currentIndex + 1) % paragraphs.size
-                    }) {
-                        Icon(
-                            Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "Next",
-                            tint = MaterialTheme.colorScheme.onPrimary
-                        )
-                    }
-                }
-            }
-
-            // Dấu chấm chỉ vị trí hiện tại (ẩn nếu chỉ có 1 đoạn)
-            if (paragraphs.size > 1) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                        .padding(16.dp),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.SemiBold
+                )
+            } else {
+                LazyColumn(
                     modifier = Modifier
-                        .align(Alignment.BottomCenter)
-                        .offset(y = (-4).dp)
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        .padding(bottom = 24.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    contentPadding = PaddingValues(
+                        start = 40.dp,
+                        end = 40.dp,
+                        top = 16.dp,
+                        bottom = 0.dp
+                    )
                 ) {
-                    paragraphs.forEachIndexed { index, _ ->
-                        Box(
-                            modifier = Modifier
-                                .padding(4.dp)
-                                .size(if (index == currentIndex) 12.dp else 8.dp)
-                                .background(
-                                    color = if (index == currentIndex) Color.White else Color.LightGray,
-                                    shape = CircleShape
+                    item {
+                        AnimatedContent(
+                            targetState = paragraphs[currentIndex],
+                            transitionSpec = {
+                                (slideInHorizontally { fullWidth -> fullWidth } + fadeIn()).togetherWith(
+                                    slideOutHorizontally { fullWidth -> -fullWidth } + fadeOut()
                                 )
-                        )
+                            }
+                        ) { paragraph ->
+                            Text(
+                                text = paragraph,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                if (paragraphs.size > 1) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .align(Alignment.Center)
+                            .offset(y = 50.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        IconButton(onClick = {
+                            currentIndex =
+                                if (currentIndex > 0) currentIndex - 1 else paragraphs.size - 1
+                        }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Previous",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+
+                        IconButton(onClick = {
+                            currentIndex = (currentIndex + 1) % paragraphs.size
+                        }) {
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Next",
+                                tint = MaterialTheme.colorScheme.onPrimary
+                            )
+                        }
+                    }
+
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .offset(y = (-4).dp)
+                    ) {
+                        paragraphs.forEachIndexed { index, _ ->
+                            Box(
+                                modifier = Modifier
+                                    .padding(4.dp)
+                                    .size(if (index == currentIndex) 12.dp else 8.dp)
+                                    .background(
+                                        color = if (index == currentIndex) Color.White else Color.LightGray,
+                                        shape = CircleShape
+                                    )
+                            )
+                        }
                     }
                 }
             }
-
-
         }
     }
 }

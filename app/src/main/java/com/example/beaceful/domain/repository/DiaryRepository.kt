@@ -1,6 +1,9 @@
 package com.example.beaceful.domain.repository
 
 import android.content.Context
+import android.util.Log
+import com.example.beaceful.core.network.recommended.Emotion
+import com.example.beaceful.core.network.recommended.SerializableEmotion
 import com.example.beaceful.domain.model.Diary
 import com.example.beaceful.domain.model.Emotions
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -27,7 +30,9 @@ data class DiarySerializable(
     val imageUrl: String?,
     val voiceUrl: String?,
     val posterId: String,
-    val createdAt: String
+    val createdAt: String,
+    val emotionsJson: String? = null,
+    val negativityScore: Float? = null
 )
 
 @Singleton
@@ -38,6 +43,16 @@ class DiaryRepository @Inject constructor(
     private val DIARY_DIR = "diaries"
 
     private fun Diary.toSerializable(): DiarySerializable {
+        val emotionsJson = emotions?.let {
+            try {
+                json.encodeToString(it).also { json ->
+                    Log.d("DiaryRepository", "Serialized emotions: $json")
+                }
+            } catch (e: Exception) {
+                Log.e("DiaryRepository", "Serialization error: ${e.message}")
+                null
+            }
+        }
         return DiarySerializable(
             id = id,
             emotion = emotion.name,
@@ -46,11 +61,23 @@ class DiaryRepository @Inject constructor(
             imageUrl = imageUrl,
             voiceUrl = voiceUrl,
             posterId = posterId,
-            createdAt = createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+            createdAt = createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            emotionsJson = emotionsJson,
+            negativityScore = negativityScore
         )
     }
 
     private fun DiarySerializable.toDiary(): Diary {
+        val emotions = emotionsJson?.let {
+            try {
+                json.decodeFromString<List<SerializableEmotion>>(it).also { emotions ->
+                    Log.d("DiaryRepository", "Deserialized emotions: $emotions")
+                }
+            } catch (e: Exception) {
+                Log.e("DiaryRepository", "Error deserializing emotionsJson: ${e.message}")
+                null
+            }
+        }
         return Diary(
             id = id,
             emotion = Emotions.valueOf(emotion),
@@ -61,9 +88,14 @@ class DiaryRepository @Inject constructor(
             posterId = posterId,
             createdAt = try {
                 LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                    .atZone(ZoneId.of("UTC"))
+                    .withZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
+                    .toLocalDateTime()
             } catch (e: DateTimeParseException) {
-                LocalDateTime.now(ZoneId.of("UTC+7"))
-            }
+                LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+            },
+            emotions = emotions,
+            negativityScore = negativityScore
         )
     }
 
@@ -150,6 +182,7 @@ class DiaryRepository @Inject constructor(
             false
         }
     }
+
     fun updateDiary(diary: Diary) {
         val diaryDir = File(context.filesDir, DIARY_DIR)
         if (!diaryDir.exists()) {
@@ -161,8 +194,9 @@ class DiaryRepository @Inject constructor(
         file.writeText(jsonString)
         println("Updated diary to ${file.absolutePath}")
     }
+
     fun getDiariesOnDate(date: LocalDateTime): List<Diary> =
-        DumpDataProvider.diaries.filter { it.createdAt.toLocalDate() == date.toLocalDate() }
+        getAllDiaries().filter { it.createdAt.toLocalDate() == date.toLocalDate() }
 
     fun getUserById(userId: String): User? =
         DumpDataProvider.listUser.find { it.id == userId }

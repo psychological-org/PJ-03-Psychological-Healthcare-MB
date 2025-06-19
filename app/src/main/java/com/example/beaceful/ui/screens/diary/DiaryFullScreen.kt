@@ -59,35 +59,6 @@ data class PieChartData(
     val color: Color,
 )
 
-//val emotions: List<PieChartData> = listOf(
-//    PieChartData(
-//        label = "anger",
-//        score = (0.5293946266174316).toFloat(),
-//        color = Emotions.ANGRY.textColor
-//    ),
-//    PieChartData(
-//        label = "sadness",
-//        score = (0.3829881548881531).toFloat(),
-//        color = Emotions.SAD.textColor
-//    ),
-//    PieChartData(
-//        label = "joy",
-//        score = (0.07129291445016861).toFloat(),
-//        color = Emotions.HAPPY.textColor
-//    ),
-//    PieChartData(
-//        label = "fear",
-//        score = (0.011929457075893879).toFloat(),
-//        color = Emotions.CONFUSE.textColor
-//    ),
-//    PieChartData(
-//        label = "love",
-//        score = (0.0034298289101570845).toFloat(),
-//        color = Emotions.INLOVE.textColor
-//    )
-//)
-//val negativity_score = 0.9252
-
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun DiaryFullScreen(
@@ -95,7 +66,6 @@ fun DiaryFullScreen(
     modifier: Modifier = Modifier,
     navController: NavHostController,
     viewModel: DiaryViewModel = hiltViewModel(),
-    recommendationViewModel: RecommendationViewModel = hiltViewModel()
 ) {
     val diary = viewModel.getDiary(diaryId)
     if (diary == null) {
@@ -112,16 +82,9 @@ fun DiaryFullScreen(
     val latestDiaryText by diaryContentFromFullScreen?.collectAsState()
         ?: remember { mutableStateOf(diary.content ?: "") }
     var selectedImageUri by remember {
-        mutableStateOf<Uri?>(diary.imageUrl?.let {
-            Uri.fromFile(
-                File(
-                    it
-                )
-            )
-        })
+        mutableStateOf<Uri?>(diary.imageUrl?.let { Uri.fromFile(File(it)) })
     }
     var recordedVoiceUri by remember { mutableStateOf<Uri?>(diary.voiceUrl?.let { Uri.parse(it) }) }
-    Log.d("Record", "$recordedVoiceUri")
 
     var isRecording by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -191,14 +154,12 @@ fun DiaryFullScreen(
         return try {
             val inputStream = context.contentResolver.openInputStream(uri)
             val file = File(context.filesDir, "voices/diary_voice_${System.currentTimeMillis()}.m4a")
-            file.parentFile?.mkdirs() // Tạo folder voices nếu chưa có
-
+            file.parentFile?.mkdirs()
             inputStream?.use { input ->
                 file.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
-
             file.absolutePath
         } catch (e: Exception) {
             println("Error saving voice: ${e.message}")
@@ -206,13 +167,11 @@ fun DiaryFullScreen(
         }
     }
 
-    // Tạo URI tạm thời cho ảnh chụp từ máy ảnh
     fun createImageUri(context: Context): Uri {
         val file = File(context.cacheDir, "temp_image_${System.currentTimeMillis()}.jpg")
         return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
     }
 
-    // Bắt đầu ghi âm
     fun startRecording() {
         if (recordAudioPermissionState.status.isGranted) {
             try {
@@ -236,7 +195,6 @@ fun DiaryFullScreen(
         }
     }
 
-    // Dừng ghi âm
     fun stopRecording() {
         try {
             mediaRecorder.value?.apply {
@@ -255,7 +213,6 @@ fun DiaryFullScreen(
         }
     }
 
-
     fun playRecordedVoice(uri: Uri) {
         try {
             if (mediaPlayer.value == null) {
@@ -266,9 +223,7 @@ fun DiaryFullScreen(
                     isPlaying.value = true
                     duration.value = this.duration
                     handler.post(updatePosition)
-
                     setOnCompletionListener {
-                        // Phát lại từ đầu
                         seekTo(0)
                         start()
                     }
@@ -297,7 +252,6 @@ fun DiaryFullScreen(
         currentPosition.value = 0
     }
 
-
     if (readImagePermissionState.status.shouldShowRationale ||
         cameraPermissionState.status.shouldShowRationale ||
         recordAudioPermissionState.status.shouldShowRationale
@@ -319,7 +273,6 @@ fun DiaryFullScreen(
         )
     }
 
-    // Dialog chọn nguồn ảnh
     var showImageSourceDialog by remember { mutableStateOf(false) }
     if (showImageSourceDialog) {
         AlertDialog(
@@ -357,57 +310,22 @@ fun DiaryFullScreen(
         )
     }
 
-//    LaunchedEffect(latestDiaryText) {
-//        diaryText = latestDiaryText
-//    }
-
-    // Log và gọi API khi diaryText thay đổi
-    LaunchedEffect(diaryText) {
-        Log.d("DiaryFullScreen", "Diary content: $diaryText")
-        if (diaryText.isNotBlank()) {
-            recommendationViewModel.getRecommendation(diaryText)
-        }
-    }
-
-    var emotionsState by remember {
-        mutableStateOf<List<PieChartData>>(emptyList())
-    }
-    var recommendationText by remember { mutableStateOf("") }
-
-    // Quan sát LiveData từ RecommendationViewModel
-    val recommendation by recommendationViewModel.recommendation.observeAsState()
-    LaunchedEffect(recommendation) {
-        recommendation?.let { result ->
-            if (result.isSuccess) {
-                val answerResponse = result.getOrNull()
-                val answer = answerResponse?.answer
-                Log.d("DiaryFullScreen", "Recommendation success: $answer")
-                // Cập nhật recommendation text
-                recommendationText = answer ?: "Không có khuyến nghị"
-
-                // Lấy dữ liệu emotions từ AnswerResponse (giả định AnswerResponse chứa emotions)
-                // Cần cập nhật model AnswerResponse để chứa emotions và negativity_score
-                emotionsState = (answerResponse?.emotions ?: emptyList()).map { emotion ->
-                    PieChartData(
-                        label = emotion.label,
-                        score = emotion.score.toFloat(),
-                        color = when (emotion.label) {
-                            "joy" -> Emotions.HAPPY.textColor
-                            "sadness" -> Emotions.SAD.textColor
-                            "anger" -> Emotions.ANGRY.textColor
-                            "love" -> Emotions.INLOVE.textColor
-                            "fear" -> Emotions.CONFUSE.textColor
-                            "surprise" -> Emotions.CONFUSE.textColor // Gán tạm surprise
-                            else -> Color.Gray
-                        }
-                    )
+    val emotionsState: List<PieChartData> = remember(diary.emotions) {
+        diary.emotions?.map { emotion ->
+            PieChartData(
+                label = emotion.label,
+                score = emotion.score,
+                color = when (emotion.label) {
+                    "joy" -> Emotions.HAPPY.textColor
+                    "sadness" -> Emotions.SAD.textColor
+                    "anger" -> Emotions.ANGRY.textColor
+                    "love" -> Emotions.INLOVE.textColor
+                    "fear" -> Emotions.CONFUSE.textColor
+                    "surprise" -> Emotions.CONFUSE.textColor
+                    else -> Color.Gray
                 }
-            } else if (result.isFailure) {
-                Log.e("DiaryFullScreen", "Recommendation error: ${result.exceptionOrNull()?.message}")
-                recommendationText = "Lỗi khi lấy khuyến nghị: ${result.exceptionOrNull()?.message}"
-                emotionsState = emptyList()
-            }
-        }
+            )
+        } ?: emptyList()
     }
 
     Column(
@@ -417,7 +335,8 @@ fun DiaryFullScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Row {
-            IconButton(onClick = { navController.popBackStack()
+            IconButton(onClick = {
+                navController.popBackStack()
                 stopPlayback()
             }) {
                 Icon(
@@ -461,8 +380,9 @@ fun DiaryFullScreen(
                     ),
                     trailingIcon = {
                         Icon(
-                            Icons.Default.Clear, contentDescription = null,
-                            modifier = Modifier.clickable(onClick = {diaryTitle = ""})
+                            Icons.Default.Clear,
+                            contentDescription = null,
+                            modifier = Modifier.clickable(onClick = { diaryTitle = "" })
                         )
                     }
                 )
