@@ -36,7 +36,7 @@ data object SelectEmotionDiary : BeacefulRoutes {
 }
 data object WriteDiary : BeacefulRoutes {
     override val icon = Icons.Filled.CollectionsBookmark
-    override val route = "diary_write/{emotion}"
+    override val route = "diary_write/{emotion}/{datetime}"
 
     fun createRoute(emotion: Emotions, datetime: LocalDateTime): String {
         return "diary_write/${emotion.name}/$datetime"

@@ -104,7 +104,7 @@ fun ChatScreen(
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
-                    items(chatPreviews.entries.toList()) { (userId, preview) ->
+                    items(chatPreviews.entries.toList().sortedByDescending { it.value.createdAt }) { (userId, preview) ->
                         val user = users.find { it.id == userId }
                         if (user != null) {
                             Log.d("ChatScreen", "Displaying chat preview for userId: $userId, name: ${user.fullName}")

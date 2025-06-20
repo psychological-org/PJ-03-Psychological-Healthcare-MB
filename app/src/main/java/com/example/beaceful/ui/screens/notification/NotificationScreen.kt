@@ -85,9 +85,9 @@ fun NotificationScreen(
                             notification = notification,
                             onNotificationClick = {
                                 // Điều hướng đến AppointmentDetails nếu có appointmentId
-                                if (notification.id.isNotEmpty()) {
-                                    navController.navigate("appt_details/${notification.id}")
-                                }
+//                                if (notification.id.isNotEmpty()) {
+//                                    navController.navigate("appt_details/${notification.id}")
+//                                }
                             }
                         )
                     }

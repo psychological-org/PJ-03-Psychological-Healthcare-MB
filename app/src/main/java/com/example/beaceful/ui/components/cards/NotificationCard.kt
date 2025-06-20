@@ -74,12 +74,12 @@ fun NotificationCard(
                     fontWeight = if (notification.isRead) FontWeight.Normal else FontWeight.Bold
                 )
                 Spacer(Modifier.height(4.dp))
-                Text(
-                    text = if (notification.isRead) "Đã đọc" else "Chưa đọc",
-                    color = if (notification.isRead) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
-                    else MaterialTheme.colorScheme.secondary,
-                    style = MaterialTheme.typography.bodySmall
-                )
+//                Text(
+//                    text = if (notification.isRead) "Đã đọc" else "Chưa đọc",
+//                    color = if (notification.isRead) MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+//                    else MaterialTheme.colorScheme.secondary,
+//                    style = MaterialTheme.typography.bodySmall
+//                )
             }
         }
     }
