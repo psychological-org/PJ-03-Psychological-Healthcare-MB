@@ -109,7 +109,8 @@ fun SelectEmotionScreen(
                     text = item.descriptionRes,
                     onClick = {
                         navController.navigate(WriteDiary.createRoute(item, selectedDateTime))
-                    }
+                    },
+                    enableDesc = true,
                 )
             }
         }
