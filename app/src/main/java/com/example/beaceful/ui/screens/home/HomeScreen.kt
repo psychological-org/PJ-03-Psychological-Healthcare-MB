@@ -748,17 +748,24 @@ fun EmotionItem(
     @DrawableRes drawable: Int,
     @StringRes text: Int,
     onClick: () -> Unit = {},
+    enableDesc: Boolean = false,
 ) {
-    Image(
-        painter = painterResource(drawable),
-        contentDescription = stringResource(text),
-        contentScale = ContentScale.Crop,
-        modifier = modifier
+    Column (verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        Image(
+            painter = painterResource(drawable),
+            contentDescription = stringResource(text),
+            contentScale = ContentScale.Crop,
+            modifier = modifier
 //            .padding(horizontal = 8.dp)
-            .size(width = 50.dp, height = 75.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .clickable(onClick = onClick)
-    )
+                .size(width = 50.dp, height = 75.dp)
+                .clip(RoundedCornerShape(18.dp))
+                .clickable(onClick = onClick)
+        )
+        if (enableDesc) {
+            Spacer(Modifier.height(4.dp))
+            Text(stringResource(text), color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.SemiBold)
+        }
+    }
 }
 
 @Composable

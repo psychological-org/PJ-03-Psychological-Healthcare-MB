@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.androidx.storage)
     implementation(libs.androidx.core.i18n)
     implementation(libs.androidx.runtime.livedata)
+    implementation(libs.androidx.room.common.jvm)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -122,4 +123,5 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
+    implementation ("io.github.ehsannarmani:compose-charts:0.1.7")
 }
