@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
 import javax.inject.Inject
 
 @HiltViewModel
@@ -33,6 +34,10 @@ class BookingViewModel @Inject constructor(
 
     fun goToNextMonth() {
         _currentMonth.update { it.plusMonths(1).withDayOfMonth(1) }
+    }
+
+    fun goBackCurrentMonth() {
+        _currentMonth.update { LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")).withDayOfMonth(1) }
     }
 
     fun generateTimeSlots(

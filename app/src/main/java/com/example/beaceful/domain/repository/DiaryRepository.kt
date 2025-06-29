@@ -61,7 +61,8 @@ class DiaryRepository @Inject constructor(
             imageUrl = imageUrl,
             voiceUrl = voiceUrl,
             posterId = posterId,
-            createdAt = createdAt.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME),
+            createdAt = createdAt.atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
+                .format(DateTimeFormatter.ISO_OFFSET_DATE_TIME),
             emotionsJson = emotionsJson,
             negativityScore = negativityScore
         )
@@ -87,12 +88,16 @@ class DiaryRepository @Inject constructor(
             voiceUrl = voiceUrl,
             posterId = posterId,
             createdAt = try {
-                LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-                    .atZone(ZoneId.of("UTC"))
-                    .withZoneSameInstant(ZoneId.of("Asia/Ho_Chi_Minh"))
-                    .toLocalDateTime()
-            } catch (e: DateTimeParseException) {
-                LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))
+                LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            } catch (e1: DateTimeParseException) {
+                try {
+                    LocalDateTime.parse(createdAt, DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        .atZone(ZoneId.of("Asia/Ho_Chi_Minh"))
+                        .toLocalDateTime()
+                } catch (e2: DateTimeParseException) {
+                    Log.e("DiaryRepository", "Error parsing createdAt: ${createdAt}, error: ${e2.message}")
+                    LocalDateTime.of(2000, 1, 1, 0, 0) // Giá trị mặc định tạm thời
+                }
             },
             emotions = emotions,
             negativityScore = negativityScore

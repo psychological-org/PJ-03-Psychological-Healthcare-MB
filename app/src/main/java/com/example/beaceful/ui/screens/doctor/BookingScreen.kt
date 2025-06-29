@@ -103,12 +103,11 @@ fun BookingScreen(
                 tint = MaterialTheme.colorScheme.primary
             )
         }
-        Spacer(Modifier.height(6.dp))
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
-                .padding(top = 16.dp)
+                .padding(top = 8.dp)
                 .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 .background(MaterialTheme.colorScheme.primary),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -116,10 +115,18 @@ fun BookingScreen(
         ) {
             item {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
+                    IconButton(onClick = { viewModel.goToPreviousMonth() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Previous",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+
                     Text(
                         text = "${
                             currentMonth.month.name.lowercase()
@@ -133,19 +140,13 @@ fun BookingScreen(
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         color = MaterialTheme.colorScheme.primary
                     )
-                    Row {
-                        IconButton(onClick = { viewModel.goToPreviousMonth() }) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Previous"
-                            )
-                        }
-                        IconButton(onClick = { viewModel.goToNextMonth() }) {
-                            Icon(
-                                Icons.AutoMirrored.Filled.ArrowForward,
-                                contentDescription = "Next"
-                            )
-                        }
+
+                    IconButton(onClick = { viewModel.goToNextMonth() }) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "Next",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
                     }
                 }
             }

@@ -118,7 +118,11 @@ fun AppointmentDetailsScreen(
                 .padding(top = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row {
+            Row (modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp),
+                horizontalArrangement = Arrangement.Start
+            ) {
                 IconButton(onClick = { navController.popBackStack() }) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBackIos,
