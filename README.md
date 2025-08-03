@@ -22,19 +22,17 @@ To make mental healthcare accessible, personalized, and supportive through innov
 
 ###  **App Demo**
 
-<video width="300" controls>
-  <source src="https://drive.google.com/file/d/1Omb2__TaA_tnFCEjzngS1RT7eke8fdBT/view?usp=sharing" type="video/mp4">
-  Your browser does not support the video tag.
-</video>
+<div align="center">
+  <a href="https://youtu.be/KYskiI5YGGw" target="_blank">
+    <img src="app/src/main/res/drawable/logo_with_name.png" alt="Watch Demo Video" width="400"/>
+  </a>
+  <p><i>Click to watch the demo video</i></p>
+</div>
 
+> **Note**: For the best viewing experience, click the demo link above to watch the full video on Google Drive
 ---
 
 ##  Key Features
-
-<div align="center">
-  <img src="[PLACEHOLDER_APP_OVERVIEW]" alt="Beaceful App Overview" width="800"/>
-  <p><i>Complete overview of Beaceful's main features</i></p>
-</div>
 
 ###  **Home & Dashboard**
 
