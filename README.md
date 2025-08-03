@@ -72,14 +72,24 @@ To make mental healthcare accessible, personalized, and supportive through innov
 ###  **Healthcare Services**
 
 - **Doctor Profiles**: Browse and view detailed healthcare provider profiles
-- **Appointment Booking**: Schedule consultations with mental health professionals
 - **Telemedicine Support**: Virtual consultation capabilities
 - **Medical History**: Track appointments and treatment progress
 
 <div align="center">
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/doctor.png" alt="Doctor Profile Screen" width="350" height="600"/>
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/booking.png" alt="Appointment Booking Screen" width="350" height="600"/>
-  <p><i>Doctor profiles and appointment booking system</i></p>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/doctor.png" alt="Doctor Profile Screen" width="450"/>
+  <p><i>Doctor profiles and healthcare provider information</i></p>
+</div>
+
+###  **Appointment Booking**
+
+- **Schedule Consultations**: Book appointments with mental health professionals
+- **Calendar Integration**: View available time slots and manage bookings
+- **Booking History**: Track past and upcoming appointments
+- **Reminder System**: Get notified about scheduled consultations
+
+<div align="center">
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/booking.png" alt="Appointment Booking Screen" width="450"/>
+  <p><i>Comprehensive appointment booking and scheduling system</i></p>
 </div>
 
 ###  **Community & Social**
