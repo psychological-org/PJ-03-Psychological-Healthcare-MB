@@ -32,6 +32,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,35 +45,37 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
 import com.example.beaceful.R
 import com.example.beaceful.domain.model.DumpDataProvider
+import com.example.beaceful.domain.model.SearchItem
 import com.example.beaceful.domain.model.User
 import com.example.beaceful.ui.components.CustomSearchBar
 import com.example.beaceful.ui.navigation.SingleDoctorProfile
+import com.example.beaceful.viewmodel.DoctorViewModel
 
 @Composable
 fun DoctorScreen(
     navController: NavHostController,
+    viewModel: DoctorViewModel = hiltViewModel(),
     modifier: Modifier = Modifier
 ) {
-    val allDoctors = remember {
-        DumpDataProvider.listUser.filter { it.roleId == 2 }   // roleId 2 = DOCTOR
-    }
+    val doctors by viewModel.doctors.collectAsState()
 
+    val error by viewModel.error.collectAsState()
     var query by remember { mutableStateOf("") }
-    val nameSuggestions = remember(allDoctors) {
-        allDoctors.map { it.fullName }
+    val nameSuggestions = remember(doctors) {
+        doctors.map { SearchItem<String>(id = it.id, name = it.fullName) }
     }
 
-    val filteredDoctors = remember(query, allDoctors) {
-        if (query.isBlank()) allDoctors
-        else allDoctors.filter { it.fullName.contains(query, ignoreCase = true) }
+    val filteredDoctors = remember(query, doctors) {
+        if (query.isBlank()) doctors
+        else doctors.filter { it.fullName.contains(query, ignoreCase = true) }
     }
 
     Column(modifier.fillMaxSize()) {
@@ -81,14 +84,17 @@ fun DoctorScreen(
             suggestions = nameSuggestions,
             placeholder = "Tìm bác sĩ...",
             onSearch = { selected ->
-                query = selected
+                query = selected.name
             },
+            onDismiss = {query = ""},
             modifier = Modifier.fillMaxWidth()
         )
+        Spacer(Modifier.height(8.dp))
         UserListScreen(
             modifier = Modifier.fillMaxSize(),
-            doctors = filteredDoctors,
-            navController = navController
+            users = filteredDoctors,
+            navController = navController,
+            viewModel = viewModel
         )
     }
 }
@@ -97,8 +103,9 @@ fun DoctorScreen(
 @Composable
 fun UserListScreen(
     modifier: Modifier = Modifier,
-    doctors: List<User>,
-    navController: NavHostController
+    users: List<User>,
+    navController: NavHostController,
+    viewModel: DoctorViewModel
 ) {
 
     LazyVerticalGrid(
@@ -108,11 +115,12 @@ fun UserListScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier,
     ) {
-        items(doctors) { doctor ->
+        items(users) { doctor ->
             UserCard(doctor,
                 onProfileClick = {
                     navController.navigate(SingleDoctorProfile.createRoute(doctor.id))
-                })
+                },
+                viewModel = viewModel)
         }
     }
 }
@@ -123,8 +131,11 @@ fun UserCard(
     profile: User,
     onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
+    viewModel: DoctorViewModel = hiltViewModel()
 ) {
 
+    val doctorStats by viewModel.doctorStats.collectAsState()
+    val stats = doctorStats[profile.id] ?: DoctorViewModel.DoctorStats()
 
     Box(
         modifier = modifier
@@ -164,15 +175,15 @@ fun UserCard(
                 ) {
                     StatItem(
                         icon = Icons.Rounded.FlightTakeoff,
-                        label = "10 năm",
+                        label = "${profile.yearOfExperience} năm",
                     )
                     StatItem(
                         icon = Icons.Outlined.StarOutline,
-                        label = "3.4/5",
+                        label = stats.averageRating?.let { String.format("%.1f/5", it) } ?: "N/A",
                     )
                     StatItem(
                         icon = Icons.Filled.Person,
-                        label = "234",
+                        label = stats.appointmentCount.toString(),
                     )
                 }
 
@@ -189,7 +200,10 @@ fun UserCard(
                         .width(120.dp)
                         .height(36.dp)
                 ) {
-                    Text(stringResource(R.string.do2_access), style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        stringResource(R.string.do2_access),
+                        style = MaterialTheme.typography.titleSmall
+                    )
                 }
             }
         }

@@ -19,7 +19,20 @@ enum class RoleType { ADMIN, DOCTOR, PATIENT }
 
 enum class FriendStatus { ACCEPTED, DECLINED, BLOCKED, PENDING }
 
-enum class AppointmentStatus { PENDING, CONFIRMED, CANCELLED, COMPLETED }
+enum class AppointmentStatus {
+    PENDING, CONFIRMED, COMPLETED, CANCELLED;
+    companion object {
+        fun fromString(value: String): AppointmentStatus {
+            return when (value.lowercase()) {
+                "pending" -> PENDING
+                "confirmed" -> CONFIRMED
+                "cancelled" -> CANCELLED
+                "completed" -> COMPLETED
+                else -> PENDING
+            }
+        }
+    }
+}
 
 enum class NotificationType { SYSTEM, FRIEND_REQUEST, APPOINTMENT, OTHER }
 
@@ -33,9 +46,12 @@ enum class Emotions(
     @DrawableRes val iconRes: Int,
     @StringRes val descriptionRes: Int,
 ) {
-    INLOVE(Pink250, Pink, R.drawable.diary_mood_inlove, R.string.in_love),
-    HAPPY(Orange250, Orange, R.drawable.diary_mood_grateful, R.string.grateful),
+    INLOVE(Orange250, Orange, R.drawable.diary_mood_inlove, R.string.in_love),
+    HAPPY(Pink250, Pink, R.drawable.diary_mood_grateful, R.string.grateful),
     CONFUSE(Teal250, Teal, R.drawable.diary_mood_confused, R.string.confused),
     SAD(Blue250, Blue, R.drawable.diary_mood_worried, R.string.worried),
     ANGRY(Salmon, Red, R.drawable.diary_mood_angry, R.string.angry)
 }
+
+enum class ViewMode { LIST, CALENDAR, CHART }
+
