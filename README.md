@@ -46,7 +46,7 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Role-based Interface**: Different experiences for patients and healthcare providers
 
 <div align="center">
-  <img src="[PLACEHOLDER_HOME_SCREEN]" alt="Home Screen Screenshots" width="700"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/home.png" alt="Home Screen Screenshots" width="700"/>
   <p><i>Home screen with time-based greetings and smart recommendations</i></p>
 </div>
 
@@ -59,14 +59,13 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Voice Notes**: Record and attach voice memos to diary entries
 
 <div align="center">
-  <img src="[PLACEHOLDER_DIARY_LIST_VIEW]" alt="Diary List View" width="300"/>
-  <img src="[PLACEHOLDER_DIARY_CALENDAR_VIEW]" alt="Diary Calendar View" width="300"/>
-  <img src="[PLACEHOLDER_DIARY_CHART_VIEW]" alt="Diary Chart View" width="300"/>
-  <p><i>Three view modes for mood tracking: List, Calendar, and Chart visualization</i></p>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary1.png" alt="Diary Calendar View" width="300"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary2.jpg" alt="Diary Chart View" width="300"/>
+  <p><i>Two view modes for mood tracking: Calendar, and Chart visualization</i></p>
 </div>
 
 <div align="center">
-  <img src="[PLACEHOLDER_EMOTION_SELECTION]" alt="Emotion Selection Screen" width="400"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/emotion.png" alt="Emotion Selection Screen" width="400"/>
   <p><i>Intuitive emotion selection interface</i></p>
 </div>
 
@@ -78,8 +77,8 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Medical History**: Track appointments and treatment progress
 
 <div align="center">
-  <img src="[PLACEHOLDER_DOCTOR_PROFILE]" alt="Doctor Profile Screen" width="350"/>
-  <img src="[PLACEHOLDER_BOOKING_SCREEN]" alt="Appointment Booking" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/doctor.png" alt="Doctor Profile Screen" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/booking.png" alt="Appointment Booking" width="350"/>
   <p><i>Doctor profiles and appointment booking system</i></p>
 </div>
 
@@ -92,40 +91,10 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Privacy Controls**: Manage post visibility (Private/Friends/Public)
 
 <div align="center">
-  <img src="[PLACEHOLDER_FORUM_SCREEN]" alt="Community Forum" width="350"/>
-  <img src="[PLACEHOLDER_CHAT_SCREEN]" alt="Chat Interface" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/forum.png" alt="Community Forum" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/chat.png" alt="Chat Interface" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/chat2.png" alt="Chat Interface" width="350"/>
   <p><i>Community forum and chat communication features</i></p>
-</div>
-
-###  **Wellness Content**
-
-- **Music Therapy**: Curated playlists for different moods
-- **Podcast Library**: Mental health and wellness podcasts
-- **Reading Materials**: Self-help books and articles
-- **Meditation Guides**: Guided meditation and breathing exercises
-
-###  **Rating & Feedback System**
-
-- **Doctor Ratings**: Rate and review healthcare providers
-- **Treatment Feedback**: Share experience with treatments
-- **Community Reviews**: Help others make informed decisions
-- **Anonymous Feedback**: Secure and private review system
-
-<div align="center">
-  <img src="[PLACEHOLDER_RATING_SCREEN]" alt="Rating and Feedback System" width="400"/>
-  <p><i>Rating system for doctors and treatment feedback</i></p>
-</div>
-
-###  **Doctor Notes & Records**
-
-- **Treatment Notes**: Secure access to doctor's notes
-- **Medical Records**: Digital health record management
-- **Prescription Tracking**: Monitor medications and treatments
-- **Progress Reports**: Track mental health improvement over time
-
-<div align="center">
-  <img src="[PLACEHOLDER_DOCTOR_NOTES]" alt="Doctor Notes and Records" width="400"/>
-  <p><i>Digital medical records and doctor notes interface</i></p>
 </div>
 
 ###  **Smart Notifications**
@@ -134,33 +103,6 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Mood Check-ins**: Gentle reminders for diary entries
 - **Community Updates**: Stay connected with forum activities
 - **Wellness Tips**: Daily mental health insights
-
----
-
-###  **App Screenshots Gallery**
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="[PLACEHOLDER_LOGIN_SCREEN]" alt="Login Screen" width="200"/>
-        <br><b>Authentication</b>
-      </td>
-      <td align="center">
-        <img src="[PLACEHOLDER_MY_PROFILE]" alt="My Profile" width="200"/>
-        <br><b>My Profile</b>
-      </td>
-      <td align="center">
-        <img src="[PLACEHOLDER_ONBOARDING]" alt="Onboarding" width="200"/>
-        <br><b>Onboarding</b>
-      </td>
-      <td align="center">
-        <img src="[PLACEHOLDER_APPOINTMENT_BOOKING]" alt="Appointment Booking" width="200"/>
-        <br><b>Book Appointment</b>
-      </td>
-    </tr>
-  </table>
-</div>
 
 ---
 
@@ -238,11 +180,6 @@ Before running the project, ensure you have:
    - Configure Firebase authentication and services
 
 ###  Build & Run
-
-<div align="center">
-  <img src="[PLACEHOLDER_BUILD_PROCESS]" alt="Build and Run Process" width="600"/>
-  <p><i>Visual guide for building and running the application</i></p>
-</div>
 
 1. **Open in Android Studio**
 
