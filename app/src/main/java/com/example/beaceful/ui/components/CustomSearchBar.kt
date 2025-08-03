@@ -85,7 +85,7 @@ fun <T> CustomSearchBar(
             if (active) {
                 Icon(
                     Icons.Default.Close, contentDescription = null,
-                    modifier = Modifier.clickable {
+                    modifier = Modifier.clickable{
                         query = ""
                     })
             } else {

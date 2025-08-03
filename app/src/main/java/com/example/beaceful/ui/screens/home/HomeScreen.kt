@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -778,7 +779,7 @@ fun HomeScreenEmotionsRow(
         horizontalArrangement = Arrangement.SpaceBetween,
         contentPadding = PaddingValues(horizontal = 36.dp),
     ) {
-        items(Emotions.entries) { item ->
+        items(emotionList) { item ->
             EmotionItem(
                 drawable = item.iconRes,
                 text = item.descriptionRes,

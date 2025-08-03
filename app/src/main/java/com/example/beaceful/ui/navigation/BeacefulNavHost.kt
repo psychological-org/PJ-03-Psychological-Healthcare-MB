@@ -5,13 +5,13 @@ import androidx.annotation.RequiresApi
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.beaceful.domain.model.Emotions
 import com.example.beaceful.ui.components.PostDetailsScreen
 import com.example.beaceful.ui.screens.chat.ChatDetailScreen
 import com.example.beaceful.ui.screens.appointment.AppointmentDetailsScreen
@@ -27,8 +27,6 @@ import com.example.beaceful.ui.screens.diary.WriteDiaryScreen
 import com.example.beaceful.ui.screens.doctor.BookingScreen
 import com.example.beaceful.ui.screens.doctor.DoctorScreen
 import com.example.beaceful.ui.screens.doctor.SingleDoctorProfileScreen
-import com.example.beaceful.ui.screens.forum.CommunityScreen
-import com.example.beaceful.ui.screens.forum.ForumScreen
 import com.example.beaceful.ui.screens.home.HomeScreen
 import com.example.beaceful.ui.screens.authen.LoginScreen
 import com.example.beaceful.ui.screens.authen.SignUpScreen

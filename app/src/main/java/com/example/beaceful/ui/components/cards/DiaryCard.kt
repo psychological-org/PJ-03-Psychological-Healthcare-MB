@@ -75,7 +75,6 @@ fun DiaryCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
             .clickable { onDiaryClick() },
         colors = CardDefaults.cardColors(
             containerColor = diary.emotion.backgroundColor
