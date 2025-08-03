@@ -22,10 +22,10 @@ To make mental healthcare accessible, personalized, and supportive through innov
 
 ###  **App Demo**
 
-<div align="center">
-  <img src="[PLACEHOLDER_APP_DEMO_GIF]" alt="Beaceful App Demo" width="300"/>
-  <p><i>Interactive demo showing key app features</i></p>
-</div>
+<video width="300" controls>
+  <source src="https://drive.google.com/file/d/1Omb2__TaA_tnFCEjzngS1RT7eke8fdBT/view?usp=sharing" type="video/mp4">
+  Your browser does not support the video tag.
+</video>
 
 ---
 
