@@ -23,8 +23,8 @@ To make mental healthcare accessible, personalized, and supportive through innov
 ###  **App Demo**
 
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=KYskiI5YGGw" target="_blank">
-    <img src="https://img.youtube.com/vi/KYskiI5YGGw/maxresdefault.jpg" alt="Beaceful App Demo" width="560" height="315" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);"/>
+  <a href="https://youtu.be/Z7vzv9vHITI" target="_blank">
+    <img src="https://img.youtube.com/vi/Z7vzv9vHITI/maxresdefault.jpg" alt="Beaceful App Demo" width="560" height="315" style="border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2);"/>
   </a>
   <br>
   <br>
