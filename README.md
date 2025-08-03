@@ -46,7 +46,7 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Role-based Interface**: Different experiences for patients and healthcare providers
 
 <div align="center">
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/home.png" alt="Home Screen Screenshots" width="700"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/home.png" alt="Home Screen Screenshots" width="600"/>
   <p><i>Home screen with time-based greetings and smart recommendations</i></p>
 </div>
 
@@ -59,13 +59,13 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Voice Notes**: Record and attach voice memos to diary entries
 
 <div align="center">
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary1.png" alt="Diary Calendar View" width="300"/>
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary2.jpg" alt="Diary Chart View" width="300"/>
-  <p><i>Two view modes for mood tracking: Calendar, and Chart visualization</i></p>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary.jpg" alt="Diary Calendar View" width="350"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/diary2.jpg" alt="Diary Chart View" width="350"/>
+  <p><i>Two view modes for mood tracking: Calendar and Chart visualization</i></p>
 </div>
 
 <div align="center">
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/emotion.png" alt="Emotion Selection Screen" width="400"/>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/emotion.png" alt="Emotion Selection Screen" width="350"/>
   <p><i>Intuitive emotion selection interface</i></p>
 </div>
 
@@ -93,8 +93,12 @@ To make mental healthcare accessible, personalized, and supportive through innov
 <div align="center">
   <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/forum.png" alt="Community Forum" width="350"/>
   <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/chat.png" alt="Chat Interface" width="350"/>
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/chat2.png" alt="Chat Interface" width="350"/>
   <p><i>Community forum and chat communication features</i></p>
+</div>
+
+<div align="center">
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/chat2.png" alt="Advanced Chat Features" width="350"/>
+  <p><i>Advanced chat features and messaging system</i></p>
 </div>
 
 ###  **Smart Notifications**
