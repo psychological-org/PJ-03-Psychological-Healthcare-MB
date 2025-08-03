@@ -77,9 +77,8 @@ To make mental healthcare accessible, personalized, and supportive through innov
 - **Medical History**: Track appointments and treatment progress
 
 <div align="center">
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/doctor.png" alt="Doctor Profile Screen" width="350"/>
-  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/booking.png" alt="Appointment Booking" width="350"/>
-  <p><i>Doctor profiles and appointment booking system</i></p>
+  <img src="https://github.com/psychological-org/PJ-03-Psychological-Healthcare-MB/blob/main/public/doctor.png" alt="Doctor Profile and Booking System" width="450"/>
+  <p><i>Complete healthcare system: Doctor profiles and appointment booking</i></p>
 </div>
 
 ###  **Community & Social**
